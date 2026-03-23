@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>단열 시뮬레이션</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+      background: linear-gradient(180deg, #f4f7fb 0%, #e9eef7 100%);
+      color: #172033;
+    }
+    .app {
+      width: min(1240px, calc(100% - 32px));
+      margin: 24px auto;
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    .panel, .sim-wrap {
+      background: rgba(255,255,255,0.84);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.72);
+      border-radius: 24px;
+      box-shadow: 0 16px 40px rgba(28, 50, 93, 0.12);
+    }
+    .panel {
+      padding: 22px 20px;
+      position: sticky;
+      top: 16px;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin: 0 0 8px;
+    }
+    .sub {
+      margin: 0 0 18px;
+      line-height: 1.6;
+      color: #55627a;
+      font-size: 0.95rem;
+    }
+    .group {
+      margin-bottom: 18px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(243, 247, 255, 0.82);
+      border: 1px solid #e0e8f7;
+    }
+    .group h2 {
+      margin: 0 0 12px;
+      font-size: 1rem;
+    }
+    .field { margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+    label {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .value {
+      color: #38507f;
+      font-weight: 700;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: #4469d8;
+      cursor: pointer;
+    }
+    .toggle-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .toggle-btn {
+      border: 1px solid #c7d6f7;
+      background: white;
+      color: #4d5f86;
+      padding: 12px 10px;
+      border-radius: 14px;
+      font-size: 0.96rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+    .toggle-btn.active {
+      background: linear-gradient(135deg, #4b74f2, #7c99ff);
+      color: white;
+      border-color: transparent;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(76, 116, 242, 0.22);
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .metric {
+      background: white;
+      border: 1px solid #e3e9f6;
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .metric .title {
+      font-size: 0.88rem;
+      color: #62708a;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+    .metric .temp {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .desc {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #5a6781;
+      margin-top: 10px;
+    }
+    .sim-wrap {
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .canvas-frame {
+      width: min(100%, 960px);
+      aspect-ratio: 4 / 3;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 18px;
+      background: #eef4ff;
+    }
+    .footer-note {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.74);
+      border: 1px solid #e4ebfa;
+      color: #55627a;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+      .panel {
+        position: static;
+      }
+      .canvas-frame {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel">
+      <h1>단열 시뮬레이션</h1>
+      <p class="sub">
+        내부와 외부 사이의 단열재 효과를 확인해보는 시뮬레이션입니다.
+      </p>
+
+      <section class="group">
+        <h2>초기 온도 설정</h2>
+        <div class="field">
+          <label for="insideTemp">용기 내부 초기 온도 <span class="value" id="insideTempValue">80°C</span></label>
+          <input id="insideTemp" type="range" min="-20" max="120" value="80" step="1" />
+        </div>
+        <div class="field">
+          <label for="outsideTemp">용기 외부 초기 온도 <span class="value" id="outsideTempValue">20°C</span></label>
+          <input id="outsideTemp" type="range" min="-20" max="120" value="20" step="1" />
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>단열재 설정</h2>
+        <div class="field">
+          <label for="particleCount">입자 개수 <span class="value" id="particleCountValue">120개</span></label>
+          <input id="particleCount" type="range" min="20" max="260" value="120" step="10" />
+        </div>
+        <div class="field">
+          <label for="thickness">단열재 두께 <span class="value" id="thicknessValue">120</span></label>
+          <input id="thickness" type="range" min="60" max="260" value="120" step="5" />
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>단열재 특성</h2>
+        <div class="toggle-row">
+          <button class="toggle-btn active" id="gasBtn">기체</button>
+          <button class="toggle-btn" id="solidBtn">고체</button>
+        </div>
+        <div class="desc" id="modelDesc">
+          단열재의 종류, 입자 수, 두께는 모두 용기 내외부 열전도 속도에 영향을 줍니다.
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>현재 온도</h2>
+        <div class="metrics">
+          <div class="metric">
+            <div class="title">용기 내부</div>
+            <div class="temp" id="displayInside">80.0°C</div>
+          </div>
+          <div class="metric">
+            <div class="title">용기 외부</div>
+            <div class="temp" id="displayOutside">20.0°C</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>실행 제어</h2>
+        <div class="toggle-row">
+          <button class="toggle-btn active" id="startBtn">시작</button>
+          <button class="toggle-btn" id="pauseBtn">일시정지</button>
+        </div>
+        <div class="toggle-row" style="margin-top:10px; grid-template-columns: 1fr;">
+          <button class="toggle-btn" id="resetBtn">초기화</button>
+        </div>
+      </section>
+
+      <div class="footer-note">
+        페이지를 열면 바로 시뮬레이션이 시작된다. 초기화 버튼을 누르면 슬라이더 값 기준으로 온도를 다시 설정하고 정지 상태로 돌아간다.
+      </div>
+    </aside>
+
+    <main class="sim-wrap">
+      <div class="canvas-frame">
+        <canvas id="simCanvas" width="960" height="720"></canvas>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const insideTemp = document.getElementById('insideTemp');
+    const outsideTemp = document.getElementById('outsideTemp');
+    const particleCount = document.getElementById('particleCount');
+    const thickness = document.getElementById('thickness');
+
+    const insideTempValue = document.getElementById('insideTempValue');
+    const outsideTempValue = document.getElementById('outsideTempValue');
+    const particleCountValue = document.getElementById('particleCountValue');
+    const thicknessValue = document.getElementById('thicknessValue');
+    const displayInside = document.getElementById('displayInside');
+    const displayOutside = document.getElementById('displayOutside');
+    const modelDesc = document.getElementById('modelDesc');
+
+    const gasBtn = document.getElementById('gasBtn');
+    const solidBtn = document.getElementById('solidBtn');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const state = {
+      model: 'gas',
+      running: true,
+      Tin: Number(insideTemp.value),
+      Tout: Number(outsideTemp.value),
+      Cin: 420,
+      Cout: 420,
+      area: 180,
+      timeScale: 0.2,
+      barrierParticles: []
+    };
+
+    function clamp(v, min, max) {
+      return Math.max(min, Math.min(max, v));
+    }
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function tempColor(temp) {
+      const t = clamp((temp + 20) / 140, 0, 1);
+      const hue = lerp(220, 10, t);
+      const light = lerp(60, 53, t);
+      return `hsl(${hue} 85% ${light}%)`;
+    }
+
+    function updateUI() {
+      insideTempValue.textContent = `${insideTemp.value}°C`;
+      outsideTempValue.textContent = `${outsideTemp.value}°C`;
+      particleCountValue.textContent = `${particleCount.value}개`;
+      thicknessValue.textContent = `${thickness.value}`;
+      displayInside.textContent = `${state.Tin.toFixed(1)}°C`;
+      displayOutside.textContent = `${state.Tout.toFixed(1)}°C`;
+      startBtn.classList.toggle('active', state.running);
+      pauseBtn.classList.toggle('active', !state.running);
+      gasBtn.classList.toggle('active', state.model === 'gas');
+      solidBtn.classList.toggle('active', state.model === 'solid');
+      modelDesc.textContent = state.model === 'gas'
+        ? '기체 단열재는 더 낮은 유효 열전도도 k를 갖는 것으로 반영된다.'
+        : '고체 단열재는 더 높은 유효 열전도도 k를 갖는 것으로 반영된다.';
+    }
+
+    function region() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const pad = 44;
+      const d = Number(thickness.value);
+      const xMid = w / 2;
+      const insX = xMid - d / 2;
+      return {
+        w,
+        h,
+        pad,
+        top: 100,
+        bottom: h - 100,
+        leftX: pad,
+        leftW: insX - pad,
+        insX,
+        insW: d,
+        rightX: insX + d,
+        rightW: w - pad - (insX + d)
+      };
+    }
+
+    function effectiveK() {
+      const n = Number(particleCount.value);
+      const alpha = (n - 20) / 240;
+      if (state.model === 'gas') {
+        return 0.25 + 0.35 * alpha;
+      }
+      return 0.75 + 0.75 * alpha;
+    }
+
+    function conductance() {
+      const d = Number(thickness.value);
+      return effectiveK() * state.area / d;
+    }
+
+    function makeBarrierParticles() {
+      state.barrierParticles = [];
+      const r = region();
+      const count = Number(particleCount.value);
+
+      if (state.model === 'gas') {
+        for (let i = 0; i < count; i++) {
+          state.barrierParticles.push({
+            x: r.insX + Math.random() * r.insW,
+            y: r.top + Math.random() * (r.bottom - r.top),
+            vx: (Math.random() - 0.5) * 1.5,
+            vy: (Math.random() - 0.5) * 1.5,
+            radius: 4 + Math.random() * 1.5
+          });
+        }
+      } else {
+        const cols = Math.max(4, Math.round(Math.sqrt(count * r.insW / (r.bottom - r.top))));
+        const rows = Math.max(4, Math.ceil(count / cols));
+        const dx = r.insW / (cols + 1);
+        const dy = (r.bottom - r.top) / (rows + 1);
+        let made = 0;
+        for (let row = 0; row < rows; row++) {
+          for (let col = 0; col < cols; col++) {
+            if (made >= count) break;
+            const ax = r.insX + dx * (col + 1);
+            const ay = r.top + dy * (row + 1);
+            state.barrierParticles.push({
+              x: ax,
+              y: ay,
+              ax,
+              ay,
+              vx: 0,
+              vy: 0,
+              row,
+              col,
+              radius: 4.2
+            });
+            made += 1;
+          }
+        }
+      }
+    }
+
+    function resetSimulation() {
+      state.Tin = Number(insideTemp.value);
+      state.Tout = Number(outsideTemp.value);
+      makeBarrierParticles();
+      updateUI();
+    }
+
+    function updateThermal(dt) {
+      if (!state.running) return;
+      const deltaT = state.Tin - state.Tout;
+      const G = conductance();
+      const P = G * deltaT;
+      const dQ = P * dt * state.timeScale;
+      state.Tin -= dQ / state.Cin;
+      state.Tout += dQ / state.Cout;
+    }
+
+    function updateBarrier(dt) {
+      const r = region();
+      const motionScale = state.running ? 1 : 0.12;
+
+      if (state.model === 'gas') {
+        const agitation = 0.03 + Math.abs(state.Tin - state.Tout) * 0.001;
+        for (const p of state.barrierParticles) {
+          p.x += p.vx * dt * 1.5 * motionScale;
+          p.y += p.vy * dt * 1.5 * motionScale;
+          p.vx += (Math.random() - 0.5) * agitation * motionScale;
+          p.vy += (Math.random() - 0.5) * agitation * motionScale;
+          p.vx = clamp(p.vx, -2.4, 2.4);
+          p.vy = clamp(p.vy, -2.4, 2.4);
+
+          if (p.x < r.insX + p.radius) {
+            p.x = r.insX + p.radius;
+            p.vx *= -1;
+          }
+          if (p.x > r.insX + r.insW - p.radius) {
+            p.x = r.insX + r.insW - p.radius;
+            p.vx *= -1;
+          }
+          if (p.y < r.top + p.radius) {
+            p.y = r.top + p.radius;
+            p.vy *= -1;
+          }
+          if (p.y > r.bottom - p.radius) {
+            p.y = r.bottom - p.radius;
+            p.vy *= -1;
+          }
+        }
+      } else {
+        const springK = 0.055;
+        const damping = 0.92;
+        const jitter = 0.014 + Math.abs(state.Tin - state.Tout) * 0.0005;
+        for (const p of state.barrierParticles) {
+          const fx = -springK * (p.x - p.ax);
+          const fy = -springK * (p.y - p.ay);
+          p.vx += (fx * dt + (Math.random() - 0.5) * jitter) * motionScale;
+          p.vy += (fy * dt + (Math.random() - 0.5) * jitter) * motionScale;
+          p.vx *= damping;
+          p.vy *= damping;
+          p.x += p.vx * dt * 1.7;
+          p.y += p.vy * dt * 1.7;
+        }
+      }
+    }
+
+    function drawChamberBackground(r) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#edf3ff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = tempColor(state.Tin);
+      ctx.fillRect(r.leftX, r.top, r.leftW, r.bottom - r.top);
+
+      ctx.fillStyle = '#f3f5f9';
+      ctx.fillRect(r.insX, r.top, r.insW, r.bottom - r.top);
+
+      ctx.fillStyle = tempColor(state.Tout);
+      ctx.fillRect(r.rightX, r.top, r.rightW, r.bottom - r.top);
+    }
+
+    function drawSideParticles(r) {
+      const cols = 8;
+      const insideCount = Math.max(18, Math.round(Number(particleCount.value) * 0.2));
+      const outsideCount = Math.max(18, Math.round(Number(particleCount.value) * 0.2));
+
+      for (let i = 0; i < insideCount; i++) {
+        const x = r.leftX + 18 + (i % cols) * ((r.leftW - 36) / cols) + (((i * 17.37) % 1) - 0.5) * 10;
+        const y = r.top + 24 + Math.floor(i / cols) * 26 + (((i * 11.19) % 1) - 0.5) * 8;
+        ctx.beginPath();
+        ctx.fillStyle = tempColor(state.Tin);
+        ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      for (let i = 0; i < outsideCount; i++) {
+        const x = r.rightX + 18 + (i % cols) * ((r.rightW - 36) / cols) + (((i * 13.91) % 1) - 0.5) * 10;
+        const y = r.top + 24 + Math.floor(i / cols) * 26 + (((i * 9.73) % 1) - 0.5) * 8;
+        ctx.beginPath();
+        ctx.fillStyle = tempColor(state.Tout);
+        ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawBarrier() {
+      if (state.model === 'solid') {
+        const lookup = new Map();
+        for (const p of state.barrierParticles) {
+          lookup.set(`${p.row},${p.col}`, p);
+        }
+        ctx.lineWidth = 1.2;
+        for (const p of state.barrierParticles) {
+          const right = lookup.get(`${p.row},${p.col + 1}`);
+          const down = lookup.get(`${p.row + 1},${p.col}`);
+          if (right) {
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(90, 107, 150, 0.28)';
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(right.x, right.y);
+            ctx.stroke();
+          }
+          if (down) {
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(90, 107, 150, 0.18)';
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(down.x, down.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      for (const p of state.barrierParticles) {
+        ctx.beginPath();
+        ctx.fillStyle = '#72819c';
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawTexts(r) {
+      ctx.fillStyle = '#2d3d5f';
+      ctx.font = '700 20px Pretendard, sans-serif';
+      ctx.fillText(`용기 내부(${state.Tin.toFixed(1)}°C)`, r.leftX + 18, 52);
+      ctx.fillText(`단열재`, r.insX + 14, 52);
+      ctx.fillText(`용기 외부(${state.Tout.toFixed(1)}°C)`, r.rightX + 18, 52);
+
+      /*const deltaT = state.Tin - state.Tout;
+      const G = conductance();
+      const P = G * deltaT;
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      ctx.fillRect(r.w - 250, r.h - 118, 210, 70);
+      ctx.fillStyle = '#31415f';
+      ctx.font = '600 16px Pretendard, sans-serif';
+      ctx.fillText(`ΔT = ${deltaT.toFixed(1)}°C`, r.w - 232, r.h - 90);
+      ctx.fillText(`P = ${P.toFixed(2)}`, r.w - 232, r.h - 66);
+      ctx.fillText(`kA/d = ${G.toFixed(3)}`, r.w - 232, r.h - 42);*/
+    }
+
+    function frame(dt) {
+      updateThermal(dt);
+      updateBarrier(dt);
+      const r = region();
+      drawChamberBackground(r);
+      drawSideParticles(r);
+      drawBarrier();
+      drawTexts(r);
+      updateUI();
+    }
+
+    let last = performance.now();
+    function animate(now) {
+      const dt = Math.min(2.5, (now - last) / 16.6667);
+      last = now;
+      frame(dt);
+      requestAnimationFrame(animate);
+    }
+
+    insideTemp.addEventListener('input', () => {
+      if (!state.running) {
+        state.Tin = Number(insideTemp.value);
+      }
+      updateUI();
+    });
+
+    outsideTemp.addEventListener('input', () => {
+      if (!state.running) {
+        state.Tout = Number(outsideTemp.value);
+      }
+      updateUI();
+    });
+
+    particleCount.addEventListener('input', () => {
+      makeBarrierParticles();
+      updateUI();
+    });
+
+    thickness.addEventListener('input', () => {
+      makeBarrierParticles();
+      updateUI();
+    });
+
+    gasBtn.addEventListener('click', () => {
+      state.model = 'gas';
+      makeBarrierParticles();
+      updateUI();
+    });
+
+    solidBtn.addEventListener('click', () => {
+      state.model = 'solid';
+      makeBarrierParticles();
+      updateUI();
+    });
+
+    startBtn.addEventListener('click', () => {
+      state.running = true;
+      updateUI();
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      state.running = false;
+      updateUI();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      state.running = false;
+      resetSimulation();
+    });
+
+    resetSimulation();
+    updateUI();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
