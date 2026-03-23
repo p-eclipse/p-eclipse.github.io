@@ -6,176 +6,282 @@
   <title>단열 시뮬레이션</title>
   <style>
     * { box-sizing: border-box; }
-    body {
+
+    :root {
+      --panel-width: 280px;
+      --panel-gap: 20px;
+      --sim-right-space: calc(var(--panel-width) + var(--panel-gap));
+    }
+
+    html, body {
       margin: 0;
+      width: 100%;
+      height: 100%;
       font-family: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
       background: linear-gradient(180deg, #f4f7fb 0%, #e9eef7 100%);
       color: #172033;
+      overflow: hidden;
     }
+
+    body {
+      position: relative;
+    }
+
     .app {
-      width: min(1240px, calc(100% - 32px));
-      margin: 24px auto;
-      display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 20px;
-      align-items: start;
+      width: 100%;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
     }
-    .panel, .sim-wrap {
-      background: rgba(255,255,255,0.84);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.72);
-      border-radius: 24px;
-      box-shadow: 0 16px 40px rgba(28, 50, 93, 0.12);
+
+    .sim-wrap {
+      position: absolute;
+      inset: 0;
+      padding: 0;
+      padding-right: var(--sim-right-space);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: transparent;
     }
+
+    .canvas-frame {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #eef4ff;
+    }
+
     .panel {
-      padding: 22px 20px;
-      position: sticky;
-      top: 16px;
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: var(--panel-width);
+      height: 100vh;
+      padding: 16px 14px 18px;
+      overflow-y: auto;
+      overflow-x: hidden;
+
+      background: rgba(255,255,255,0.78);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+
+      border-left: 1px solid rgba(255,255,255,0.72);
+      box-shadow: -12px 0 32px rgba(28, 50, 93, 0.12);
+
+      z-index: 20;
     }
+
+    .panel-header {
+      padding-right: 6px;
+      margin-bottom: 14px;
+    }
+
     h1 {
-      font-size: 1.8rem;
-      margin: 0 0 8px;
+      font-size: 1.18rem;
+      margin: 0 0 6px;
+      line-height: 1.2;
     }
+
     .sub {
-      margin: 0 0 18px;
-      line-height: 1.6;
+      margin: 0;
+      line-height: 1.45;
       color: #55627a;
-      font-size: 0.95rem;
+      font-size: 0.80rem;
     }
+
     .group {
-      margin-bottom: 18px;
-      padding: 14px;
-      border-radius: 18px;
+      margin-bottom: 12px;
+      padding: 10px;
+      border-radius: 14px;
       background: rgba(243, 247, 255, 0.82);
       border: 1px solid #e0e8f7;
     }
-    .group h2 {
-      margin: 0 0 12px;
-      font-size: 1rem;
+
+    .group:first-of-type {
+      background: linear-gradient(135deg, #eef3ff, #f6f8ff);
+      border: 1px solid #dbe5ff;
     }
-    .field { margin-bottom: 14px; }
-    .field:last-child { margin-bottom: 0; }
+
+    .group h2 {
+      margin: 0 0 10px;
+      font-size: 0.92rem;
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
     label {
       display: flex;
       justify-content: space-between;
       gap: 8px;
-      margin-bottom: 8px;
-      font-size: 0.95rem;
-      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 0.83rem;
+      font-weight: 700;
+      line-height: 1.35;
     }
+
     .value {
       color: #38507f;
-      font-weight: 700;
+      font-weight: 800;
+      white-space: nowrap;
     }
+
     input[type="range"] {
       width: 100%;
       accent-color: #4469d8;
       cursor: pointer;
     }
+
     .toggle-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 8px;
     }
+
+    .toggle-row.single {
+      grid-template-columns: 1fr;
+    }
+
     .toggle-btn {
       border: 1px solid #c7d6f7;
       background: white;
       color: #4d5f86;
-      padding: 12px 10px;
-      border-radius: 14px;
-      font-size: 0.96rem;
-      font-weight: 700;
+      padding: 10px 8px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      font-weight: 800;
       cursor: pointer;
       transition: 0.2s ease;
     }
+
+    .group:first-of-type .toggle-btn {
+      font-size: 0.95rem;
+      padding: 12px 10px;
+    }
+
+    .toggle-btn:hover {
+      transform: translateY(-1px);
+    }
+
     .toggle-btn.active {
       background: linear-gradient(135deg, #4b74f2, #7c99ff);
       color: white;
       border-color: transparent;
-      transform: translateY(-1px);
-      box-shadow: 0 10px 20px rgba(76, 116, 242, 0.22);
+      box-shadow: 0 8px 18px rgba(76, 116, 242, 0.18);
     }
+
     .metrics {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 8px;
     }
+
     .metric {
       background: white;
       border: 1px solid #e3e9f6;
-      border-radius: 18px;
-      padding: 14px;
+      border-radius: 14px;
+      padding: 10px;
     }
+
     .metric .title {
-      font-size: 0.88rem;
+      font-size: 0.76rem;
       color: #62708a;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       font-weight: 700;
+      line-height: 1.3;
     }
+
     .metric .temp {
-      font-size: 1.5rem;
-      font-weight: 800;
+      font-size: 1.08rem;
+      font-weight: 900;
       letter-spacing: -0.02em;
     }
+
     .desc {
-      font-size: 0.9rem;
-      line-height: 1.6;
+      font-size: 0.80rem;
+      line-height: 1.5;
       color: #5a6781;
-      margin-top: 10px;
+      margin-top: 8px;
     }
-    .sim-wrap {
-      padding: 16px;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-    }
-    .canvas-frame {
-      width: min(100%, 960px);
-      aspect-ratio: 4 / 3;
-    }
-    canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      border-radius: 18px;
-      background: #eef4ff;
-    }
+
     .footer-note {
-      margin-top: 14px;
-      padding: 12px 14px;
-      border-radius: 14px;
+      margin-top: 4px;
+      padding: 10px 11px;
+      border-radius: 12px;
       background: rgba(255,255,255,0.74);
       border: 1px solid #e4ebfa;
       color: #55627a;
-      font-size: 0.9rem;
-      line-height: 1.55;
+      font-size: 0.76rem;
+      line-height: 1.5;
     }
+
     @media (max-width: 980px) {
+      html, body {
+        overflow: auto;
+      }
+
       .app {
-        grid-template-columns: 1fr;
+        height: auto;
+        min-height: 100vh;
       }
+
+      .sim-wrap {
+        position: relative;
+        height: 62vh;
+        min-height: 420px;
+        padding-right: 0;
+      }
+
       .panel {
-        position: static;
-      }
-      .canvas-frame {
+        position: relative;
         width: 100%;
+        height: auto;
+        right: auto;
+        top: auto;
+        border-left: none;
+        border-top: 1px solid rgba(255,255,255,0.72);
+        box-shadow: 0 -8px 28px rgba(28, 50, 93, 0.10);
       }
     }
   </style>
 </head>
 <body>
-  
   <div class="app">
     <main class="sim-wrap">
       <div class="canvas-frame">
-        <canvas id="simCanvas" width="960" height="720"></canvas>
+        <canvas id="simCanvas" width="1280" height="720"></canvas>
       </div>
     </main>
-    <aside class="panel">
-      <h1>단열 시뮬레이션</h1>
-      <p class="sub">
-        내부와 외부 사이의 단열재 효과를 확인해보는 시뮬레이션입니다.
-      </p>
+
+    <aside class="panel" id="panel">
+      <div class="panel-header">
+        <h1>단열 시뮬레이션</h1>
+        <p class="sub">
+          내부와 외부 사이의 단열재 효과를 확인하는 시뮬레이션입니다.
+        </p>
+      </div>
+
+      <section class="group">
+        <div class="toggle-row">
+          <button class="toggle-btn active" id="startBtn">시작</button>
+          <button class="toggle-btn" id="pauseBtn">일시정지</button>
+        </div>
+        <div class="toggle-row single" style="margin-top:8px;">
+          <button class="toggle-btn" id="resetBtn">초기화</button>
+        </div>
+      </section>
 
       <section class="group">
         <h2>초기 온도 설정</h2>
@@ -226,23 +332,10 @@
         </div>
       </section>
 
-      <section class="group">
-        <h2>실행 제어</h2>
-        <div class="toggle-row">
-          <button class="toggle-btn active" id="startBtn">시작</button>
-          <button class="toggle-btn" id="pauseBtn">일시정지</button>
-        </div>
-        <div class="toggle-row" style="margin-top:10px; grid-template-columns: 1fr;">
-          <button class="toggle-btn" id="resetBtn">초기화</button>
-        </div>
-      </section>
-
       <div class="footer-note">
-        페이지를 열면 바로 시뮬레이션이 시작된다. 초기화 버튼을 누르면 슬라이더 값 기준으로 온도를 다시 설정하고 정지 상태로 돌아간다.
+        초기화 버튼은 현재 슬라이더 값으로 온도를 다시 설정하고 정지 상태로 되돌립니다.
       </div>
     </aside>
-
-
   </div>
 
   <script>
@@ -295,6 +388,20 @@
       return `hsl(${hue} 85% ${light}%)`;
     }
 
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const width = Math.max(1, Math.round(rect.width * dpr));
+      const height = Math.max(1, Math.round(rect.height * dpr));
+
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(dpr, dpr);
+      }
+    }
+
     function updateUI() {
       insideTempValue.textContent = `${insideTemp.value}°C`;
       outsideTempValue.textContent = `${outsideTemp.value}°C`;
@@ -302,34 +409,42 @@
       thicknessValue.textContent = `${thickness.value}`;
       displayInside.textContent = `${state.Tin.toFixed(1)}°C`;
       displayOutside.textContent = `${state.Tout.toFixed(1)}°C`;
+
       startBtn.classList.toggle('active', state.running);
       pauseBtn.classList.toggle('active', !state.running);
       gasBtn.classList.toggle('active', state.model === 'gas');
       solidBtn.classList.toggle('active', state.model === 'solid');
+
       modelDesc.textContent = state.model === 'gas'
-        ? '기체 단열재는 고체 단열재보다 열전달 속도가 느리다.'
-        : '고체 단열재는 기체 단열재보다 열전달 속도가 빠르다.';
+        ? '기체 단열재는 고체 단열재보다 열전달 속도가 느립니다.'
+        : '고체 단열재는 기체 단열재보다 열전달 속도가 빠릅니다.';
     }
 
     function region() {
-      const w = canvas.width;
-      const h = canvas.height;
-      const pad = 44;
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+
+      const padX = Math.max(28, w * 0.035);
+      const padY = Math.max(70, h * 0.14);
+
       const d = Number(thickness.value);
+      const maxInsW = Math.min(d, w * 0.32);
       const xMid = w / 2;
-      const insX = xMid - d / 2;
+      const insX = xMid - maxInsW / 2;
+
       return {
         w,
         h,
-        pad,
-        top: 100,
-        bottom: h - 100,
-        leftX: pad,
-        leftW: insX - pad,
+        pad: padX,
+        top: padY,
+        bottom: h - padY,
+        leftX: padX,
+        leftW: Math.max(80, insX - padX),
         insX,
-        insW: d,
-        rightX: insX + d,
-        rightW: w - pad - (insX + d)
+        insW: maxInsW,
+        rightX: insX + maxInsW,
+        rightW: Math.max(80, w - padX - (insX + maxInsW))
       };
     }
 
@@ -359,15 +474,17 @@
             y: r.top + Math.random() * (r.bottom - r.top),
             vx: (Math.random() - 0.5) * 1.5,
             vy: (Math.random() - 0.5) * 1.5,
-            radius: 4 + Math.random() * 1.5
+            radius: 3.6 + Math.random() * 1.4
           });
         }
       } else {
-        const cols = Math.max(4, Math.round(Math.sqrt(count * r.insW / (r.bottom - r.top))));
+        const usableH = r.bottom - r.top;
+        const cols = Math.max(4, Math.round(Math.sqrt(count * r.insW / usableH)));
         const rows = Math.max(4, Math.ceil(count / cols));
         const dx = r.insW / (cols + 1);
-        const dy = (r.bottom - r.top) / (rows + 1);
+        const dy = usableH / (rows + 1);
         let made = 0;
+
         for (let row = 0; row < rows; row++) {
           for (let col = 0; col < cols; col++) {
             if (made >= count) break;
@@ -382,7 +499,7 @@
               vy: 0,
               row,
               col,
-              radius: 4.2
+              radius: 4.1
             });
             made += 1;
           }
@@ -442,6 +559,7 @@
         const springK = 0.055;
         const damping = 0.92;
         const jitter = 0.014 + Math.abs(state.Tin - state.Tout) * 0.0005;
+
         for (const p of state.barrierParticles) {
           const fx = -springK * (p.x - p.ax);
           const fy = -springK * (p.y - p.ay);
@@ -456,9 +574,10 @@
     }
 
     function drawChamberBackground(r) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, r.w, r.h);
+
       ctx.fillStyle = '#edf3ff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, r.w, r.h);
 
       ctx.fillStyle = tempColor(state.Tin);
       ctx.fillRect(r.leftX, r.top, r.leftW, r.bottom - r.top);
@@ -500,10 +619,12 @@
         for (const p of state.barrierParticles) {
           lookup.set(`${p.row},${p.col}`, p);
         }
+
         ctx.lineWidth = 1.2;
         for (const p of state.barrierParticles) {
           const right = lookup.get(`${p.row},${p.col + 1}`);
           const down = lookup.get(`${p.row + 1},${p.col}`);
+
           if (right) {
             ctx.beginPath();
             ctx.strokeStyle = 'rgba(90, 107, 150, 0.28)';
@@ -511,6 +632,7 @@
             ctx.lineTo(right.x, right.y);
             ctx.stroke();
           }
+
           if (down) {
             ctx.beginPath();
             ctx.strokeStyle = 'rgba(90, 107, 150, 0.18)';
@@ -530,27 +652,21 @@
     }
 
     function drawTexts(r) {
-      ctx.fillStyle = '#2d3d5f';
-      ctx.font = '700 20px Pretendard, sans-serif';
-      ctx.fillText(`용기 내부(${state.Tin.toFixed(1)}°C)`, r.leftX + 18, 52);
-      ctx.fillText(`단열재`, r.insX + 14, 52);
-      ctx.fillText(`용기 외부(${state.Tout.toFixed(1)}°C)`, r.rightX + 18, 52);
+      const titleY = Math.max(38, r.top - 28);
+      const fontSize = Math.max(15, Math.min(20, r.w * 0.016));
 
-      /*const deltaT = state.Tin - state.Tout;
-      const G = conductance();
-      const P = G * deltaT;
-      ctx.fillStyle = 'rgba(255,255,255,0.92)';
-      ctx.fillRect(r.w - 250, r.h - 118, 210, 70);
-      ctx.fillStyle = '#31415f';
-      ctx.font = '600 16px Pretendard, sans-serif';
-      ctx.fillText(`ΔT = ${deltaT.toFixed(1)}°C`, r.w - 232, r.h - 90);
-      ctx.fillText(`P = ${P.toFixed(2)}`, r.w - 232, r.h - 66);
-      ctx.fillText(`kA/d = ${G.toFixed(3)}`, r.w - 232, r.h - 42);*/
+      ctx.fillStyle = '#2d3d5f';
+      ctx.font = `700 ${fontSize}px Pretendard, sans-serif`;
+      ctx.fillText(`용기 내부 (${state.Tin.toFixed(1)}°C)`, r.leftX + 12, titleY);
+      ctx.fillText(`단열재`, r.insX + 10, titleY);
+      ctx.fillText(`용기 외부 (${state.Tout.toFixed(1)}°C)`, r.rightX + 12, titleY);
     }
 
     function frame(dt) {
+      resizeCanvas();
       updateThermal(dt);
       updateBarrier(dt);
+
       const r = region();
       drawChamberBackground(r);
       drawSideParticles(r);
@@ -560,6 +676,7 @@
     }
 
     let last = performance.now();
+
     function animate(now) {
       const dt = Math.min(2.5, (now - last) / 16.6667);
       last = now;
@@ -618,6 +735,12 @@
       resetSimulation();
     });
 
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      makeBarrierParticles();
+    });
+
+    resizeCanvas();
     resetSimulation();
     updateUI();
     requestAnimationFrame(animate);
