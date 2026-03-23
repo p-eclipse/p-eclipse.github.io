@@ -305,8 +305,8 @@
       gasBtn.classList.toggle('active', state.model === 'gas');
       solidBtn.classList.toggle('active', state.model === 'solid');
       modelDesc.textContent = state.model === 'gas'
-        ? '기체 단열재는 더 낮은 유효 열전도도 k를 갖는 것으로 반영된다.'
-        : '고체 단열재는 더 높은 유효 열전도도 k를 갖는 것으로 반영된다.';
+        ? '기체 단열재는 고체 단열재보다 열전달 속도가 느리다.'
+        : '고체 단열재는 기체 단열재보다 열전달 속도가 빠르다.';
     }
 
     function region() {
