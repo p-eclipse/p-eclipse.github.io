@@ -10,6 +10,11 @@
       "name": "Heat Conduction",
       "path": "./conductionCompare/",
       "description": "열전도 비교실험"
+    },
+    {
+      "name": "Heat Insulation",
+      "path": "./insulation/",
+      "description": "단열재 실험"
     }
   ]
 }
