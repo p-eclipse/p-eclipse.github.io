@@ -253,12 +253,11 @@
               <th>반</th>
               <th>닉네임</th>
               <th>기록</th>
-              <th>시간</th>
             </tr>
           </thead>
           <tbody id="rankingBody">
             <tr>
-              <td class="empty" colspan="5">데이터를 불러오는 중.</td>
+              <td class="empty" colspan="4">데이터를 불러오는 중.</td>
             </tr>
           </tbody>
         </table>
@@ -386,7 +385,7 @@
       rankingBody.innerHTML = "";
     
       if (!items.length) {
-        rankingBody.innerHTML = '<tr><td class="empty" colspan="5">아직 저장된 기록이 없습니다.</td></tr>';
+        rankingBody.innerHTML = '<tr><td class="empty" colspan="4">아직 저장된 기록이 없습니다.</td></tr>';
         footText.textContent = labelText;
         return;
       }
@@ -400,7 +399,6 @@
           <td class="class-cell">${item.classLabel}</td>
           <td>${item.fullName}</td>
           <td>${item.timeText}</td>
-          <td>${item.orderText}</td>
         `;
     
         rankingBody.appendChild(tr);
@@ -424,7 +422,7 @@
           fullName: parsed.fullName,
           timeValue: data.time,
           timeText: formatTime(data.time),
-          orderText: childSnap.key
+          //orderText: childSnap.key
         });
       });
     
