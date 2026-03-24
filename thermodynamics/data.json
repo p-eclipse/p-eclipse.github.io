@@ -15,6 +15,11 @@
       "name": "Heat Insulation",
       "path": "./insulation/",
       "description": "단열재 실험"
+    },
+    {
+      "name": "Specific Heat",
+      "path": "./specificheat/",
+      "description": "비열의제왕"
     }
   ]
 }
