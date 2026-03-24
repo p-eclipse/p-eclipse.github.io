@@ -79,7 +79,7 @@ const mainMessage = document.getElementById("mainMessage");
 const subMessage = document.getElementById("subMessage");
 const restartBtn = document.getElementById("restartBtn");
 const fullResetBtn = document.getElementById("fullResetBtn");
-const menuBtn = document.getElementById("menuBtn");
+//const menuBtn = document.getElementById("menuBtn");
 const playerBadge = document.getElementById("playerBadge");
 const leaderboardBtn = document.getElementById("leaderboardBtn");
 
@@ -649,9 +649,9 @@ function initialize() {
   restartBtn.addEventListener("click", restartCurrentLevel);
   fullResetBtn.addEventListener("click", resetEntireGame);
 
-  menuBtn.addEventListener("click", () => {
+  /*menuBtn.addEventListener("click", () => {
     showProfileOverlay(true);
-  });
+  });*/
 
   overlayNextBtn.addEventListener("click", goNextLevel);
   overlayResetBtn.addEventListener("click", resetEntireGame);
