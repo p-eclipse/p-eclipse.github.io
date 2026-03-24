@@ -300,6 +300,8 @@ select {
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(244, 67, 67, 0.28);
   transition: transform 0.08s ease, filter 0.15s ease, opacity 0.15s ease;
+  touch-action: manipulation;
+  user-select: none;
 }
 
 .heat-btn:hover,
