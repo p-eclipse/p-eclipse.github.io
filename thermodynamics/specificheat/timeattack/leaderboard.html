@@ -3,36 +3,229 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>반별 순위표</title>
+  <title>명예의 전당</title>
   <style>
-    /* 기존 CSS 완벽 동일하게 유지 */
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: "Pretendard", "Noto Sans KR", sans-serif; background: #eef2f7; color: #1e293b; }
-    .wrap { width: min(920px, calc(100% - 28px)); margin: 32px auto 56px; }
-    .panel { background: rgba(255,255,255,0.9); border: 1px solid #dbe3ee; border-radius: 24px; padding: 24px; box-shadow: 0 12px 34px rgba(15, 23, 42, 0.08); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-    h1 { margin: 0 0 8px; font-size: 32px; color: #1d4ed8; }
-    .desc { color: #64748b; line-height: 1.6; margin-bottom: 20px; }
-    .toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 22px; }
-    select, button { font: inherit; }
-    select { border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 14px; background: white; min-width: 120px; }
-    button { border: none; border-radius: 12px; padding: 12px 16px; font-weight: 800; cursor: pointer; }
-    .primary { background: #2563eb; color: white; }
-    .danger { background: #e2e8f0; color: #334155; }
-    table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 16px; background: white; }
-    thead th { background: #eff6ff; color: #1d4ed8; text-align: left; font-size: 14px; padding: 14px 16px; }
-    tbody td { padding: 14px 16px; border-top: 1px solid #e2e8f0; font-size: 15px; }
-    tbody tr:first-child td { border-top: none; }
-    .rank { font-weight: 900; width: 90px; }
-    .empty { padding: 28px 16px; text-align: center; color: #64748b; }
-    .top3 { font-weight: 900; }
-    .foot { margin-top: 14px; color: #64748b; font-size: 14px; }
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Noto Sans KR", sans-serif;
+      background: #eef2f7;
+      color: #1e293b;
+    }
+
+    button,
+    select,
+    a {
+      font: inherit;
+    }
+
+    .wrap {
+      width: min(920px, calc(100% - 28px));
+      margin: 32px auto 56px;
+    }
+
+    .topbar {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #dbe3ee;
+      border-radius: 20px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 12px 34px rgba(15, 23, 42, 0.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      margin-bottom: 18px;
+    }
+
+    .menu-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      color: #54709a;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      transition: filter 0.15s ease, transform 0.08s ease;
+    }
+
+    .menu-link:hover {
+      filter: brightness(0.98);
+    }
+
+    .menu-link:active {
+      transform: translateY(1px);
+    }
+
+    .topbar-right {
+      font-size: 14px;
+      font-weight: 800;
+      color: #62748e;
+      background: #f1f4f8;
+      padding: 10px 14px;
+      border-radius: 999px;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #dbe3ee;
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 12px 34px rgba(15, 23, 42, 0.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      color: #1d4ed8;
+    }
+
+    .desc {
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+
+    select {
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: white;
+      min-width: 120px;
+      color: #0f172a;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: filter 0.15s ease, transform 0.08s ease;
+    }
+
+    button:hover {
+      filter: brightness(0.98);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 16px;
+      background: white;
+    }
+
+    thead th {
+      background: #eff6ff;
+      color: #1d4ed8;
+      text-align: left;
+      font-size: 14px;
+      padding: 14px 16px;
+    }
+
+    tbody td {
+      padding: 14px 16px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 15px;
+    }
+
+    tbody tr:first-child td {
+      border-top: none;
+    }
+
+    .rank {
+      font-weight: 900;
+      width: 90px;
+    }
+
+    .top3 {
+      font-weight: 900;
+      color: #1d4ed8;
+    }
+
+    .empty {
+      padding: 28px 16px;
+      text-align: center;
+      color: #64748b;
+    }
+
+    .foot {
+      margin-top: 14px;
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    @media (max-width: 760px) {
+      .wrap {
+        width: min(100%, calc(100% - 20px));
+        margin: 20px auto 32px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .topbar-right {
+        text-align: center;
+      }
+
+      .panel {
+        padding: 18px;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      thead th,
+      tbody td {
+        padding: 12px 10px;
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
+    <div class="topbar">
+      <a class="menu-link" href="../index.html">← 메뉴로 돌아가기</a>
+      <div class="topbar-right">비열의 제왕 · 명예의 전당</div>
+    </div>
+
     <div class="panel">
-      <h1>반별 순위표 (서버 연동)</h1>
-      <div class="desc">현재 데이터는 Firebase 서버에서 실시간으로 가져옵니다.</div>
+      <h1>반별 순위표</h1>
+      <div class="desc">
+        Firebase Realtime Database에서 반별 기록을 불러옵니다.
+        가장 빠른 기록이 위에 표시됩니다.
+      </div>
 
       <div class="toolbar">
         <select id="classSelect"></select>
@@ -48,7 +241,11 @@
             <th>저장 시각</th>
           </tr>
         </thead>
-        <tbody id="rankingBody"></tbody>
+        <tbody id="rankingBody">
+          <tr>
+            <td class="empty" colspan="4">데이터를 불러오는 중.</td>
+          </tr>
+        </tbody>
       </table>
 
       <div class="foot" id="footText"></div>
@@ -59,26 +256,31 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, query, orderByChild, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // ★ 여기에 본인의 Config를 넣어주세요 ★
     const firebaseConfig = {
-      apiKey: "본인의_API_키",
-      authDomain: "본인의_프로젝트.firebaseapp.com",
-      databaseURL: "https://본인의_프로젝트-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "본인의_프로젝트"
+      apiKey: "AIzaSyC8n2DKZU3-HRrVx8k82ocICMOs26BnR_M",
+      authDomain: "lord-of-specific-heat.firebaseapp.com",
+      databaseURL: "https://lord-of-specific-heat-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "lord-of-specific-heat",
+      storageBucket: "lord-of-specific-heat.firebasestorage.app",
+      messagingSenderId: "1071681493906",
+      appId: "1:1071681493906:web:5c47f588f801cbc999bf4b"
     };
+
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // 디코딩을 위한 16개 리스트 (script.js와 반드시 똑같아야 함!)
     const nicknameAList = [
-      "싸늘한", "신나는", "두려운", "악몽의", "정복자", "귀살대", 
-      "초롱초롱", "흥얼거리는", "산뜻한", "관대한", "풋풋한", "졸린눈의",
-      "위대한", "조용한", "불타는", "차가운"
+      "싸늘한", "신나는", "두려운", "악몽의",
+      "정복자", "귀살대", "초롱초롱", "흥얼거리는",
+      "산뜻한", "관대한", "풋풋한", "졸린눈의",
+      "종언의", "천마", "불타는", "레전드"
     ];
+
     const nicknameBList = [
-      "아인슈타인", "파인만", "갈릴레이", "뉴턴", "패러데이", "켈빈", 
-      "라부아지에", "멘델", "퀴리", "지석영", "파스퇴르", "다윈",
-      "에디슨", "테슬라", "보어", "호킹"
+      "아인슈타인", "파인만", "갈릴레이", "뉴턴",
+      "패러데이", "켈빈", "라부아지에", "멘델",
+      "퀴리", "지석영", "파스퇴르", "다윈",
+      "호킹", "노이만", "코페르니쿠스", "튜링"
     ];
 
     const classSelect = document.getElementById("classSelect");
@@ -93,72 +295,102 @@
     }
 
     function fillClasses() {
+      classSelect.innerHTML = "";
       for (let i = 1; i <= 8; i += 1) {
         const option = document.createElement("option");
-        option.value = String(i).padStart(2, '0'); // 1 -> "01"
+        option.value = String(i).padStart(2, "0");
         option.textContent = `${i}반`;
         classSelect.appendChild(option);
       }
-      classSelect.value = String(getQueryClass()).padStart(2, '0');
+      classSelect.value = String(getQueryClass()).padStart(2, "0");
     }
 
     function formatDate(ts) {
       if (!ts) return "-";
-      return new Date(ts).toLocaleString("ko-KR", { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' });
+      return new Date(ts).toLocaleString("ko-KR", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
     }
 
-    // HEX 데이터를 원래 이름으로 복구 (예: "05A3" -> "풋풋한 뉴턴")
     function decodeWho(hexStr) {
-      const hexA = hexStr.substring(2, 3); // "A"
-      const hexB = hexStr.substring(3, 4); // "3"
-      const idxA = parseInt(hexA, 16);     // 10
-      const idxB = parseInt(hexB, 16);     // 3
-      return `${nicknameAList[idxA]} ${nicknameBList[idxB]}`;
+      if (typeof hexStr !== "string" || hexStr.length < 4) {
+        return "알 수 없는 플레이어";
+      }
+
+      const hexA = hexStr.substring(2, 3);
+      const hexB = hexStr.substring(3, 4);
+
+      const idxA = parseInt(hexA, 16);
+      const idxB = parseInt(hexB, 16);
+
+      const nameA = nicknameAList[idxA];
+      const nameB = nicknameBList[idxB];
+
+      if (nameA === undefined || nameB === undefined) {
+        return "알 수 없는 플레이어";
+      }
+
+      return `${nameA} ${nameB}`;
     }
 
-    // Firebase 데이터 로드 및 렌더링
     async function renderRanking() {
-      rankingBody.innerHTML = '<tr><td class="empty" colspan="4">데이터를 불러오는 중...</td></tr>';
-      
+      rankingBody.innerHTML = '<tr><td class="empty" colspan="4">데이터를 불러오는 중.</td></tr>';
+
       const classHex = classSelect.value;
       const classKey = `class_${classHex}`;
-      
-      // 시간을 기준으로 오름차순(기록 빠른 순) 정렬하여 가져오기
-      const topQuery = query(ref(db, `leaderboard/${classKey}`), orderByChild('time'));
-      
+      const rankingQuery = query(ref(db, `leaderboard/${classKey}`), orderByChild("time"));
+
       try {
-        const snapshot = await get(topQuery);
+        const snapshot = await get(rankingQuery);
         rankingBody.innerHTML = "";
-        
+
         let count = 0;
+
         if (!snapshot.exists()) {
           rankingBody.innerHTML = '<tr><td class="empty" colspan="4">아직 저장된 기록이 없습니다.</td></tr>';
-        } else {
-          snapshot.forEach((childSnap) => {
-            const data = childSnap.val();
-            count++;
-            
-            const fullName = decodeWho(data.who);
-            const timeSec = (data.time / 100).toFixed(2); // 30056 -> 300.56
-            
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td class="rank ${count <= 3 ? "top3" : ""}">${count}위</td>
-              <td>${fullName}</td>
-              <td>${timeSec}s</td>
-              <td>${formatDate(data.timestamp)}</td>
-            `;
-            rankingBody.appendChild(tr);
-          });
+          footText.textContent = `${Number(classHex)}반 기록 0개`;
+          return;
         }
+
+        snapshot.forEach((childSnap) => {
+          const data = childSnap.val();
+          count += 1;
+
+          const fullName = decodeWho(data.who);
+          const timeSec = typeof data.time === "number"
+            ? (data.time / 100).toFixed(2)
+            : "-";
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="rank ${count <= 3 ? "top3" : ""}">${count}위</td>
+            <td>${fullName}</td>
+            <td>${timeSec}s</td>
+            <td>${formatDate(data.timestamp)}</td>
+          `;
+
+          rankingBody.appendChild(tr);
+        });
+
         footText.textContent = `${Number(classHex)}반 기록 ${count}개`;
-      } catch (e) {
-        console.error(e);
-        rankingBody.innerHTML = '<tr><td class="empty" colspan="4" style="color:red;">데이터를 불러오는데 실패했습니다.</td></tr>';
+      } catch (error) {
+        console.error("순위표 로드 실패:", error);
+        rankingBody.innerHTML = '<tr><td class="empty" colspan="4" style="color:#dc2626;">데이터를 불러오는데 실패했습니다.</td></tr>';
+        footText.textContent = "네트워크 또는 Firebase 설정을 확인하십시오.";
       }
     }
 
-    classSelect.addEventListener("change", renderRanking);
+    classSelect.addEventListener("change", () => {
+      const selectedClass = Number(classSelect.value);
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.set("class", selectedClass);
+      window.history.replaceState({}, "", nextUrl);
+      renderRanking();
+    });
+
     refreshBtn.addEventListener("click", renderRanking);
 
     fillClasses();
