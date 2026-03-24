@@ -20,7 +20,7 @@ const massOptions = [100, 200, 500, 1000];
 const cardsContainer = document.getElementById("cardsContainer");
 const mainMessage = document.getElementById("mainMessage");
 const subMessage = document.getElementById("subMessage");
-const resetBtn = document.getElementById("resetBtn");
+//const resetBtn = document.getElementById("resetBtn");
 
 let samples = [];
 let lastTimestamp = null;
@@ -256,11 +256,11 @@ function formatMass(mass) {
   return mass >= 1000 ? `${mass / 1000} kg` : `${mass}g`;
 }
 
-function resetPractice() {
+/*function resetPractice() {
   samples = buildDefaultSamples();
   renderCards();
   updatePracticeMessage();
-}
+}*/
 
 function gameLoop(timestamp) {
   if (lastTimestamp === null) {
@@ -276,7 +276,7 @@ function gameLoop(timestamp) {
   requestAnimationFrame(gameLoop);
 }
 
-resetBtn.addEventListener("click", resetPractice);
+//resetBtn.addEventListener("click", resetPractice);
 
 samples = buildDefaultSamples();
 renderCards();
