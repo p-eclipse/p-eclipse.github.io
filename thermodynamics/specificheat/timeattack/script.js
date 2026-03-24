@@ -72,7 +72,7 @@ const levels = [
 const cardsContainer = document.getElementById("cardsContainer");
 const totalTimeText = document.getElementById("totalTimeText");
 const levelBadge = document.getElementById("levelBadge");
-const stageTitle = document.getElementById("stageTitle");
+//const stageTitle = document.getElementById("stageTitle");
 const successTimeText = document.getElementById("successTimeText");
 const progressFill = document.getElementById("progressFill");
 const mainMessage = document.getElementById("mainMessage");
@@ -377,7 +377,7 @@ function coolReagents(dt) {
 
 function renderLevel() {
   levelBadge.textContent = `LEVEL ${currentLevelIndex + 1} / ${TOTAL_LEVELS}`;
-  stageTitle.textContent = `도전 ${currentLevelIndex + 1}단계`;
+  //stageTitle.textContent = `도전 ${currentLevelIndex + 1}단계`;
   cardsContainer.innerHTML = "";
 
   reagents.forEach((r) => {
