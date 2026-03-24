@@ -23,7 +23,7 @@
     }
 
     .wrap {
-      width: min(920px, calc(100% - 28px));
+      width: min(980px, calc(100% - 28px));
       margin: 32px auto 56px;
     }
 
@@ -108,7 +108,7 @@
       border-radius: 12px;
       padding: 12px 14px;
       background: white;
-      min-width: 120px;
+      min-width: 140px;
       color: #0f172a;
     }
 
@@ -134,12 +134,18 @@
       color: white;
     }
 
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 16px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
       overflow: hidden;
       border-radius: 16px;
       background: white;
+      min-width: 640px;
     }
 
     thead th {
@@ -148,12 +154,14 @@
       text-align: left;
       font-size: 14px;
       padding: 14px 16px;
+      white-space: nowrap;
     }
 
     tbody td {
       padding: 14px 16px;
       border-top: 1px solid #e2e8f0;
       font-size: 15px;
+      white-space: nowrap;
     }
 
     tbody tr:first-child td {
@@ -162,6 +170,12 @@
 
     .rank {
       font-weight: 900;
+      width: 90px;
+    }
+
+    .class-cell {
+      font-weight: 800;
+      color: #334155;
       width: 90px;
     }
 
@@ -221,9 +235,9 @@
     </div>
 
     <div class="panel">
-      <h1>반별 순위표</h1>
+      <h1>명예의 전당</h1>
       <div class="desc">
-        우리반의 순위표를 확인해보세요!
+        반별 기록과 전체 순위를 확인해보세요!
       </div>
 
       <div class="toolbar">
@@ -231,21 +245,24 @@
         <button class="primary" id="refreshBtn" type="button">새로고침</button>
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>순위</th>
-            <th>닉네임</th>
-            <th>기록</th>
-            <th>저장 시각</th>
-          </tr>
-        </thead>
-        <tbody id="rankingBody">
-          <tr>
-            <td class="empty" colspan="4">데이터를 불러오는 중.</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>순위</th>
+              <th>반</th>
+              <th>닉네임</th>
+              <th>기록</th>
+              <th>시간</th>
+            </tr>
+          </thead>
+          <tbody id="rankingBody">
+            <tr>
+              <td class="empty" colspan="5">데이터를 불러오는 중.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <div class="foot" id="footText"></div>
     </div>
@@ -282,6 +299,8 @@
       "호킹", "노이만", "코페르니쿠스", "튜링"
     ];
 
+    const MAX_CLASS = 15;
+
     const classSelect = document.getElementById("classSelect");
     const refreshBtn = document.getElementById("refreshBtn");
     const rankingBody = document.getElementById("rankingBody");
@@ -289,19 +308,34 @@
 
     function getQueryClass() {
       const params = new URLSearchParams(window.location.search);
-      const value = Number(params.get("class"));
-      return value >= 1 && value <= 8 ? value : 1;
+      const raw = params.get("class");
+
+      if (raw === "all") return "all";
+
+      const value = Number(raw);
+      if (Number.isInteger(value) && value >= 1 && value <= MAX_CLASS) {
+        return String(value).padStart(2, "0");
+      }
+
+      return "all";
     }
 
     function fillClasses() {
       classSelect.innerHTML = "";
-      for (let i = 1; i <= 8; i += 1) {
+
+      const allOption = document.createElement("option");
+      allOption.value = "all";
+      allOption.textContent = "전체 순위";
+      classSelect.appendChild(allOption);
+
+      for (let i = 1; i <= MAX_CLASS; i += 1) {
         const option = document.createElement("option");
         option.value = String(i).padStart(2, "0");
         option.textContent = `${i}반`;
         classSelect.appendChild(option);
       }
-      classSelect.value = String(getQueryClass()).padStart(2, "0");
+
+      classSelect.value = getQueryClass();
     }
 
     function formatDate(ts) {
@@ -335,57 +369,132 @@
       return `${nameA} ${nameB}`;
     }
 
-    async function renderRanking() {
-      rankingBody.innerHTML = '<tr><td class="empty" colspan="4">데이터를 불러오는 중.</td></tr>';
+    function getClassLabelFromWho(hexStr, fallbackClassKey = "") {
+      if (typeof hexStr === "string" && hexStr.length >= 2) {
+        const classHex = hexStr.substring(0, 2);
+        const classNum = parseInt(classHex, 16);
+        if (!Number.isNaN(classNum) && classNum >= 1) {
+          return `${classNum}반`;
+        }
+      }
 
-      const classHex = classSelect.value;
+      if (fallbackClassKey.startsWith("class_")) {
+        const classHex = fallbackClassKey.replace("class_", "");
+        const classNum = parseInt(classHex, 16);
+        if (!Number.isNaN(classNum) && classNum >= 1) {
+          return `${classNum}반`;
+        }
+      }
+
+      return "-";
+    }
+
+    function renderRows(items, labelText) {
+      rankingBody.innerHTML = "";
+
+      if (!items.length) {
+        rankingBody.innerHTML = '<tr><td class="empty" colspan="5">아직 저장된 기록이 없습니다.</td></tr>';
+        footText.textContent = labelText;
+        return;
+      }
+
+      items.forEach((item, index) => {
+        const tr = document.createElement("tr");
+        const rank = index + 1;
+
+        tr.innerHTML = `
+          <td class="rank ${rank <= 3 ? "top3" : ""}">${rank}위</td>
+          <td class="class-cell">${item.classLabel}</td>
+          <td>${item.fullName}</td>
+          <td>${item.timeText}</td>
+          <td>${item.dateText}</td>
+        `;
+
+        rankingBody.appendChild(tr);
+      });
+
+      footText.textContent = labelText;
+    }
+
+    async function loadSingleClass(classHex) {
       const classKey = `class_${classHex}`;
       const rankingQuery = query(ref(db, `leaderboard/${classKey}`), orderByChild("time"));
+      const snapshot = await get(rankingQuery);
+
+      if (!snapshot.exists()) {
+        renderRows([], `${Number.parseInt(classHex, 10)}반 기록 0개`);
+        return;
+      }
+
+      const items = [];
+
+      snapshot.forEach((childSnap) => {
+        const data = childSnap.val() || {};
+        items.push({
+          classLabel: `${Number.parseInt(classHex, 10)}반`,
+          fullName: decodeWho(data.who),
+          timeValue: typeof data.time === "number" ? data.time : Number.POSITIVE_INFINITY,
+          timeText: typeof data.time === "number" ? `${(data.time / 100).toFixed(2)}s` : "-",
+          dateText: formatDate(data.timestamp)
+        });
+      });
+
+      renderRows(items, `${Number.parseInt(classHex, 10)}반 기록 ${items.length}개`);
+    }
+
+    async function loadAllClasses() {
+      const rootRef = ref(db, "leaderboard");
+      const snapshot = await get(rootRef);
+
+      if (!snapshot.exists()) {
+        renderRows([], "전체 기록 0개");
+        return;
+      }
+
+      const items = [];
+
+      snapshot.forEach((classSnap) => {
+        const classKey = classSnap.key || "";
+
+        classSnap.forEach((childSnap) => {
+          const data = childSnap.val() || {};
+          items.push({
+            classLabel: getClassLabelFromWho(data.who, classKey),
+            fullName: decodeWho(data.who),
+            timeValue: typeof data.time === "number" ? data.time : Number.POSITIVE_INFINITY,
+            timeText: typeof data.time === "number" ? `${(data.time / 100).toFixed(2)}s` : "-",
+            dateText: formatDate(data.timestamp)
+          });
+        });
+      });
+
+      items.sort((a, b) => a.timeValue - b.timeValue);
+
+      renderRows(items, `전체 기록 ${items.length}개`);
+    }
+
+    async function renderRanking() {
+      rankingBody.innerHTML = '<tr><td class="empty" colspan="5">데이터를 불러오는 중.</td></tr>';
 
       try {
-        const snapshot = await get(rankingQuery);
-        rankingBody.innerHTML = "";
+        const selected = classSelect.value;
 
-        let count = 0;
-
-        if (!snapshot.exists()) {
-          rankingBody.innerHTML = '<tr><td class="empty" colspan="4">아직 저장된 기록이 없습니다.</td></tr>';
-          footText.textContent = `${Number(classHex)}반 기록 0개`;
-          return;
+        if (selected === "all") {
+          await loadAllClasses();
+        } else {
+          await loadSingleClass(selected);
         }
-
-        snapshot.forEach((childSnap) => {
-          const data = childSnap.val();
-          count += 1;
-
-          const fullName = decodeWho(data.who);
-          const timeSec = typeof data.time === "number"
-            ? (data.time / 100).toFixed(2)
-            : "-";
-
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td class="rank ${count <= 3 ? "top3" : ""}">${count}위</td>
-            <td>${fullName}</td>
-            <td>${timeSec}s</td>
-            <td>${formatDate(data.timestamp)}</td>
-          `;
-
-          rankingBody.appendChild(tr);
-        });
-
-        footText.textContent = `${Number(classHex)}반 기록 ${count}개`;
       } catch (error) {
         console.error("순위표 로드 실패:", error);
-        rankingBody.innerHTML = '<tr><td class="empty" colspan="4" style="color:#dc2626;">데이터를 불러오는데 실패했습니다.</td></tr>';
+        rankingBody.innerHTML = '<tr><td class="empty" colspan="5" style="color:#dc2626;">데이터를 불러오는데 실패했습니다.</td></tr>';
         footText.textContent = "네트워크 또는 Firebase 설정을 확인하십시오.";
       }
     }
 
     classSelect.addEventListener("change", () => {
-      const selectedClass = Number(classSelect.value);
+      const selected = classSelect.value;
       const nextUrl = new URL(window.location.href);
-      nextUrl.searchParams.set("class", selectedClass);
+      nextUrl.searchParams.set("class", selected);
       window.history.replaceState({}, "", nextUrl);
       renderRanking();
     });
