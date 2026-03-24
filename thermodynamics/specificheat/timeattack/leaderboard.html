@@ -299,7 +299,7 @@
       "호킹", "노이만", "코페르니쿠스", "튜링"
     ];
 
-    const MAX_CLASS = 15;
+    const MAX_CLASS = 8;
 
     const classSelect = document.getElementById("classSelect");
     const refreshBtn = document.getElementById("refreshBtn");
@@ -348,45 +348,46 @@
       });
     }
 
-    function decodeWho(hexStr) {
-      if (typeof hexStr !== "string" || hexStr.length < 4) {
+    function decodeNameCode(nameCode) {
+      if (!Number.isInteger(nameCode) || nameCode < 0 || nameCode > 255) {
         return "알 수 없는 플레이어";
       }
-
-      const hexA = hexStr.substring(2, 3);
-      const hexB = hexStr.substring(3, 4);
-
-      const idxA = parseInt(hexA, 16);
-      const idxB = parseInt(hexB, 16);
-
-      const nameA = nicknameAList[idxA];
-      const nameB = nicknameBList[idxB];
-
-      if (nameA === undefined || nameB === undefined) {
+    
+      const adjIndex = (nameCode >> 4) & 0x0F;
+      const nameIndex = nameCode & 0x0F;
+    
+      const partA = nicknameAList[adjIndex];
+      const partB = nicknameBList[nameIndex];
+    
+      if (partA === undefined || partB === undefined) {
         return "알 수 없는 플레이어";
       }
-
-      return `${nameA} ${nameB}`;
+    
+      return `${partA} ${partB}`;
     }
-
-    function getClassLabelFromWho(hexStr, fallbackClassKey = "") {
-      if (typeof hexStr === "string" && hexStr.length >= 2) {
-        const classHex = hexStr.substring(0, 2);
-        const classNum = parseInt(classHex, 16);
-        if (!Number.isNaN(classNum) && classNum >= 1) {
-          return `${classNum}반`;
-        }
+    
+    function parseWho(hexStr) {
+      if (typeof hexStr !== "string" || !/^[0-9a-fA-F]{4}$/.test(hexStr)) {
+        return {
+          classNum: 0,
+          classLabel: "-",
+          nameCode: -1,
+          fullName: "알 수 없는 플레이어"
+        };
       }
-
-      if (fallbackClassKey.startsWith("class_")) {
-        const classHex = fallbackClassKey.replace("class_", "");
-        const classNum = parseInt(classHex, 16);
-        if (!Number.isNaN(classNum) && classNum >= 1) {
-          return `${classNum}반`;
-        }
-      }
-
-      return "-";
+    
+      const classHex = hexStr.substring(0, 2); // AB
+      const nameHex = hexStr.substring(2, 4);  // CD
+    
+      const classNum = parseInt(classHex, 16);
+      const nameCode = parseInt(nameHex, 16);
+    
+      return {
+        classNum,
+        classLabel: classNum === 0 ? "인식실패" : `${classNum}반`,
+        nameCode,
+        fullName: decodeNameCode(nameCode)
+      };
     }
 
     function renderRows(items, labelText) {
@@ -420,56 +421,60 @@
       const classKey = `class_${classHex}`;
       const rankingQuery = query(ref(db, `leaderboard/${classKey}`), orderByChild("time"));
       const snapshot = await get(rankingQuery);
-
+    
+      const classNum = parseInt(classHex, 10);
+    
       if (!snapshot.exists()) {
-        renderRows([], `${Number.parseInt(classHex, 10)}반 기록 0개`);
+        renderRows([], `${classNum}반 기록 0개`);
         return;
       }
-
+    
       const items = [];
-
+    
       snapshot.forEach((childSnap) => {
         const data = childSnap.val() || {};
+        const parsed = parseWho(data.who);
+    
         items.push({
-          classLabel: `${Number.parseInt(classHex, 10)}반`,
-          fullName: decodeWho(data.who),
+          classLabel: parsed.classLabel === "-" ? `${classNum}반` : parsed.classLabel,
+          fullName: parsed.fullName,
           timeValue: typeof data.time === "number" ? data.time : Number.POSITIVE_INFINITY,
           timeText: typeof data.time === "number" ? `${(data.time / 100).toFixed(2)}s` : "-",
           dateText: formatDate(data.timestamp)
         });
       });
-
-      renderRows(items, `${Number.parseInt(classHex, 10)}반 기록 ${items.length}개`);
+    
+      renderRows(items, `${classNum}반 기록 ${items.length}개`);
     }
 
     async function loadAllClasses() {
       const rootRef = ref(db, "leaderboard");
       const snapshot = await get(rootRef);
-
+    
       if (!snapshot.exists()) {
         renderRows([], "전체 기록 0개");
         return;
       }
-
+    
       const items = [];
-
+    
       snapshot.forEach((classSnap) => {
-        const classKey = classSnap.key || "";
-
         classSnap.forEach((childSnap) => {
           const data = childSnap.val() || {};
+          const parsed = parseWho(data.who);
+    
           items.push({
-            classLabel: getClassLabelFromWho(data.who, classKey),
-            fullName: decodeWho(data.who),
+            classLabel: parsed.classLabel,
+            fullName: parsed.fullName,
             timeValue: typeof data.time === "number" ? data.time : Number.POSITIVE_INFINITY,
             timeText: typeof data.time === "number" ? `${(data.time / 100).toFixed(2)}s` : "-",
             dateText: formatDate(data.timestamp)
           });
         });
       });
-
+    
       items.sort((a, b) => a.timeValue - b.timeValue);
-
+    
       renderRows(items, `전체 기록 ${items.length}개`);
     }
 
