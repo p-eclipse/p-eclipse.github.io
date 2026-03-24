@@ -30,6 +30,28 @@ body {
   -webkit-backdrop-filter: blur(8px);
 }
 
+.menu-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: #54709a;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  transition: filter 0.15s ease, transform 0.08s ease;
+}
+
+.menu-link:hover {
+  filter: brightness(0.98);
+}
+
+.menu-link:active {
+  transform: translateY(1px);
+}
+
 .back-btn {
   font-size: 14px;
   color: #54709a;
