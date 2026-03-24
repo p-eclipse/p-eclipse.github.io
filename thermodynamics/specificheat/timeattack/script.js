@@ -326,7 +326,7 @@ function showOverlay({ final = false } = {}) {
     overlayBadge.textContent = "LEVEL CLEAR";
     overlayTitle.textContent = `레벨 ${currentLevelIndex + 1} 클리어!`;
     overlayDesc.textContent =
-      "모든 시약을 목표 온도 범위에 안정적으로 유지했다. 다음 스테이지로 넘어가라.";
+      "모든 물질을 목표 온도 범위에 안정적으로 유지했습니다. 다음 스테이지로 넘어가세요!";
 
     overlayNextBtn.classList.remove("hidden");
     overlayLeaderboardBtn.classList.add("hidden");
@@ -466,12 +466,12 @@ function buildLevel(levelIndex) {
   if (playerProfile) {
     updateMessages(
       "시작!",
-      `${playerProfile.classNumber}반 ${getFullNickname()} 출전. 질량이 클수록 온도계가 굵다. 비열과 질량을 보고 먼저 올릴 시약을 판단해라.`
+      `${playerProfile.classNumber}반 ${getFullNickname()} 출전. 질량이 클수록 온도계가 굵습니다. 비열과 질량을 보고 먼저 가열할 물질을 판단하십시오.`
     );
   } else {
     updateMessages(
       "시작!",
-      "질량이 클수록 온도계가 굵다. 비열과 질량을 보고 먼저 올릴 시약을 판단해라."
+      "질량이 클수록 온도계가 굵습니다. 비열과 질량을 보고 먼저 가열할 물질을 판단하십시오."
     );
   }
 }
@@ -483,7 +483,7 @@ function checkLevelState(dt) {
     holdTime += dt;
     updateMessages(
       "좋아, 유지 중!",
-      `모든 시약이 ${TARGET_MIN}~${TARGET_MAX}℃ 범위 안에 있다. ${HOLD_GOAL.toFixed(1)}초까지 버텨라.`
+      `모든 물질이 ${TARGET_MIN}~${TARGET_MAX}℃ 범위 안에 있습니다. ${HOLD_GOAL.toFixed(1)}초까지 버티십시오!`
     );
   } else {
     holdTime = 0;
@@ -492,12 +492,12 @@ function checkLevelState(dt) {
     if (hasHot) {
       updateMessages(
         "과열 주의!",
-        "하나 이상이 90℃를 넘었다. 비열이 작고 질량이 작은 시약은 특히 급격히 튄다."
+        "하나 이상이 90℃를 넘었습니다. 비열이 작고 질량이 작은 물질은 특히 급격히 튑니다."
       );
     } else {
       updateMessages(
         "온도 맞추기",
-        "모든 시약을 동시에 목표 범위 안에 넣어야 한다. 둔한 시약과 민감한 시약의 순서를 생각해라."
+        "모든 물질을 동시에 목표 범위 안에 넣어야 합니다. 비열 개념을 생각하십시오."
       );
     }
   }
@@ -511,7 +511,7 @@ function checkLevelState(dt) {
     if (currentLevelIndex < TOTAL_LEVELS - 1) {
       updateMessages(
         `레벨 ${currentLevelIndex + 1} 클리어!`,
-        "다음 레벨에서 더 까다로운 조합을 다뤄야 한다."
+        "다음 레벨에서 더 까다로운 조합을 다뤄야 합니다!"
       );
       showOverlay({ final: false });
     } else {
@@ -519,7 +519,7 @@ function checkLevelState(dt) {
       saveCurrentRecord();
       updateMessages(
         "모든 레벨 클리어!",
-        `총 기록은 ${totalTime.toFixed(1)}초다. ${playerProfile.classNumber}반 순위표에 저장되었다.`
+        `총 기록은 ${totalTime.toFixed(1)}초입니다. ${playerProfile.classNumber}반 순위표에 저장되었습니다.`
       );
       fullResetBtn.classList.remove("hidden");
       showOverlay({ final: true });
