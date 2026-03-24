@@ -1,8 +1,6 @@
-// Firebase 모듈 임포트 (맨 윗줄에 추가)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, push, set, query, orderByChild, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-// 본인의 Firebase Config로 교체하세요!
 const firebaseConfig = {
   apiKey: "AIzaSyC8n2DKZU3-HRrVx8k82ocICMOs26BnR_M",
   authDomain: "lord-of-specific-heat.firebaseapp.com",
@@ -12,6 +10,7 @@ const firebaseConfig = {
   messagingSenderId: "1071681493906",
   appId: "1:1071681493906:web:5c47f588f801cbc999bf4b"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
@@ -25,13 +24,12 @@ const DISPLAY_MAX_TEMP = 100;
 const THERMO_MIN_FILL = 18;
 const THERMO_FILL_RANGE = 62;
 const TOTAL_LEVELS = 10;
-
-const RANKING_STORAGE_PREFIX = "specific_heat_ranking_class_";
+const MAX_CLASS = 8;
 
 const nicknameAList = [
   "싸늘한", "신나는", "두려운", "악몽의",
   "정복자", "귀살대", "초롱초롱", "흥얼거리는",
-  "산뜻한", "관대한", "풋풋한","졸린눈의",
+  "산뜻한", "관대한", "풋풋한", "졸린눈의",
   "종언의", "천마", "불타는", "레전드"
 ];
 
@@ -72,14 +70,12 @@ const levels = [
 const cardsContainer = document.getElementById("cardsContainer");
 const totalTimeText = document.getElementById("totalTimeText");
 const levelBadge = document.getElementById("levelBadge");
-//const stageTitle = document.getElementById("stageTitle");
 const successTimeText = document.getElementById("successTimeText");
 const progressFill = document.getElementById("progressFill");
 const mainMessage = document.getElementById("mainMessage");
 const subMessage = document.getElementById("subMessage");
 const restartBtn = document.getElementById("restartBtn");
 const fullResetBtn = document.getElementById("fullResetBtn");
-//const menuBtn = document.getElementById("menuBtn");
 const playerBadge = document.getElementById("playerBadge");
 const leaderboardBtn = document.getElementById("leaderboardBtn");
 
@@ -121,76 +117,6 @@ function savePlayerProfile(profile) {
 function getFullNickname(profile = playerProfile) {
   if (!profile) return "";
   return `${profile.nicknameA} ${profile.nicknameB}`;
-}
-
-function getRankingKey(classNumber) {
-  return `${RANKING_STORAGE_PREFIX}${classNumber}`;
-}
-
-function getClassRanking(classNumber) {
-  try {
-    const raw = localStorage.getItem(getRankingKey(classNumber));
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveClassRanking(classNumber, ranking) {
-  localStorage.setItem(getRankingKey(classNumber), JSON.stringify(ranking));
-}
-/*
-function saveCurrentRecord() {
-  if (!playerProfile) return;
-
-  const ranking = getClassRanking(playerProfile.classNumber);
-
-  ranking.push({
-    classNumber: playerProfile.classNumber,
-    nickname: getFullNickname(),
-    time: Number(totalTime.toFixed(3)),
-    recordedAt: new Date().toISOString()
-  });
-
-  ranking.sort((a, b) => a.time - b.time);
-  saveClassRanking(playerProfile.classNumber, ranking.slice(0, 100));
-}*/
-
-// 기존 localStorage 방식 대신 Firebase로 전송하도록 변경
-async function saveCurrentRecord() {
-  if (!playerProfile) return;
-
-  // 1. 이름이 리스트에서 몇 번째 인덱스인지 찾기 (0~15)
-  const indexA = nicknameAList.indexOf(playerProfile.nicknameA);
-  const indexB = nicknameBList.indexOf(playerProfile.nicknameB);
-
-  // 2. who 데이터 생성 (반 + 닉네임A 헥스 + 닉네임B 헥스)
-  // 예: 5반(05) + 10번째(A) + 3번째(3) -> "05A3"
-  const classHex = playerProfile.classNumber.toString().padStart(2, '0');
-  const hexA = indexA.toString(16).toUpperCase();
-  const hexB = indexB.toString(16).toUpperCase();
-  const whoHex = classHex + hexA + hexB;
-
-  // 3. time 데이터 생성 (300.56초 -> 30056 정수형)
-  const intTime = Math.floor(totalTime * 100);
-
-  // 4. Firebase의 반별 경로에 저장 (예: leaderboard/class_05)
-  const classKey = `class_${classHex}`;
-  const dbRef = ref(db, `leaderboard/${classKey}`);
-  const newRef = push(dbRef); // 고유 ID 자동 생성
-
-  try {
-    await set(newRef, {
-      who: whoHex,
-      time: intTime,
-      timestamp: Date.now()
-    });
-    console.log("서버 저장 완료:", whoHex, intTime);
-  } catch (e) {
-    console.error("서버 저장 실패:", e);
-    alert("기록 저장 중 오류가 발생했습니다.");
-  }
 }
 
 function updatePlayerBadge() {
@@ -377,7 +303,6 @@ function coolReagents(dt) {
 
 function renderLevel() {
   levelBadge.textContent = `LEVEL ${currentLevelIndex + 1} / ${TOTAL_LEVELS}`;
-  //stageTitle.textContent = `도전 ${currentLevelIndex + 1}단계`;
   cardsContainer.innerHTML = "";
 
   reagents.forEach((r) => {
@@ -529,6 +454,49 @@ function checkLevelState(dt) {
   updateBottomUI();
 }
 
+// 규칙에 맞는 핵심 인코딩
+function encodeWho(classNumber, nicknameA, nicknameB) {
+  const indexA = nicknameAList.indexOf(nicknameA);
+  const indexB = nicknameBList.indexOf(nicknameB);
+
+  if (indexA < 0 || indexA > 15 || indexB < 0 || indexB > 15) {
+    throw new Error("닉네임 인덱스가 유효 범위를 벗어났습니다.");
+  }
+
+  if (!Number.isInteger(classNumber) || classNumber < 0 || classNumber > 255) {
+    throw new Error("반 번호가 유효 범위를 벗어났습니다.");
+  }
+
+  const nameCode = (indexA << 4) | indexB;   // 0~255
+  const who = (classNumber << 8) | nameCode; // 0~65535
+  return who;
+}
+
+async function saveCurrentRecord() {
+  if (!playerProfile) return;
+
+  try {
+    const who = encodeWho(
+      playerProfile.classNumber,
+      playerProfile.nicknameA,
+      playerProfile.nicknameB
+    );
+
+    const intTime = Math.floor(totalTime * 100);
+
+    const newRef = push(ref(db, "leaderboard"));
+    await set(newRef, {
+      who,
+      time: intTime
+    });
+
+    console.log("서버 저장 완료:", { who, time: intTime });
+  } catch (e) {
+    console.error("서버 저장 실패:", e);
+    alert("기록 저장 중 오류가 발생했습니다.");
+  }
+}
+
 function restartCurrentLevel() {
   if (!playerProfile) {
     showProfileOverlay(false);
@@ -600,7 +568,7 @@ function bindProfileEvents() {
 
     const classNumber = Number(classValue);
 
-    if (!Number.isInteger(classNumber) || classNumber < 1 || classNumber > 8) {
+    if (!Number.isInteger(classNumber) || classNumber < 1 || classNumber > MAX_CLASS) {
       profileErrorEl.textContent = "반을 선택해주십시오.";
       return;
     }
@@ -648,10 +616,6 @@ function initialize() {
 
   restartBtn.addEventListener("click", restartCurrentLevel);
   fullResetBtn.addEventListener("click", resetEntireGame);
-
-  /*menuBtn.addEventListener("click", () => {
-    showProfileOverlay(true);
-  });*/
 
   overlayNextBtn.addEventListener("click", goNextLevel);
   overlayResetBtn.addEventListener("click", resetEntireGame);
