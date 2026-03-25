@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>녹음 기반 로그 스펙트럼 분석기</title>
+  <title>소리 녹음 스펙트럼 분석기</title>
   <style>
     :root{
       --bg:#0b1020;
@@ -30,7 +30,7 @@
     }
 
     .app{
-      width:min(1280px, calc(100% - 24px));
+      width:min(1320px, calc(100% - 24px));
       margin:16px auto 28px;
       display:grid;
       grid-template-columns:1fr 320px;
@@ -110,14 +110,21 @@
       cursor:not-allowed;
     }
 
+    .viz-shell{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 92px;
+      gap:14px;
+      align-items:stretch;
+    }
+
     .viz-wrap{
       position:relative;
       background:#030712;
       border-radius:16px;
       border:1px solid rgba(255,255,255,0.08);
       overflow:hidden;
-      touch-action:none;
       user-select:none;
+      min-width:0;
     }
 
     canvas{
@@ -151,27 +158,6 @@
       pointer-events:none;
     }
 
-    .cut-handle{
-      position:absolute;
-      left:10px;
-      width:42px;
-      height:24px;
-      transform:translateY(-50%);
-      border-radius:999px;
-      background:rgba(125,211,252,0.18);
-      border:1px solid rgba(125,211,252,0.7);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:#dff6ff;
-      font-size:0.75rem;
-      font-weight:800;
-      pointer-events:auto;
-      touch-action:none;
-      cursor:ns-resize;
-      backdrop-filter: blur(4px);
-    }
-
     .axis-label{
       position:absolute;
       font-size:0.78rem;
@@ -185,6 +171,134 @@
 
     .label-time{ bottom:10px; left:50%; transform:translateX(-50%); }
     .label-freq{ top:50%; left:8px; transform:translateY(-50%) rotate(-90deg); transform-origin:left top; }
+
+    .cut-panel{
+      background:#09101f;
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:16px;
+      padding:12px 10px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      min-height:100%;
+      user-select:none;
+    }
+
+    .cut-panel-title{
+      font-size:0.76rem;
+      font-weight:900;
+      color:#d6e9ff;
+      letter-spacing:0.08em;
+    }
+
+    .cut-scale-wrap{
+      position:relative;
+      flex:1;
+      width:100%;
+      min-height:440px;
+      display:flex;
+      justify-content:center;
+      align-items:stretch;
+    }
+
+    .cut-scale{
+      position:relative;
+      width:54px;
+      height:100%;
+      border-radius:999px;
+      border:1px solid rgba(125,211,252,0.18);
+      background:
+        linear-gradient(180deg,
+          rgba(255,255,255,0.08) 0%,
+          rgba(125,211,252,0.18) 18%,
+          rgba(96,165,250,0.28) 50%,
+          rgba(59,130,246,0.42) 100%);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,0.03);
+      touch-action:none;
+      cursor:ns-resize;
+      overflow:hidden;
+    }
+
+    .cut-scale::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0px,
+          transparent 27px,
+          rgba(255,255,255,0.06) 27px,
+          rgba(255,255,255,0.06) 28px
+        );
+      pointer-events:none;
+    }
+
+    .cut-active{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      background:linear-gradient(180deg, rgba(96,165,250,0.18), rgba(125,211,252,0.55));
+      pointer-events:none;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.22);
+    }
+
+    .cut-thumb{
+      position:absolute;
+      left:50%;
+      width:72px;
+      height:28px;
+      transform:translate(-50%, -50%);
+      border-radius:999px;
+      background:linear-gradient(135deg, rgba(125,211,252,0.95), rgba(96,165,250,0.95));
+      color:#07111d;
+      font-size:0.74rem;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 0 0 2px rgba(7,17,29,0.65), 0 6px 18px rgba(96,165,250,0.35);
+      pointer-events:none;
+    }
+
+    .cut-readout{
+      width:100%;
+      text-align:center;
+      padding:10px 8px;
+      border-radius:12px;
+      background:#0c1326;
+      border:1px solid rgba(255,255,255,0.08);
+    }
+
+    .cut-readout .k{
+      color:var(--sub);
+      font-size:0.72rem;
+      margin-bottom:4px;
+    }
+
+    .cut-readout .v{
+      font-size:0.96rem;
+      font-weight:800;
+      color:var(--text);
+    }
+
+    .cut-ticks{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+    }
+
+    .cut-tick{
+      position:absolute;
+      left:100%;
+      margin-left:8px;
+      transform:translateY(-50%);
+      color:rgba(255,255,255,0.72);
+      font-size:0.72rem;
+      white-space:nowrap;
+    }
 
     .group{
       background:rgba(255,255,255,0.03);
@@ -289,6 +403,15 @@
       .app{
         grid-template-columns:1fr;
       }
+      .viz-shell{
+        grid-template-columns:1fr;
+      }
+      .cut-panel{
+        min-height:auto;
+      }
+      .cut-scale-wrap{
+        min-height:300px;
+      }
     }
   </style>
 </head>
@@ -298,8 +421,8 @@
       <h1 class="title">녹음 기반 로그 스펙트럼 분석기</h1>
       <p class="subtitle">
         녹음한 소리를 웹 메모리에 임시 저장한 뒤 <b>로그 주파수축</b> 스펙트로그램으로 전개하고,
-        y축 드래그로 정한 컷오프 \( y \) 에 대해 해당 주파수 이하만 남겨 다시 재생한다.
-        y축 범위는 <b>20 Hz ~ 20 kHz</b>다. :contentReference[oaicite:1]{index=1}
+        별도의 세로 컷오프 바에서 정한 컷오프 \( y \) 에 대해 해당 주파수 이하만 남겨 다시 재생한다.
+        y축 범위는 <b>20 Hz ~ 20 kHz</b>다.
       </p>
 
       <div class="toolbar">
@@ -312,14 +435,33 @@
         <button id="clearBtn">초기화</button>
       </div>
 
-      <div class="viz-wrap" id="vizWrap">
-        <canvas id="specCanvas" width="1100" height="620"></canvas>
-        <div class="overlay" id="overlay">
-          <div class="cut-fill" id="cutFill"></div>
-          <div class="cut-line" id="cutLine"></div>
-          <div class="cut-handle" id="cutHandle">CUT</div>
-          <div class="axis-label label-time">시간 →</div>
-          <div class="axis-label label-freq">log f ↑</div>
+      <div class="viz-shell">
+        <div class="viz-wrap" id="vizWrap">
+          <canvas id="specCanvas" width="1100" height="620"></canvas>
+          <div class="overlay" id="overlay">
+            <div class="cut-fill" id="cutFill"></div>
+            <div class="cut-line" id="cutLine"></div>
+            <div class="axis-label label-time">시간 →</div>
+            <div class="axis-label label-freq">log f ↑</div>
+          </div>
+        </div>
+
+        <div class="cut-panel">
+          <div class="cut-panel-title">CUTOFF</div>
+
+          <div class="cut-scale-wrap">
+            <div class="cut-scale" id="cutScale">
+              <div class="cut-active" id="cutActive"></div>
+              <div class="cut-thumb" id="cutThumb">CUT</div>
+            </div>
+
+            <div class="cut-ticks" id="cutTicks"></div>
+          </div>
+
+          <div class="cut-readout">
+            <div class="k">현재 컷오프</div>
+            <div class="v" id="cutoffViewBar">-</div>
+          </div>
         </div>
       </div>
     </section>
@@ -394,7 +536,7 @@
         <div class="tip">
           1. 녹음 시작 → 녹음 종료<br>
           2. 스펙트럼 전개<br>
-          3. 왼쪽 CUT 핸들을 y축으로 드래그<br>
+          3. 오른쪽 세로 컷오프 바를 위아래로 드래그<br>
           4. 도착한 로그축 위치의 주파수 \( y \) 를 컷오프로 사용<br>
           5. 필터 재생은 <b>\( y \) 이하 주파수 성분만</b> 남긴다
         </div>
@@ -408,9 +550,13 @@
 
     const vizWrap = document.getElementById("vizWrap");
     const overlay = document.getElementById("overlay");
-    const cutHandle = document.getElementById("cutHandle");
     const cutLine = document.getElementById("cutLine");
     const cutFill = document.getElementById("cutFill");
+
+    const cutScale = document.getElementById("cutScale");
+    const cutActive = document.getElementById("cutActive");
+    const cutThumb = document.getElementById("cutThumb");
+    const cutTicks = document.getElementById("cutTicks");
 
     const recordBtn = document.getElementById("recordBtn");
     const stopRecordBtn = document.getElementById("stopRecordBtn");
@@ -431,6 +577,7 @@
     const durationView = document.getElementById("durationView");
     const nyquistView = document.getElementById("nyquistView");
     const cutoffView = document.getElementById("cutoffView");
+    const cutoffViewBar = document.getElementById("cutoffViewBar");
     const statusBox = document.getElementById("statusBox");
 
     const LOG_MIN_FREQ = 20;
@@ -483,10 +630,6 @@
       return audioContext;
     }
 
-    function getAnalysisMaxFreq(){
-      return LOG_MAX_FREQ;
-    }
-
     function getEffectiveCutoff(){
       if (!decodedBuffer) return cutoffFreq;
       return Math.min(cutoffFreq, decodedBuffer.sampleRate / 2);
@@ -518,13 +661,14 @@
 
     function resizeCanvasForDisplay(){
       const rect = vizWrap.getBoundingClientRect();
-      const targetWidth = Math.max(700, Math.floor(rect.width));
+      const targetWidth = Math.max(640, Math.floor(rect.width));
       const targetHeight = Math.max(420, Math.floor(targetWidth * 0.56));
       canvas.width = targetWidth;
       canvas.height = targetHeight;
       clearCanvas();
       drawAxes();
       updateCutoffOverlay();
+      buildCutTicks();
       if (spectrogramData) drawSpectrogram();
     }
 
@@ -557,6 +701,40 @@
       const plotH = canvas.height - plotTop - plotBottom;
       const t = clamp((canvas.height - plotBottom - y) / plotH, 0, 1);
       return normToLogFreq(t);
+    }
+
+    function cutNormToFreq(norm){
+      return normToLogFreq(norm);
+    }
+
+    function cutFreqToNorm(freq){
+      return logFreqToNorm(freq);
+    }
+
+    function getCutScaleHeight(){
+      return cutScale.getBoundingClientRect().height;
+    }
+
+    function pointerYToCutFreq(clientY){
+      const rect = cutScale.getBoundingClientRect();
+      const y = clamp(clientY - rect.top, 0, rect.height);
+      const norm = 1 - (y / rect.height);
+      return cutNormToFreq(norm);
+    }
+
+    function buildCutTicks(){
+      cutTicks.innerHTML = "";
+      const rect = cutScale.getBoundingClientRect();
+      const ticks = [20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50, 20];
+
+      ticks.forEach(freq => {
+        const tick = document.createElement("div");
+        tick.className = "cut-tick";
+        const norm = cutFreqToNorm(freq);
+        tick.style.top = `${(1 - norm) * rect.height}px`;
+        tick.textContent = freq >= 1000 ? `${freq/1000}k` : `${freq}`;
+        cutTicks.appendChild(tick);
+      });
     }
 
     function drawAxes(){
@@ -613,15 +791,24 @@
       }
       nyquistView.textContent = "20.0 kHz";
       cutoffView.textContent = fmtHz(cutoffFreq);
+      cutoffViewBar.textContent = fmtHz(cutoffFreq);
     }
 
     function updateCutoffOverlay(){
       const y = freqToY(cutoffFreq);
-      cutHandle.style.top = `${y}px`;
       cutLine.style.top = `${y}px`;
       cutFill.style.top = `${y}px`;
       cutFill.style.bottom = `${plotBottom}px`;
+
+      const scaleHeight = getCutScaleHeight();
+      const norm = cutFreqToNorm(cutoffFreq);
+      const thumbTop = (1 - norm) * scaleHeight;
+
+      cutThumb.style.top = `${thumbTop}px`;
+      cutActive.style.height = `${norm * scaleHeight}px`;
+
       cutoffView.textContent = fmtHz(cutoffFreq);
+      cutoffViewBar.textContent = fmtHz(cutoffFreq);
     }
 
     function setCutoffFreq(freq){
@@ -630,22 +817,19 @@
       drawSpectrogram();
     }
 
-    function getPointerY(event){
-      const rect = overlay.getBoundingClientRect();
-      const clientY = event.touches ? event.touches[0].clientY : event.clientY;
-      return clientY - rect.top;
-    }
-
     function startDragCutoff(event){
       if (!decodedBuffer) return;
       draggingCutoff = true;
+
+      const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+      setCutoffFreq(pointerYToCutFreq(clientY));
       event.preventDefault();
     }
 
     function moveDragCutoff(event){
       if (!draggingCutoff) return;
-      const y = getPointerY(event);
-      setCutoffFreq(yToFreq(y));
+      const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+      setCutoffFreq(pointerYToCutFreq(clientY));
       event.preventDefault();
     }
 
@@ -925,7 +1109,7 @@
       drawSpectrogram();
       playFilteredBtn.disabled = false;
 
-      setStatus("스펙트럼 전개 완료. 이제 y축에서 컷오프를 드래그해라.");
+      setStatus("스펙트럼 전개 완료. 이제 오른쪽 컷오프 바를 드래그해라.");
     }
 
     function stopPlayback(){
@@ -1060,6 +1244,7 @@
 
       clearCanvas();
       updateInfoViews();
+      updateCutoffOverlay();
       setStatus("초기화 완료. 다시 녹음해라.");
     }
 
@@ -1091,8 +1276,8 @@
       if (decodedBuffer && spectrogramData) analyzeRecording();
     });
 
-    cutHandle.addEventListener("mousedown", startDragCutoff);
-    cutHandle.addEventListener("touchstart", startDragCutoff, { passive:false });
+    cutScale.addEventListener("mousedown", startDragCutoff);
+    cutScale.addEventListener("touchstart", startDragCutoff, { passive:false });
     window.addEventListener("mousemove", moveDragCutoff);
     window.addEventListener("touchmove", moveDragCutoff, { passive:false });
     window.addEventListener("mouseup", stopDragCutoff);
@@ -1107,9 +1292,13 @@
     stopPlaybackBtn.addEventListener("click", stopPlayback);
     clearBtn.addEventListener("click", clearAll);
 
-    window.addEventListener("resize", resizeCanvasForDisplay);
+    window.addEventListener("resize", () => {
+      resizeCanvasForDisplay();
+      buildCutTicks();
+    });
 
     resizeCanvasForDisplay();
+    buildCutTicks();
     updateInfoViews();
     updateCutoffOverlay();
     clearCanvas();
