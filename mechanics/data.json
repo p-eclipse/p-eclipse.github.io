@@ -2,9 +2,9 @@
   "title": "Classical Mechanics",
   "folders": [
     {
-      "name": "Bulding",
-      "path": "./building/",
-      "description": "개발중입니다."
+      "name": "Sound Spectrum",
+      "path": "./soundspectrum/",
+      "description": "소리 진동수 스펙트럼 분석기"
     }
   ]
 }
