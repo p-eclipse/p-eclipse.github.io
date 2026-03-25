@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>실시간 소리 스펙트럼 분석기</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121933;
+      --panel2:#192346;
+      --line:#33406f;
+      --text:#ecf2ff;
+      --sub:#aebbe0;
+      --accent:#7dd3fc;
+      --accent2:#60a5fa;
+      --danger:#fb7185;
+      --good:#4ade80;
+    }
+
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family:Pretendard,"Noto Sans KR",system-ui,sans-serif;
+      background:linear-gradient(180deg,#0a0f1f,#121a31);
+      color:var(--text);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .app{
+      width:min(1200px, calc(100% - 24px));
+      margin:16px auto 28px;
+      display:grid;
+      grid-template-columns: 1fr 320px;
+      gap:16px;
+    }
+
+    .card{
+      background:rgba(18,25,51,0.92);
+      border:1px solid rgba(125,211,252,0.14);
+      border-radius:18px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.25);
+      overflow:hidden;
+    }
+
+    .main{
+      padding:14px;
+    }
+
+    .sidebar{
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .title{
+      font-size:1.4rem;
+      font-weight:800;
+      margin:0 0 6px;
+    }
+
+    .subtitle{
+      margin:0 0 14px;
+      color:var(--sub);
+      line-height:1.5;
+      font-size:0.95rem;
+    }
+
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    button{
+      border:none;
+      border-radius:12px;
+      padding:11px 14px;
+      font-size:0.95rem;
+      font-weight:700;
+      cursor:pointer;
+      background:var(--panel2);
+      color:var(--text);
+      border:1px solid rgba(255,255,255,0.08);
+    }
+
+    button.primary{
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#07111d;
+    }
+
+    button.stop{
+      background:linear-gradient(135deg,#fda4af,#fb7185);
+      color:#2b0911;
+    }
+
+    button:disabled{
+      opacity:0.5;
+      cursor:not-allowed;
+    }
+
+    .viz-wrap{
+      position:relative;
+      background:#030712;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.08);
+      overflow:hidden;
+      touch-action:none;
+      user-select:none;
+    }
+
+    canvas{
+      display:block;
+      width:100%;
+      height:auto;
+    }
+
+    .overlay{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+    }
+
+    .range-line{
+      position:absolute;
+      left:52px;
+      right:10px;
+      height:2px;
+      background:rgba(125,211,252,0.95);
+      box-shadow:0 0 10px rgba(125,211,252,0.7);
+    }
+
+    .range-handle{
+      position:absolute;
+      left:10px;
+      width:42px;
+      height:24px;
+      transform:translateY(-50%);
+      border-radius:999px;
+      background:rgba(125,211,252,0.18);
+      border:1px solid rgba(125,211,252,0.7);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#dff6ff;
+      font-size:0.75rem;
+      font-weight:800;
+      pointer-events:auto;
+      touch-action:none;
+      cursor:ns-resize;
+      backdrop-filter: blur(4px);
+    }
+
+    .range-fill{
+      position:absolute;
+      left:52px;
+      right:10px;
+      background:rgba(96,165,250,0.10);
+      border-top:1px dashed rgba(125,211,252,0.55);
+      border-bottom:1px dashed rgba(125,211,252,0.55);
+      pointer-events:none;
+    }
+
+    .axis-label{
+      position:absolute;
+      font-size:0.78rem;
+      color:rgba(255,255,255,0.75);
+      background:rgba(0,0,0,0.25);
+      padding:4px 8px;
+      border-radius:999px;
+      backdrop-filter:blur(6px);
+      pointer-events:none;
+    }
+
+    .label-time{ bottom:10px; left:50%; transform:translateX(-50%); }
+    .label-freq{ top:50%; left:8px; transform:translateY(-50%) rotate(-90deg); transform-origin:left top; }
+
+    .group{
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:14px;
+      padding:14px;
+    }
+
+    .group h3{
+      margin:0 0 10px;
+      font-size:1rem;
+    }
+
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin:8px 0;
+    }
+
+    .row label{
+      font-size:0.92rem;
+      color:var(--sub);
+      flex:1;
+    }
+
+    .row input[type="range"]{
+      flex:1.2;
+      accent-color:var(--accent);
+    }
+
+    .row input[type="number"], .row select{
+      width:110px;
+      background:#0c1326;
+      color:var(--text);
+      border:1px solid rgba(255,255,255,0.1);
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:0.92rem;
+    }
+
+    .stat{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .pill{
+      background:#0c1326;
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:12px;
+      padding:10px 12px;
+    }
+
+    .pill .k{
+      color:var(--sub);
+      font-size:0.8rem;
+      margin-bottom:4px;
+    }
+
+    .pill .v{
+      font-size:1rem;
+      font-weight:800;
+    }
+
+    .tip{
+      color:var(--sub);
+      line-height:1.55;
+      font-size:0.9rem;
+    }
+
+    .legend{
+      height:14px;
+      border-radius:999px;
+      background:linear-gradient(90deg,
+        #000000 0%,
+        #1d4ed8 20%,
+        #06b6d4 38%,
+        #22c55e 55%,
+        #fde047 75%,
+        #f97316 90%,
+        #ffffff 100%);
+      border:1px solid rgba(255,255,255,0.12);
+      margin-top:8px;
+    }
+
+    @media (max-width: 980px){
+      .app{
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="card main">
+      <h1 class="title">실시간 소리 스펙트럼 분석기</h1>
+      <p class="subtitle">
+        마이크 입력을 실시간 스펙트로그램으로 표시한다.
+        그래프 안의 위/아래 핸들을 드래그해서 표시할 주파수 범위를 직접 조절할 수 있다.
+      </p>
+
+      <div class="toolbar">
+        <button id="startBtn" class="primary">마이크 시작</button>
+        <button id="stopBtn" class="stop" disabled>정지</button>
+        <button id="clearBtn">그래프 지우기</button>
+      </div>
+
+      <div class="viz-wrap" id="vizWrap">
+        <canvas id="specCanvas" width="1100" height="620"></canvas>
+
+        <div class="overlay" id="overlay">
+          <div class="range-fill" id="rangeFill"></div>
+          <div class="range-line" id="minLine"></div>
+          <div class="range-line" id="maxLine"></div>
+          <div class="range-handle" id="minHandle">MIN</div>
+          <div class="range-handle" id="maxHandle">MAX</div>
+          <div class="axis-label label-time">시간 →</div>
+          <div class="axis-label label-freq">진동수 ↑</div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="card sidebar">
+      <div class="group">
+        <h3>현재 상태</h3>
+        <div class="stat">
+          <div class="pill">
+            <div class="k">샘플링 주파수</div>
+            <div class="v" id="sampleRateView">-</div>
+          </div>
+          <div class="pill">
+            <div class="k">최대 분석 주파수</div>
+            <div class="v" id="nyquistView">-</div>
+          </div>
+          <div class="pill">
+            <div class="k">표시 범위 하한</div>
+            <div class="v" id="minFreqView">-</div>
+          </div>
+          <div class="pill">
+            <div class="k">표시 범위 상한</div>
+            <div class="v" id="maxFreqView">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>분석 설정</h3>
+
+        <div class="row">
+          <label for="fftSizeSelect">FFT 크기</label>
+          <select id="fftSizeSelect">
+            <option value="1024">1024</option>
+            <option value="2048" selected>2048</option>
+            <option value="4096">4096</option>
+            <option value="8192">8192</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label for="minDbSlider">최소 dB</label>
+          <input type="range" id="minDbSlider" min="-120" max="-20" step="1" value="-100">
+          <input type="number" id="minDbNumber" min="-120" max="-20" step="1" value="-100">
+        </div>
+
+        <div class="row">
+          <label for="maxDbSlider">최대 dB</label>
+          <input type="range" id="maxDbSlider" min="-80" max="0" step="1" value="-20">
+          <input type="number" id="maxDbNumber" min="-80" max="0" step="1" value="-20">
+        </div>
+
+        <div class="row">
+          <label for="minFreqInput">하한 주파수 (Hz)</label>
+          <input type="number" id="minFreqInput" min="0" step="1" value="0">
+        </div>
+
+        <div class="row">
+          <label for="maxFreqInput">상한 주파수 (Hz)</label>
+          <input type="number" id="maxFreqInput" min="1" step="1" value="8000">
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>색상 해석</h3>
+        <div class="tip">검을수록 약하고, 밝고 따뜻한 색일수록 진폭이 큰 영역이다.</div>
+        <div class="legend"></div>
+      </div>
+
+      <div class="group">
+        <h3>사용 팁</h3>
+        <div class="tip">
+          1. <b>마이크 시작</b>을 누른다.<br>
+          2. 소리를 내면 오른쪽에서 왼쪽으로가 아니라, <b>왼쪽에서 오른쪽으로 시간 축이 흐르며</b> 스펙트럼이 쌓인다.<br>
+          3. 그래프 왼쪽의 <b>MIN / MAX 핸들</b>을 드래그해서 보고 싶은 주파수 대역만 확대하듯 조절한다.<br>
+          4. FFT 크기를 키우면 주파수 분해능은 좋아지지만 반응은 조금 무거워진다.
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("specCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const vizWrap = document.getElementById("vizWrap");
+    const overlay = document.getElementById("overlay");
+    const minHandle = document.getElementById("minHandle");
+    const maxHandle = document.getElementById("maxHandle");
+    const minLine = document.getElementById("minLine");
+    const maxLine = document.getElementById("maxLine");
+    const rangeFill = document.getElementById("rangeFill");
+
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    const fftSizeSelect = document.getElementById("fftSizeSelect");
+    const minDbSlider = document.getElementById("minDbSlider");
+    const maxDbSlider = document.getElementById("maxDbSlider");
+    const minDbNumber = document.getElementById("minDbNumber");
+    const maxDbNumber = document.getElementById("maxDbNumber");
+    const minFreqInput = document.getElementById("minFreqInput");
+    const maxFreqInput = document.getElementById("maxFreqInput");
+
+    const sampleRateView = document.getElementById("sampleRateView");
+    const nyquistView = document.getElementById("nyquistView");
+    const minFreqView = document.getElementById("minFreqView");
+    const maxFreqView = document.getElementById("maxFreqView");
+
+    let audioContext = null;
+    let analyser = null;
+    let micStream = null;
+    let sourceNode = null;
+    let freqData = null;
+    let animationId = null;
+
+    let plotLeft = 56;
+    let plotRight = 10;
+    let plotTop = 10;
+    let plotBottom = 34;
+
+    let displayMinFreq = 0;
+    let displayMaxFreq = 8000;
+
+    let dragging = null; // "min" | "max" | null
+
+    function clamp(v, min, max){
+      return Math.max(min, Math.min(max, v));
+    }
+
+    function fmtHz(v){
+      if (v >= 1000) return (v / 1000).toFixed(v >= 10000 ? 0 : 1) + " kHz";
+      return Math.round(v) + " Hz";
+    }
+
+    function getNyquist(){
+      return audioContext ? audioContext.sampleRate / 2 : 24000;
+    }
+
+    function syncDbInputs(){
+      minDbNumber.value = minDbSlider.value;
+      maxDbNumber.value = maxDbSlider.value;
+    }
+
+    function syncDbSliders(){
+      minDbSlider.value = minDbNumber.value;
+      maxDbSlider.value = maxDbNumber.value;
+    }
+
+    function applyAnalyserDb(){
+      if (!analyser) return;
+      let minDb = Number(minDbSlider.value);
+      let maxDb = Number(maxDbSlider.value);
+
+      if (minDb >= maxDb - 1){
+        minDb = maxDb - 1;
+        minDbSlider.value = minDb;
+        minDbNumber.value = minDb;
+      }
+      analyser.minDecibels = minDb;
+      analyser.maxDecibels = maxDb;
+    }
+
+    function resizeCanvasForDisplay(){
+      const rect = vizWrap.getBoundingClientRect();
+      const targetWidth = Math.max(700, Math.floor(rect.width));
+      const targetHeight = Math.max(420, Math.floor(targetWidth * 0.56));
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      clearSpectrogram();
+      updateOverlay();
+      drawAxes();
+    }
+
+    function clearSpectrogram(){
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      drawAxes();
+    }
+
+    function drawAxes(){
+      const w = canvas.width;
+      const h = canvas.height;
+      const plotW = w - plotLeft - plotRight;
+      const plotH = h - plotTop - plotBottom;
+
+      ctx.save();
+
+      ctx.strokeStyle = "rgba(255,255,255,0.22)";
+      ctx.lineWidth = 1;
+
+      ctx.beginPath();
+      ctx.moveTo(plotLeft, plotTop);
+      ctx.lineTo(plotLeft, h - plotBottom);
+      ctx.lineTo(w - plotRight, h - plotBottom);
+      ctx.stroke();
+
+      const nyquist = getNyquist();
+      const gridCount = 6;
+      ctx.fillStyle = "rgba(255,255,255,0.65)";
+      ctx.font = "12px Pretendard, sans-serif";
+
+      for(let i = 0; i <= gridCount; i++){
+        const t = i / gridCount;
+        const f = displayMinFreq + (displayMaxFreq - displayMinFreq) * t;
+        const y = freqToY(f);
+
+        ctx.strokeStyle = "rgba(255,255,255,0.08)";
+        ctx.beginPath();
+        ctx.moveTo(plotLeft, y);
+        ctx.lineTo(w - plotRight, y);
+        ctx.stroke();
+
+        ctx.fillText(Math.round(f) + " Hz", 6, y + 4);
+      }
+
+      const timeGrid = 8;
+      for(let i = 0; i <= timeGrid; i++){
+        const x = plotLeft + (plotW * i / timeGrid);
+        ctx.strokeStyle = "rgba(255,255,255,0.05)";
+        ctx.beginPath();
+        ctx.moveTo(x, plotTop);
+        ctx.lineTo(x, h - plotBottom);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function yToFreq(y){
+      const plotH = canvas.height - plotTop - plotBottom;
+      const t = clamp((canvas.height - plotBottom - y) / plotH, 0, 1);
+      return displayMinFreq + t * (displayMaxFreq - displayMinFreq);
+    }
+
+    function freqToY(freq){
+      const plotH = canvas.height - plotTop - plotBottom;
+      const t = (freq - displayMinFreq) / (displayMaxFreq - displayMinFreq);
+      return canvas.height - plotBottom - clamp(t, 0, 1) * plotH;
+    }
+
+    function updateOverlay(){
+      const minY = freqToY(displayMinFreq);
+      const maxY = freqToY(displayMaxFreq);
+
+      minHandle.style.top = `${minY}px`;
+      maxHandle.style.top = `${maxY}px`;
+      minLine.style.top = `${minY}px`;
+      maxLine.style.top = `${maxY}px`;
+
+      rangeFill.style.top = `${maxY}px`;
+      rangeFill.style.height = `${minY - maxY}px`;
+
+      minFreqInput.value = Math.round(displayMinFreq);
+      maxFreqInput.value = Math.round(displayMaxFreq);
+
+      minFreqView.textContent = fmtHz(displayMinFreq);
+      maxFreqView.textContent = fmtHz(displayMaxFreq);
+
+      drawAxes();
+    }
+
+    function setDisplayRange(minF, maxF){
+      const nyquist = getNyquist();
+      minF = clamp(minF, 0, nyquist - 50);
+      maxF = clamp(maxF, 50, nyquist);
+
+      if (maxF - minF < 50){
+        if (dragging === "min") {
+          minF = maxF - 50;
+        } else {
+          maxF = minF + 50;
+        }
+      }
+
+      minF = clamp(minF, 0, nyquist - 50);
+      maxF = clamp(maxF, 50, nyquist);
+
+      displayMinFreq = minF;
+      displayMaxFreq = maxF;
+
+      updateOverlay();
+      updateInfoViews();
+    }
+
+    function updateInfoViews(){
+      const nyquist = getNyquist();
+      sampleRateView.textContent = audioContext ? `${Math.round(audioContext.sampleRate)} Hz` : "-";
+      nyquistView.textContent = `${Math.round(nyquist)} Hz`;
+      minFreqView.textContent = fmtHz(displayMinFreq);
+      maxFreqView.textContent = fmtHz(displayMaxFreq);
+    }
+
+    function getPointerY(event){
+      const rect = overlay.getBoundingClientRect();
+      const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+      return clientY - rect.top;
+    }
+
+    function startDrag(which, event){
+      dragging = which;
+      event.preventDefault();
+    }
+
+    function moveDrag(event){
+      if (!dragging) return;
+      const y = getPointerY(event);
+      const f = yToFreq(y);
+
+      if (dragging === "min"){
+        setDisplayRange(f, displayMaxFreq);
+      } else if (dragging === "max"){
+        setDisplayRange(displayMinFreq, f);
+      }
+    }
+
+    function stopDrag(){
+      dragging = null;
+    }
+
+    function dbToColorNorm(norm){
+      const t = clamp(norm, 0, 1);
+
+      let r=0, g=0, b=0;
+
+      if (t < 0.15){
+        const u = t / 0.15;
+        r = 0;
+        g = 0;
+        b = 40 + 120 * u;
+      } else if (t < 0.35){
+        const u = (t - 0.15) / 0.20;
+        r = 0;
+        g = 80 * u;
+        b = 160 + 80 * u;
+      } else if (t < 0.55){
+        const u = (t - 0.35) / 0.20;
+        r = 0;
+        g = 160 + 80 * u;
+        b = 240 - 120 * u;
+      } else if (t < 0.75){
+        const u = (t - 0.55) / 0.20;
+        r = 50 + 200 * u;
+        g = 240;
+        b = 120 - 120 * u;
+      } else if (t < 0.92){
+        const u = (t - 0.75) / 0.17;
+        r = 250;
+        g = 240 - 120 * u;
+        b = 0;
+      } else {
+        const u = (t - 0.92) / 0.08;
+        r = 250 + 5 * u;
+        g = 120 + 135 * u;
+        b = 255 * u;
+      }
+
+      return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
+    }
+
+    function drawSpectrogramFrame(){
+      if (!analyser || !freqData){
+        animationId = requestAnimationFrame(drawSpectrogramFrame);
+        return;
+      }
+
+      analyser.getFloatFrequencyData(freqData);
+
+      const w = canvas.width;
+      const h = canvas.height;
+      const plotW = w - plotLeft - plotRight;
+      const plotH = h - plotTop - plotBottom;
+
+      // 한 칸씩 왼쪽으로 밀기
+      const imageData = ctx.getImageData(plotLeft + 1, plotTop, plotW - 1, plotH);
+      ctx.putImageData(imageData, plotLeft, plotTop);
+
+      const nyquist = getNyquist();
+      const minDb = analyser.minDecibels;
+      const maxDb = analyser.maxDecibels;
+
+      const x = w - plotRight - 1;
+
+      for(let py = 0; py < plotH; py++){
+        const y = plotTop + py;
+
+        const f = yToFreq(y);
+        const idxFloat = (f / nyquist) * (freqData.length - 1);
+        const idx0 = Math.floor(idxFloat);
+        const idx1 = Math.min(freqData.length - 1, idx0 + 1);
+        const frac = idxFloat - idx0;
+
+        const db = freqData[idx0] * (1 - frac) + freqData[idx1] * frac;
+        const norm = (db - minDb) / (maxDb - minDb);
+
+        ctx.fillStyle = dbToColorNorm(norm);
+        ctx.fillRect(x, y, 1, 1);
+      }
+
+      // 축 다시 그림
+      drawAxes();
+
+      animationId = requestAnimationFrame(drawSpectrogramFrame);
+    }
+
+    async function startMic(){
+      if (audioContext) return;
+
+      try{
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
+        });
+
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        sourceNode = audioContext.createMediaStreamSource(micStream);
+        analyser = audioContext.createAnalyser();
+
+        analyser.fftSize = Number(fftSizeSelect.value);
+        analyser.smoothingTimeConstant = 0.0;
+        analyser.minDecibels = Number(minDbSlider.value);
+        analyser.maxDecibels = Number(maxDbSlider.value);
+
+        sourceNode.connect(analyser);
+
+        freqData = new Float32Array(analyser.frequencyBinCount);
+
+        const nyquist = getNyquist();
+        displayMinFreq = 0;
+        displayMaxFreq = Math.min(8000, nyquist);
+        minFreqInput.max = Math.round(nyquist);
+        maxFreqInput.max = Math.round(nyquist);
+
+        updateInfoViews();
+        updateOverlay();
+        clearSpectrogram();
+
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+
+        drawSpectrogramFrame();
+      } catch (err){
+        alert("마이크 접근에 실패했습니다.\n브라우저 권한을 확인하세요.\n\n" + err.message);
+      }
+    }
+
+    async function stopMic(){
+      if (animationId){
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+
+      if (sourceNode){
+        sourceNode.disconnect();
+        sourceNode = null;
+      }
+
+      if (micStream){
+        micStream.getTracks().forEach(track => track.stop());
+        micStream = null;
+      }
+
+      if (audioContext){
+        await audioContext.close();
+        audioContext = null;
+      }
+
+      analyser = null;
+      freqData = null;
+
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      updateInfoViews();
+    }
+
+    startBtn.addEventListener("click", startMic);
+    stopBtn.addEventListener("click", stopMic);
+    clearBtn.addEventListener("click", clearSpectrogram);
+
+    fftSizeSelect.addEventListener("change", () => {
+      if (!analyser) return;
+      analyser.fftSize = Number(fftSizeSelect.value);
+      freqData = new Float32Array(analyser.frequencyBinCount);
+      clearSpectrogram();
+    });
+
+    minDbSlider.addEventListener("input", () => {
+      syncDbInputs();
+      applyAnalyserDb();
+    });
+
+    maxDbSlider.addEventListener("input", () => {
+      syncDbInputs();
+      applyAnalyserDb();
+    });
+
+    minDbNumber.addEventListener("input", () => {
+      syncDbSliders();
+      applyAnalyserDb();
+    });
+
+    maxDbNumber.addEventListener("input", () => {
+      syncDbSliders();
+      applyAnalyserDb();
+    });
+
+    minFreqInput.addEventListener("change", () => {
+      setDisplayRange(Number(minFreqInput.value), displayMaxFreq);
+    });
+
+    maxFreqInput.addEventListener("change", () => {
+      setDisplayRange(displayMinFreq, Number(maxFreqInput.value));
+    });
+
+    minHandle.addEventListener("mousedown", (e) => startDrag("min", e));
+    maxHandle.addEventListener("mousedown", (e) => startDrag("max", e));
+    minHandle.addEventListener("touchstart", (e) => startDrag("min", e), { passive:false });
+    maxHandle.addEventListener("touchstart", (e) => startDrag("max", e), { passive:false });
+
+    window.addEventListener("mousemove", moveDrag);
+    window.addEventListener("touchmove", moveDrag, { passive:false });
+    window.addEventListener("mouseup", stopDrag);
+    window.addEventListener("touchend", stopDrag);
+    window.addEventListener("touchcancel", stopDrag);
+
+    window.addEventListener("resize", resizeCanvasForDisplay);
+
+    resizeCanvasForDisplay();
+    updateInfoViews();
+    updateOverlay();
+  </script>
+</body>
+</html>
