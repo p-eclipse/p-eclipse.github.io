@@ -17,6 +17,7 @@
       --danger:#fb7185;
       --good:#4ade80;
       --warn:#fbbf24;
+      --mobileSidebarWidth:min(86vw, 340px);
     }
 
     *{box-sizing:border-box}
@@ -31,11 +32,12 @@
     }
 
     .app{
-      width:min(1320px, calc(100% - 24px));
+      width:min(1380px, calc(100% - 24px));
       margin:16px auto 28px;
       display:grid;
-      grid-template-columns:1fr 320px;
+      grid-template-columns:minmax(0, 1fr) 320px;
       gap:16px;
+      align-items:start;
     }
 
     .card{
@@ -46,19 +48,55 @@
       overflow:hidden;
     }
 
-    .main{ padding:14px; }
+    .main{
+      padding:14px;
+      min-width:0;
+    }
 
     .sidebar{
       padding:16px;
       display:flex;
       flex-direction:column;
       gap:14px;
+      min-width:0;
+    }
+
+    .title-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:6px;
     }
 
     .title{
-      margin:0 0 6px;
+      margin:0;
       font-size:1.42rem;
       font-weight:800;
+    }
+
+    .mobile-menu-btn{
+      display:none;
+      width:46px;
+      height:46px;
+      border-radius:14px;
+      background:rgba(25,35,70,0.95);
+      border:1px solid rgba(255,255,255,0.08);
+      color:var(--text);
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      gap:5px;
+      padding:0;
+      flex:none;
+    }
+
+    .mobile-menu-btn span{
+      display:block;
+      width:20px;
+      height:2px;
+      border-radius:999px;
+      background:currentColor;
     }
 
     .subtitle{
@@ -114,9 +152,10 @@
 
     .viz-shell{
       display:grid;
-      grid-template-columns:minmax(0,1fr) 92px;
+      grid-template-columns:minmax(0, 1fr) 92px;
       gap:14px;
       align-items:stretch;
+      min-width:0;
     }
 
     .viz-wrap{
@@ -127,7 +166,8 @@
       overflow:hidden;
       user-select:none;
       min-width:0;
-      min-height:420px;
+      width:100%;
+      aspect-ratio:1 / 1;
     }
 
     #specBgCanvas,
@@ -140,6 +180,7 @@
     }
 
     #specBgCanvas{ z-index:1; }
+
     #specFgCanvas{
       z-index:2;
       pointer-events:none;
@@ -185,8 +226,8 @@
       flex-direction:column;
       align-items:center;
       gap:10px;
-      min-height:100%;
       user-select:none;
+      min-height:100%;
     }
 
     .cut-panel-title{
@@ -200,16 +241,17 @@
       position:relative;
       flex:1;
       width:100%;
-      min-height:440px;
       display:flex;
       justify-content:center;
       align-items:stretch;
+      min-height:0;
     }
 
     .cut-scale{
       position:relative;
       width:54px;
       height:100%;
+      min-height:0;
       border-radius:999px;
       border:1px solid rgba(125,211,252,0.18);
       background:
@@ -333,6 +375,7 @@
     .row input[type="range"]{
       flex:1.2;
       accent-color:var(--accent);
+      min-width:0;
     }
 
     .row input[type="number"], .row select{
@@ -403,29 +446,154 @@
       min-height:48px;
     }
 
+    .sidebar-backdrop{
+      display:none;
+    }
+
     @media (max-width: 980px){
       .app{
         grid-template-columns:1fr;
       }
-      .viz-shell{
-        grid-template-columns:1fr;
+
+      .mobile-menu-btn{
+        display:flex;
       }
+
+      .sidebar{
+        position:fixed;
+        top:0;
+        right:0;
+        bottom:0;
+        width:var(--mobileSidebarWidth);
+        max-width:100%;
+        border-radius:0;
+        z-index:30;
+        transform:translateX(100%);
+        transition:transform 0.25s ease;
+        overflow-y:auto;
+        padding-top:70px;
+        box-shadow:-12px 0 32px rgba(0,0,0,0.35);
+      }
+
+      body.sidebar-open .sidebar{
+        transform:translateX(0);
+      }
+
+      .sidebar-backdrop{
+        display:block;
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,0.42);
+        opacity:0;
+        pointer-events:none;
+        transition:opacity 0.25s ease;
+        z-index:25;
+      }
+
+      body.sidebar-open .sidebar-backdrop{
+        opacity:1;
+        pointer-events:auto;
+      }
+
+      .viz-shell{
+        grid-template-columns:minmax(0, 1fr) 92px;
+      }
+
       .cut-panel{
         min-height:auto;
       }
-      .cut-scale-wrap{
-        min-height:300px;
+
+      .row{
+        flex-wrap:wrap;
+        align-items:flex-start;
+      }
+
+      .row label{
+        width:100%;
+        flex:none;
+      }
+
+      .row input[type="range"]{
+        flex:1 1 100%;
+      }
+
+      .row input[type="number"],
+      .row select{
+        width:100%;
+      }
+    }
+
+    @media (max-width: 640px){
+      .app{
+        width:min(100%, calc(100% - 12px));
+        margin:6px auto 14px;
+        gap:10px;
+      }
+
+      .main{
+        padding:10px;
+      }
+
+      .toolbar{
+        gap:8px;
+      }
+
+      .toolbar button{
+        flex:1 1 calc(50% - 8px);
+        min-width:0;
+        padding:10px 10px;
+        font-size:0.88rem;
+      }
+
+      .viz-shell{
+        gap:10px;
+        grid-template-columns:minmax(0, 1fr) 82px;
+      }
+
+      .cut-panel{
+        padding:10px 8px;
+      }
+
+      .cut-scale{
+        width:46px;
+      }
+
+      .cut-thumb{
+        width:64px;
+        font-size:0.68rem;
+      }
+
+      .cut-tick{
+        font-size:0.68rem;
+      }
+
+      .title{
+        font-size:1.15rem;
+      }
+
+      .subtitle{
+        font-size:0.88rem;
       }
     }
   </style>
 </head>
 <body>
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
   <div class="app">
     <section class="card main">
-      <h1 class="title">소리 녹음 스펙트럼 분석기</h1>
+      <div class="title-row">
+        <h1 class="title">소리 녹음 스펙트럼 분석기</h1>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="설정 열기" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+
       <p class="subtitle">
         녹음한 소리를 웹 메모리에 임시 저장한 뒤 <b>로그 주파수축</b> 스펙트로그램으로 전개하고,
-        오른쪽 세로 컷오프 바에서 정한 컷오프 \( y \) 에 대해 해당 주파수 이하만 남겨 다시 재생한다.
+        오른쪽 세로 컷오프 바에서 정한 컷오프에 따라 해당 주파수 이하만 남겨 다시 재생한다.
         y축 범위는 <b>20 Hz ~ 20 kHz</b>다.
       </p>
 
@@ -441,8 +609,8 @@
 
       <div class="viz-shell">
         <div class="viz-wrap" id="vizWrap">
-          <canvas id="specBgCanvas" width="1100" height="620"></canvas>
-          <canvas id="specFgCanvas" width="1100" height="620"></canvas>
+          <canvas id="specBgCanvas" width="900" height="900"></canvas>
+          <canvas id="specFgCanvas" width="900" height="900"></canvas>
 
           <div class="overlay" id="overlay">
             <div class="axis-label label-time">시간 →</div>
@@ -469,7 +637,7 @@
       </div>
     </section>
 
-    <aside class="card sidebar">
+    <aside class="card sidebar" id="sidebar">
       <div class="group">
         <h3>현재 상태</h3>
         <div class="stat">
@@ -539,9 +707,9 @@
         <div class="tip">
           1. 녹음 시작 → 녹음 종료<br>
           2. 스펙트럼 전개<br>
-          3. 오른쪽 세로 컷오프 바를 위아래로 드래그<br>
-          4. 도착한 로그축 위치의 주파수 \( y \) 를 컷오프로 사용<br>
-          5. 필터 재생은 <b>\( y \) 이하 주파수 성분만</b> 남긴다
+          3. 오른쪽 컷오프 바를 위아래로 드래그<br>
+          4. 도착한 로그축 위치의 주파수를 컷오프로 사용<br>
+          5. 필터 재생은 해당 컷오프 이하 주파수 성분만 남긴다
         </div>
       </div>
     </aside>
@@ -555,8 +723,6 @@
     const fgCtx = fgCanvas.getContext("2d");
 
     const vizWrap = document.getElementById("vizWrap");
-    const overlay = document.getElementById("overlay");
-
     const cutScale = document.getElementById("cutScale");
     const cutActive = document.getElementById("cutActive");
     const cutThumb = document.getElementById("cutThumb");
@@ -584,8 +750,12 @@
     const cutoffViewBar = document.getElementById("cutoffViewBar");
     const statusBox = document.getElementById("statusBox");
 
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+
     const LOG_MIN_FREQ = 20;
     const LOG_MAX_FREQ = 20000;
+    const MOBILE_WIDTH = 980;
 
     let plotLeft = 56;
     let plotRight = 10;
@@ -633,6 +803,30 @@
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
       }
       return audioContext;
+    }
+
+    function isMobileLayout(){
+      return window.innerWidth <= MOBILE_WIDTH;
+    }
+
+    function openSidebar(){
+      if (!isMobileLayout()) return;
+      document.body.classList.add("sidebar-open");
+      mobileMenuBtn.setAttribute("aria-expanded", "true");
+    }
+
+    function closeSidebar(){
+      document.body.classList.remove("sidebar-open");
+      mobileMenuBtn.setAttribute("aria-expanded", "false");
+    }
+
+    function toggleSidebar(){
+      if (!isMobileLayout()) return;
+      document.body.classList.toggle("sidebar-open");
+      mobileMenuBtn.setAttribute(
+        "aria-expanded",
+        document.body.classList.contains("sidebar-open") ? "true" : "false"
+      );
     }
 
     function getEffectiveCutoff(){
@@ -683,12 +877,6 @@
       return bgCanvas.height - plotBottom - t * plotH;
     }
 
-    function yToFreq(y){
-      const plotH = bgCanvas.height - plotTop - plotBottom;
-      const t = clamp((bgCanvas.height - plotBottom - y) / plotH, 0, 1);
-      return normToLogFreq(t);
-    }
-
     function cutNormToFreq(norm){
       return normToLogFreq(norm);
     }
@@ -724,21 +912,22 @@
     }
 
     function resizeCanvasForDisplay(){
-      const rect = vizWrap.getBoundingClientRect();
-      const targetWidth = Math.max(640, Math.floor(rect.width));
-      const targetHeight = Math.max(420, Math.floor(targetWidth * 0.56));
+      const wrapRect = vizWrap.getBoundingClientRect();
+      const sideRect = cutScale.getBoundingClientRect();
 
-      bgCanvas.width = targetWidth;
-      bgCanvas.height = targetHeight;
-      fgCanvas.width = targetWidth;
-      fgCanvas.height = targetHeight;
+      const targetSize = Math.max(320, Math.floor(Math.min(wrapRect.width, wrapRect.height || wrapRect.width)));
+      bgCanvas.width = targetSize;
+      bgCanvas.height = targetSize;
+      fgCanvas.width = targetSize;
+      fgCanvas.height = targetSize;
 
-      vizWrap.style.height = `${targetHeight}px`;
+      if (sideRect.height > 0){
+        buildCutTicks();
+      }
 
       clearBgCanvas();
       clearFgCanvas();
       drawAxesOnBg();
-      buildCutTicks();
 
       if (spectrogramData && decodedBuffer){
         rebuildFreqYCache();
@@ -746,6 +935,7 @@
       }
 
       drawCutoffOverlayToFg();
+      updateCutoffOverlay();
     }
 
     function clearBgCanvas(){
@@ -889,11 +1079,12 @@
 
     function updateCutoffOverlay(){
       const scaleHeight = getCutScaleHeight();
-      const norm = cutFreqToNorm(cutoffFreq);
-      const thumbTop = (1 - norm) * scaleHeight;
-
-      cutThumb.style.top = `${thumbTop}px`;
-      cutActive.style.height = `${norm * scaleHeight}px`;
+      if (scaleHeight > 0){
+        const norm = cutFreqToNorm(cutoffFreq);
+        const thumbTop = (1 - norm) * scaleHeight;
+        cutThumb.style.top = `${thumbTop}px`;
+        cutActive.style.height = `${norm * scaleHeight}px`;
+      }
 
       cutoffView.textContent = fmtHz(cutoffFreq);
       cutoffViewBar.textContent = fmtHz(cutoffFreq);
@@ -1381,7 +1572,15 @@
     stopPlaybackBtn.addEventListener("click", stopPlayback);
     clearBtn.addEventListener("click", clearAll);
 
+    mobileMenuBtn.addEventListener("click", toggleSidebar);
+    sidebarBackdrop.addEventListener("click", closeSidebar);
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeSidebar();
+    });
+
     window.addEventListener("resize", () => {
+      if (!isMobileLayout()) closeSidebar();
       resizeCanvasForDisplay();
       buildCutTicks();
     });
