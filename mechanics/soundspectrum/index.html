@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>녹음 기반 스펙트럼 분석기</title>
+  <title>소리 스펙트럼 분석기</title>
   <style>
     :root{
       --bg:#0b1020;
@@ -295,10 +295,11 @@
 <body>
   <div class="app">
     <section class="card main">
-      <h1 class="title">녹음 기반 스펙트럼 분석기</h1>
+      <h1 class="title">녹음 기반 로그 스펙트럼 분석기</h1>
       <p class="subtitle">
-        녹음한 소리를 웹 메모리에 임시 저장한 뒤 스펙트로그램으로 전개하고,
-        y축 드래그로 정한 컷오프 주파수 \( y \) 에 대해 <b>0 ~ y Hz</b> 성분만 남겨 다시 재생한다.
+        녹음한 소리를 웹 메모리에 임시 저장한 뒤 <b>로그 주파수축</b> 스펙트로그램으로 전개하고,
+        y축 드래그로 정한 컷오프 \( y \) 에 대해 해당 주파수 이하만 남겨 다시 재생한다.
+        y축 범위는 <b>20 Hz ~ 20 kHz</b>다. :contentReference[oaicite:1]{index=1}
       </p>
 
       <div class="toolbar">
@@ -318,7 +319,7 @@
           <div class="cut-line" id="cutLine"></div>
           <div class="cut-handle" id="cutHandle">CUT</div>
           <div class="axis-label label-time">시간 →</div>
-          <div class="axis-label label-freq">진동수 ↑</div>
+          <div class="axis-label label-freq">log f ↑</div>
         </div>
       </div>
     </section>
@@ -336,8 +337,8 @@
             <div class="v" id="durationView">-</div>
           </div>
           <div class="pill">
-            <div class="k">최대 분석 주파수</div>
-            <div class="v" id="nyquistView">-</div>
+            <div class="k">축 상한</div>
+            <div class="v" id="nyquistView">20.0 kHz</div>
           </div>
           <div class="pill">
             <div class="k">재생 컷오프</div>
@@ -393,9 +394,9 @@
         <div class="tip">
           1. 녹음 시작 → 녹음 종료<br>
           2. 스펙트럼 전개<br>
-          3. 그래프 왼쪽 핸들을 y축 방향으로 드래그<br>
-          4. 그 위치의 주파수값을 \( y \) 라 할 때, 재생은 <b>0 ~ y Hz</b> 만 남겨서 한다.<br>
-          5. 원본 재생과 필터 재생을 비교하면 된다.
+          3. 왼쪽 CUT 핸들을 y축으로 드래그<br>
+          4. 도착한 로그축 위치의 주파수 \( y \) 를 컷오프로 사용<br>
+          5. 필터 재생은 <b>\( y \) 이하 주파수 성분만</b> 남긴다
         </div>
       </div>
     </aside>
@@ -431,6 +432,9 @@
     const nyquistView = document.getElementById("nyquistView");
     const cutoffView = document.getElementById("cutoffView");
     const statusBox = document.getElementById("statusBox");
+
+    const LOG_MIN_FREQ = 20;
+    const LOG_MAX_FREQ = 20000;
 
     let plotLeft = 56;
     let plotRight = 10;
@@ -479,10 +483,13 @@
       return audioContext;
     }
 
-    function getNyquist(){
-      if (decodedBuffer) return decodedBuffer.sampleRate / 2;
-      if (audioContext) return audioContext.sampleRate / 2;
-      return 24000;
+    function getAnalysisMaxFreq(){
+      return LOG_MAX_FREQ;
+    }
+
+    function getEffectiveCutoff(){
+      if (!decodedBuffer) return cutoffFreq;
+      return Math.min(cutoffFreq, decodedBuffer.sampleRate / 2);
     }
 
     function syncDbInputs(){
@@ -527,11 +534,35 @@
       drawAxes();
     }
 
+    function logFreqToNorm(freq){
+      const f = clamp(freq, LOG_MIN_FREQ, LOG_MAX_FREQ);
+      return (Math.log10(f) - Math.log10(LOG_MIN_FREQ)) /
+             (Math.log10(LOG_MAX_FREQ) - Math.log10(LOG_MIN_FREQ));
+    }
+
+    function normToLogFreq(norm){
+      const t = clamp(norm, 0, 1);
+      const logF = Math.log10(LOG_MIN_FREQ) +
+                   t * (Math.log10(LOG_MAX_FREQ) - Math.log10(LOG_MIN_FREQ));
+      return Math.pow(10, logF);
+    }
+
+    function freqToY(freq){
+      const plotH = canvas.height - plotTop - plotBottom;
+      const t = logFreqToNorm(freq);
+      return canvas.height - plotBottom - t * plotH;
+    }
+
+    function yToFreq(y){
+      const plotH = canvas.height - plotTop - plotBottom;
+      const t = clamp((canvas.height - plotBottom - y) / plotH, 0, 1);
+      return normToLogFreq(t);
+    }
+
     function drawAxes(){
       const w = canvas.width;
       const h = canvas.height;
       const plotW = w - plotLeft - plotRight;
-      const plotH = h - plotTop - plotBottom;
 
       ctx.save();
       ctx.strokeStyle = "rgba(255,255,255,0.22)";
@@ -546,11 +577,8 @@
       ctx.fillStyle = "rgba(255,255,255,0.65)";
       ctx.font = "12px Pretendard, sans-serif";
 
-      const gridCount = 6;
-      const nyquist = getNyquist();
-      for(let i = 0; i <= gridCount; i++){
-        const t = i / gridCount;
-        const f = t * nyquist;
+      const ticks = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
+      for(const f of ticks){
         const y = freqToY(f);
 
         ctx.strokeStyle = "rgba(255,255,255,0.08)";
@@ -559,7 +587,8 @@
         ctx.lineTo(w - plotRight, y);
         ctx.stroke();
 
-        ctx.fillText(Math.round(f) + " Hz", 6, y + 4);
+        const label = f >= 1000 ? `${f/1000}k` : `${f}`;
+        ctx.fillText(label, 6, y + 4);
       }
 
       const timeGrid = 8;
@@ -574,30 +603,15 @@
       ctx.restore();
     }
 
-    function freqToY(freq){
-      const nyquist = getNyquist();
-      const plotH = canvas.height - plotTop - plotBottom;
-      const t = clamp(freq / nyquist, 0, 1);
-      return canvas.height - plotBottom - t * plotH;
-    }
-
-    function yToFreq(y){
-      const nyquist = getNyquist();
-      const plotH = canvas.height - plotTop - plotBottom;
-      const t = clamp((canvas.height - plotBottom - y) / plotH, 0, 1);
-      return t * nyquist;
-    }
-
     function updateInfoViews(){
       if (decodedBuffer){
         sampleRateView.textContent = Math.round(decodedBuffer.sampleRate) + " Hz";
         durationView.textContent = fmtSec(decodedBuffer.duration);
-        nyquistView.textContent = fmtHz(decodedBuffer.sampleRate / 2);
       } else {
         sampleRateView.textContent = "-";
         durationView.textContent = "-";
-        nyquistView.textContent = "-";
       }
+      nyquistView.textContent = "20.0 kHz";
       cutoffView.textContent = fmtHz(cutoffFreq);
     }
 
@@ -611,8 +625,7 @@
     }
 
     function setCutoffFreq(freq){
-      const nyquist = getNyquist();
-      cutoffFreq = clamp(freq, 0, nyquist);
+      cutoffFreq = clamp(freq, LOG_MIN_FREQ, LOG_MAX_FREQ);
       updateCutoffOverlay();
       drawSpectrogram();
     }
@@ -646,34 +659,22 @@
 
       if (t < 0.15){
         const u = t / 0.15;
-        r = 0;
-        g = 0;
-        b = 40 + 120 * u;
+        r = 0; g = 0; b = 40 + 120 * u;
       } else if (t < 0.35){
         const u = (t - 0.15) / 0.20;
-        r = 0;
-        g = 80 * u;
-        b = 160 + 80 * u;
+        r = 0; g = 80 * u; b = 160 + 80 * u;
       } else if (t < 0.55){
         const u = (t - 0.35) / 0.20;
-        r = 0;
-        g = 160 + 80 * u;
-        b = 240 - 120 * u;
+        r = 0; g = 160 + 80 * u; b = 240 - 120 * u;
       } else if (t < 0.75){
         const u = (t - 0.55) / 0.20;
-        r = 50 + 200 * u;
-        g = 240;
-        b = 120 - 120 * u;
+        r = 50 + 200 * u; g = 240; b = 120 - 120 * u;
       } else if (t < 0.92){
         const u = (t - 0.75) / 0.17;
-        r = 250;
-        g = 240 - 120 * u;
-        b = 0;
+        r = 250; g = 240 - 120 * u; b = 0;
       } else {
         const u = (t - 0.92) / 0.08;
-        r = 250 + 5 * u;
-        g = 120 + 135 * u;
-        b = 255 * u;
+        r = 250 + 5 * u; g = 120 + 135 * u; b = 255 * u;
       }
 
       return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
@@ -685,12 +686,6 @@
         w[n] = 0.5 - 0.5 * Math.cos(2 * Math.PI * n / (N - 1));
       }
       return w;
-    }
-
-    function nextPow2(n){
-      let p = 1;
-      while(p < n) p <<= 1;
-      return p;
     }
 
     function fft(re, im, inverse=false){
@@ -784,11 +779,7 @@
         }
       }
 
-      return {
-        data: spec,
-        frameCount,
-        binCount
-      };
+      return { data: spec, frameCount, binCount };
     }
 
     function drawSpectrogram(){
@@ -800,22 +791,23 @@
 
       const minDb = getMinDb();
       const maxDb = getMaxDb();
-      const nyquist = decodedBuffer.sampleRate / 2;
 
       const plotW = canvas.width - plotLeft - plotRight;
-      const plotH = canvas.height - plotTop - plotBottom;
+      const nyquistData = decodedBuffer.sampleRate / 2;
 
       for(let frame = 0; frame < spectrogramFrames; frame++){
         const x0 = plotLeft + Math.floor(frame * plotW / spectrogramFrames);
         const x1 = plotLeft + Math.floor((frame + 1) * plotW / spectrogramFrames);
         const colW = Math.max(1, x1 - x0);
 
-        for(let k = 0; k < spectrogramBins - 1; k++){
-          const f0 = (k / (spectrogramBins - 1)) * nyquist;
-          const f1 = ((k + 1) / (spectrogramBins - 1)) * nyquist;
+        for(let k = 1; k < spectrogramBins - 1; k++){
+          const f0 = (k / (spectrogramBins - 1)) * nyquistData;
+          const f1 = ((k + 1) / (spectrogramBins - 1)) * nyquistData;
 
-          const y1 = freqToY(f0);
-          const y0 = freqToY(f1);
+          if (f1 < LOG_MIN_FREQ || f0 > LOG_MAX_FREQ) continue;
+
+          const y1 = freqToY(clamp(f0, LOG_MIN_FREQ, LOG_MAX_FREQ));
+          const y0 = freqToY(clamp(f1, LOG_MIN_FREQ, LOG_MAX_FREQ));
           const h = Math.max(1, y1 - y0);
 
           const db = spectrogramData[frame][k];
@@ -827,18 +819,16 @@
 
       drawAxes();
 
-      if (decodedBuffer){
-        const y = freqToY(cutoffFreq);
-        ctx.save();
-        ctx.strokeStyle = "rgba(125,211,252,0.95)";
-        ctx.lineWidth = 2;
-        ctx.setLineDash([8,6]);
-        ctx.beginPath();
-        ctx.moveTo(plotLeft, y);
-        ctx.lineTo(canvas.width - plotRight, y);
-        ctx.stroke();
-        ctx.restore();
-      }
+      const y = freqToY(cutoffFreq);
+      ctx.save();
+      ctx.strokeStyle = "rgba(125,211,252,0.95)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8,6]);
+      ctx.beginPath();
+      ctx.moveTo(plotLeft, y);
+      ctx.lineTo(canvas.width - plotRight, y);
+      ctx.stroke();
+      ctx.restore();
 
       updateCutoffOverlay();
     }
@@ -877,7 +867,7 @@
           const ctx0 = ensureAudioContext();
           decodedBuffer = await ctx0.decodeAudioData(arrayBuffer.slice(0));
 
-          cutoffFreq = Math.min(3000, decodedBuffer.sampleRate / 2);
+          cutoffFreq = 3000;
           updateInfoViews();
           updateCutoffOverlay();
           analyzeBtn.disabled = false;
@@ -975,7 +965,8 @@
       const norm = new Float32Array(mono.length + fftSize);
 
       const frameCount = Math.max(1, Math.floor((mono.length - fftSize) / hopSize) + 1);
-      const binToKeep = Math.floor(cutoffHz / sampleRate * fftSize);
+      const effectiveCutoff = Math.min(cutoffHz, sampleRate / 2);
+      const binToKeep = Math.floor(effectiveCutoff / sampleRate * fftSize);
 
       for(let frame = 0; frame < frameCount; frame++){
         const start = frame * hopSize;
@@ -1026,10 +1017,12 @@
       const hopRatio = Number(hopRatioSelect.value);
       const hopSize = Math.max(1, Math.floor(fftSize * hopRatio));
 
-      setStatus(`0 ~ ${Math.round(cutoffFreq)} Hz 성분만 남겨 재합성 중...`);
+      const effectiveCutoff = getEffectiveCutoff();
+
+      setStatus(`0 ~ ${Math.round(effectiveCutoff)} Hz 성분만 남겨 재합성 중...`);
       await new Promise(resolve => setTimeout(resolve, 20));
 
-      const filteredBuffer = rebuildFilteredBuffer(decodedBuffer, cutoffFreq, fftSize, hopSize);
+      const filteredBuffer = rebuildFilteredBuffer(decodedBuffer, effectiveCutoff, fftSize, hopSize);
 
       const src = audioContext.createBufferSource();
       src.buffer = filteredBuffer;
@@ -1042,7 +1035,7 @@
       stopPlaybackBtn.disabled = false;
       src.start();
 
-      setStatus(`필터 재생 중: 0 ~ ${Math.round(cutoffFreq)} Hz`);
+      setStatus(`필터 재생 중: 0 ~ ${Math.round(effectiveCutoff)} Hz`);
     }
 
     function clearAll(){
@@ -1062,6 +1055,8 @@
       stopPlaybackBtn.disabled = true;
       recordBtn.disabled = false;
       stopRecordBtn.disabled = true;
+
+      cutoffFreq = 3000;
 
       clearCanvas();
       updateInfoViews();
