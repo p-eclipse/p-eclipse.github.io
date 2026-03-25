@@ -32,11 +32,11 @@
       height:100vh;
       overflow:hidden;
     }
-    
+
     .app{
       width:min(1380px, calc(100% - 24px));
-      height:calc(100vh - 20px);
-      margin:10px auto;
+      height:calc(100vh - 16px);
+      margin:8px auto;
       display:grid;
       grid-template-columns:minmax(0, 1fr) 320px;
       gap:16px;
@@ -78,7 +78,7 @@
       gap:10px;
       margin-bottom:0;
     }
-    
+
     .title{
       margin:0;
       font-size:1.18rem;
@@ -116,7 +116,7 @@
       line-height:1.4;
       font-size:0.84rem;
     }
-    
+
     .toolbar{
       display:flex;
       flex-wrap:wrap;
@@ -163,10 +163,12 @@
 
     .viz-shell{
       display:grid;
-      grid-template-columns:minmax(0, 1fr) 92px;
-      gap:14px;
+      grid-template-columns:minmax(0, 1fr) 86px;
+      gap:12px;
       align-items:stretch;
       min-width:0;
+      min-height:0;
+      height:100%;
     }
 
     .viz-wrap{
@@ -365,7 +367,7 @@
       border-radius:14px;
       padding:12px;
     }
-    
+
     .group h3{
       margin:0 0 8px;
       font-size:0.95rem;
@@ -447,7 +449,7 @@
       margin-top:8px;
     }
 
-   .status{
+    .status{
       margin-top:2px;
       padding:8px 10px;
       border-radius:12px;
@@ -463,9 +465,33 @@
       display:none;
     }
 
+
+    @media (min-width: 981px){
+      .app{
+        height:calc(100vh - 12px);
+        margin:6px auto;
+      }
+
+      .main,
+      .sidebar{
+        padding:10px;
+      }
+
+      .group{
+        padding:10px;
+      }
+
+      .toolbar button{
+        padding:8px 10px;
+        font-size:0.84rem;
+      }
+    }
+
     @media (max-width: 980px){
       .app{
         grid-template-columns:1fr;
+        height:auto;
+        margin:16px auto 28px;
       }
 
       .mobile-menu-btn{
@@ -509,14 +535,8 @@
       }
 
       .viz-shell{
-      display:grid;
-      grid-template-columns:minmax(0, 1fr) 86px;
-      gap:12px;
-      align-items:stretch;
-      min-width:0;
-      min-height:0;
-      height:100%;
-    }
+        grid-template-columns:minmax(0, 1fr) 92px;
+      }
 
       .cut-panel{
         min-height:auto;
@@ -545,12 +565,14 @@
     @media (max-width: 640px){
       .app{
         width:min(100%, calc(100% - 12px));
+        height:auto;
         margin:6px auto 14px;
         gap:10px;
       }
 
       .main{
         padding:10px;
+        display:block;
       }
 
       .toolbar{
@@ -567,6 +589,7 @@
       .viz-shell{
         gap:10px;
         grid-template-columns:minmax(0, 1fr) 82px;
+        height:auto;
       }
 
       .cut-panel{
@@ -935,38 +958,31 @@
 
     function resizeCanvasForDisplay(){
       const wrapRect = vizWrap.getBoundingClientRect();
-    
-      const targetSize = Math.max(
-        260,
-        Math.floor(Math.min(wrapRect.width, wrapRect.height))
-      );
-    
-      bgCanvas.width = targetSize;
-      bgCanvas.height = targetSize;
-      fgCanvas.width = targetSize;
-      fgCanvas.height = targetSize;
-    
-      bgCanvas.style.width = targetSize + "px";
-      bgCanvas.style.height = targetSize + "px";
-      fgCanvas.style.width = targetSize + "px";
-      fgCanvas.style.height = targetSize + "px";
-    
-      plotLeft = 56;
+
+      const targetWidth = Math.max(320, Math.floor(wrapRect.width));
+      const targetHeight = Math.max(220, Math.floor(wrapRect.height));
+
+      bgCanvas.width = targetWidth;
+      bgCanvas.height = targetHeight;
+      fgCanvas.width = targetWidth;
+      fgCanvas.height = targetHeight;
+
+      plotLeft = Math.max(44, Math.floor(targetWidth * 0.07));
       plotRight = 10;
       plotTop = 10;
-      plotBottom = 34;
-    
+      plotBottom = Math.max(28, Math.floor(targetHeight * 0.08));
+
       buildCutTicks();
-    
+
       clearBgCanvas();
       clearFgCanvas();
       drawAxesOnBg();
-    
+
       if (spectrogramData && decodedBuffer){
         rebuildFreqYCache();
         drawSpectrogramToBg();
       }
-    
+
       drawCutoffOverlayToFg();
       updateCutoffOverlay();
     }
