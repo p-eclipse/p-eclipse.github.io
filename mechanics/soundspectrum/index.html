@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>실시간 소리 스펙트럼 분석기</title>
+  <title>녹음 기반 스펙트럼 분석기</title>
   <style>
     :root{
       --bg:#0b1020;
@@ -16,9 +16,10 @@
       --accent2:#60a5fa;
       --danger:#fb7185;
       --good:#4ade80;
+      --warn:#fbbf24;
     }
 
-    *{box-sizing:border-box;}
+    *{box-sizing:border-box}
     body{
       margin:0;
       font-family:Pretendard,"Noto Sans KR",system-ui,sans-serif;
@@ -29,10 +30,10 @@
     }
 
     .app{
-      width:min(1200px, calc(100% - 24px));
+      width:min(1280px, calc(100% - 24px));
       margin:16px auto 28px;
       display:grid;
-      grid-template-columns: 1fr 320px;
+      grid-template-columns:1fr 320px;
       gap:16px;
     }
 
@@ -44,10 +45,7 @@
       overflow:hidden;
     }
 
-    .main{
-      padding:14px;
-    }
-
+    .main{ padding:14px; }
     .sidebar{
       padding:16px;
       display:flex;
@@ -56,15 +54,15 @@
     }
 
     .title{
-      font-size:1.4rem;
-      font-weight:800;
       margin:0 0 6px;
+      font-size:1.42rem;
+      font-weight:800;
     }
 
     .subtitle{
       margin:0 0 14px;
       color:var(--sub);
-      line-height:1.5;
+      line-height:1.55;
       font-size:0.95rem;
     }
 
@@ -97,6 +95,16 @@
       color:#2b0911;
     }
 
+    button.good{
+      background:linear-gradient(135deg,#86efac,#4ade80);
+      color:#08250f;
+    }
+
+    button.warn{
+      background:linear-gradient(135deg,#fde68a,#fbbf24);
+      color:#2b1e03;
+    }
+
     button:disabled{
       opacity:0.5;
       cursor:not-allowed;
@@ -124,16 +132,26 @@
       pointer-events:none;
     }
 
-    .range-line{
+    .cut-fill{
+      position:absolute;
+      left:52px;
+      right:10px;
+      background:rgba(96,165,250,0.14);
+      border-top:1px dashed rgba(125,211,252,0.65);
+      pointer-events:none;
+    }
+
+    .cut-line{
       position:absolute;
       left:52px;
       right:10px;
       height:2px;
       background:rgba(125,211,252,0.95);
       box-shadow:0 0 10px rgba(125,211,252,0.7);
+      pointer-events:none;
     }
 
-    .range-handle{
+    .cut-handle{
       position:absolute;
       left:10px;
       width:42px;
@@ -152,16 +170,6 @@
       touch-action:none;
       cursor:ns-resize;
       backdrop-filter: blur(4px);
-    }
-
-    .range-fill{
-      position:absolute;
-      left:52px;
-      right:10px;
-      background:rgba(96,165,250,0.10);
-      border-top:1px dashed rgba(125,211,252,0.55);
-      border-bottom:1px dashed rgba(125,211,252,0.55);
-      pointer-events:none;
     }
 
     .axis-label{
@@ -210,7 +218,7 @@
     }
 
     .row input[type="number"], .row select{
-      width:110px;
+      width:120px;
       background:#0c1326;
       color:var(--text);
       border:1px solid rgba(255,255,255,0.1);
@@ -241,11 +249,12 @@
     .pill .v{
       font-size:1rem;
       font-weight:800;
+      word-break:break-word;
     }
 
     .tip{
       color:var(--sub);
-      line-height:1.55;
+      line-height:1.6;
       font-size:0.9rem;
     }
 
@@ -264,9 +273,21 @@
       margin-top:8px;
     }
 
+    .status{
+      margin-top:4px;
+      padding:10px 12px;
+      border-radius:12px;
+      background:#0c1326;
+      border:1px solid rgba(255,255,255,0.08);
+      color:var(--sub);
+      font-size:0.92rem;
+      line-height:1.45;
+      min-height:48px;
+    }
+
     @media (max-width: 980px){
       .app{
-        grid-template-columns: 1fr;
+        grid-template-columns:1fr;
       }
     }
   </style>
@@ -274,27 +295,28 @@
 <body>
   <div class="app">
     <section class="card main">
-      <h1 class="title">실시간 소리 스펙트럼 분석기</h1>
+      <h1 class="title">녹음 기반 스펙트럼 분석기</h1>
       <p class="subtitle">
-        마이크 입력을 실시간 스펙트로그램으로 표시한다.
-        그래프 안의 위/아래 핸들을 드래그해서 표시할 주파수 범위를 직접 조절할 수 있다.
+        녹음한 소리를 웹 메모리에 임시 저장한 뒤 스펙트로그램으로 전개하고,
+        y축 드래그로 정한 컷오프 주파수 \( y \) 에 대해 <b>0 ~ y Hz</b> 성분만 남겨 다시 재생한다.
       </p>
 
       <div class="toolbar">
-        <button id="startBtn" class="primary">마이크 시작</button>
-        <button id="stopBtn" class="stop" disabled>정지</button>
-        <button id="clearBtn">그래프 지우기</button>
+        <button id="recordBtn" class="primary">녹음 시작</button>
+        <button id="stopRecordBtn" class="stop" disabled>녹음 종료</button>
+        <button id="analyzeBtn" class="warn" disabled>스펙트럼 전개</button>
+        <button id="playOriginalBtn" disabled>원본 재생</button>
+        <button id="playFilteredBtn" class="good" disabled>필터 재생</button>
+        <button id="stopPlaybackBtn" disabled>재생 정지</button>
+        <button id="clearBtn">초기화</button>
       </div>
 
       <div class="viz-wrap" id="vizWrap">
         <canvas id="specCanvas" width="1100" height="620"></canvas>
-
         <div class="overlay" id="overlay">
-          <div class="range-fill" id="rangeFill"></div>
-          <div class="range-line" id="minLine"></div>
-          <div class="range-line" id="maxLine"></div>
-          <div class="range-handle" id="minHandle">MIN</div>
-          <div class="range-handle" id="maxHandle">MAX</div>
+          <div class="cut-fill" id="cutFill"></div>
+          <div class="cut-line" id="cutLine"></div>
+          <div class="cut-handle" id="cutHandle">CUT</div>
           <div class="axis-label label-time">시간 →</div>
           <div class="axis-label label-freq">진동수 ↑</div>
         </div>
@@ -310,18 +332,19 @@
             <div class="v" id="sampleRateView">-</div>
           </div>
           <div class="pill">
+            <div class="k">오디오 길이</div>
+            <div class="v" id="durationView">-</div>
+          </div>
+          <div class="pill">
             <div class="k">최대 분석 주파수</div>
             <div class="v" id="nyquistView">-</div>
           </div>
           <div class="pill">
-            <div class="k">표시 범위 하한</div>
-            <div class="v" id="minFreqView">-</div>
-          </div>
-          <div class="pill">
-            <div class="k">표시 범위 상한</div>
-            <div class="v" id="maxFreqView">-</div>
+            <div class="k">재생 컷오프</div>
+            <div class="v" id="cutoffView">-</div>
           </div>
         </div>
+        <div class="status" id="statusBox">녹음을 시작해라.</div>
       </div>
 
       <div class="group">
@@ -330,10 +353,19 @@
         <div class="row">
           <label for="fftSizeSelect">FFT 크기</label>
           <select id="fftSizeSelect">
+            <option value="512">512</option>
             <option value="1024">1024</option>
             <option value="2048" selected>2048</option>
             <option value="4096">4096</option>
-            <option value="8192">8192</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label for="hopRatioSelect">Hop 비율</label>
+          <select id="hopRatioSelect">
+            <option value="0.25">1/4</option>
+            <option value="0.5" selected>1/2</option>
+            <option value="0.75">3/4</option>
           </select>
         </div>
 
@@ -348,16 +380,6 @@
           <input type="range" id="maxDbSlider" min="-80" max="0" step="1" value="-20">
           <input type="number" id="maxDbNumber" min="-80" max="0" step="1" value="-20">
         </div>
-
-        <div class="row">
-          <label for="minFreqInput">하한 주파수 (Hz)</label>
-          <input type="number" id="minFreqInput" min="0" step="1" value="0">
-        </div>
-
-        <div class="row">
-          <label for="maxFreqInput">상한 주파수 (Hz)</label>
-          <input type="number" id="maxFreqInput" min="1" step="1" value="8000">
-        </div>
       </div>
 
       <div class="group">
@@ -367,12 +389,13 @@
       </div>
 
       <div class="group">
-        <h3>사용 팁</h3>
+        <h3>조작 방식</h3>
         <div class="tip">
-          1. <b>마이크 시작</b>을 누른다.<br>
-          2. 소리를 내면 오른쪽에서 왼쪽으로가 아니라, <b>왼쪽에서 오른쪽으로 시간 축이 흐르며</b> 스펙트럼이 쌓인다.<br>
-          3. 그래프 왼쪽의 <b>MIN / MAX 핸들</b>을 드래그해서 보고 싶은 주파수 대역만 확대하듯 조절한다.<br>
-          4. FFT 크기를 키우면 주파수 분해능은 좋아지지만 반응은 조금 무거워진다.
+          1. 녹음 시작 → 녹음 종료<br>
+          2. 스펙트럼 전개<br>
+          3. 그래프 왼쪽 핸들을 y축 방향으로 드래그<br>
+          4. 그 위치의 주파수값을 \( y \) 라 할 때, 재생은 <b>0 ~ y Hz</b> 만 남겨서 한다.<br>
+          5. 원본 재생과 필터 재생을 비교하면 된다.
         </div>
       </div>
     </aside>
@@ -384,57 +407,82 @@
 
     const vizWrap = document.getElementById("vizWrap");
     const overlay = document.getElementById("overlay");
-    const minHandle = document.getElementById("minHandle");
-    const maxHandle = document.getElementById("maxHandle");
-    const minLine = document.getElementById("minLine");
-    const maxLine = document.getElementById("maxLine");
-    const rangeFill = document.getElementById("rangeFill");
+    const cutHandle = document.getElementById("cutHandle");
+    const cutLine = document.getElementById("cutLine");
+    const cutFill = document.getElementById("cutFill");
 
-    const startBtn = document.getElementById("startBtn");
-    const stopBtn = document.getElementById("stopBtn");
+    const recordBtn = document.getElementById("recordBtn");
+    const stopRecordBtn = document.getElementById("stopRecordBtn");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const playOriginalBtn = document.getElementById("playOriginalBtn");
+    const playFilteredBtn = document.getElementById("playFilteredBtn");
+    const stopPlaybackBtn = document.getElementById("stopPlaybackBtn");
     const clearBtn = document.getElementById("clearBtn");
 
     const fftSizeSelect = document.getElementById("fftSizeSelect");
+    const hopRatioSelect = document.getElementById("hopRatioSelect");
     const minDbSlider = document.getElementById("minDbSlider");
     const maxDbSlider = document.getElementById("maxDbSlider");
     const minDbNumber = document.getElementById("minDbNumber");
     const maxDbNumber = document.getElementById("maxDbNumber");
-    const minFreqInput = document.getElementById("minFreqInput");
-    const maxFreqInput = document.getElementById("maxFreqInput");
 
     const sampleRateView = document.getElementById("sampleRateView");
+    const durationView = document.getElementById("durationView");
     const nyquistView = document.getElementById("nyquistView");
-    const minFreqView = document.getElementById("minFreqView");
-    const maxFreqView = document.getElementById("maxFreqView");
-
-    let audioContext = null;
-    let analyser = null;
-    let micStream = null;
-    let sourceNode = null;
-    let freqData = null;
-    let animationId = null;
+    const cutoffView = document.getElementById("cutoffView");
+    const statusBox = document.getElementById("statusBox");
 
     let plotLeft = 56;
     let plotRight = 10;
     let plotTop = 10;
     let plotBottom = 34;
 
-    let displayMinFreq = 0;
-    let displayMaxFreq = 8000;
+    let audioContext = null;
+    let micStream = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recordedBlob = null;
+    let decodedBuffer = null;
 
-    let dragging = null; // "min" | "max" | null
+    let playbackSource = null;
+
+    let spectrogramData = null;
+    let spectrogramFrames = 0;
+    let spectrogramBins = 0;
+
+    let cutoffFreq = 3000;
+    let draggingCutoff = false;
+
+    function setStatus(msg){
+      statusBox.textContent = msg;
+    }
 
     function clamp(v, min, max){
       return Math.max(min, Math.min(max, v));
     }
 
     function fmtHz(v){
+      if (!isFinite(v)) return "-";
       if (v >= 1000) return (v / 1000).toFixed(v >= 10000 ? 0 : 1) + " kHz";
       return Math.round(v) + " Hz";
     }
 
+    function fmtSec(v){
+      if (!isFinite(v)) return "-";
+      return v.toFixed(2) + " s";
+    }
+
+    function ensureAudioContext(){
+      if (!audioContext){
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      return audioContext;
+    }
+
     function getNyquist(){
-      return audioContext ? audioContext.sampleRate / 2 : 24000;
+      if (decodedBuffer) return decodedBuffer.sampleRate / 2;
+      if (audioContext) return audioContext.sampleRate / 2;
+      return 24000;
     }
 
     function syncDbInputs(){
@@ -447,18 +495,18 @@
       maxDbSlider.value = maxDbNumber.value;
     }
 
-    function applyAnalyserDb(){
-      if (!analyser) return;
-      let minDb = Number(minDbSlider.value);
-      let maxDb = Number(maxDbSlider.value);
+    function getMinDb(){
+      let v = Number(minDbSlider.value);
+      const maxDb = Number(maxDbSlider.value);
+      if (v >= maxDb - 1) v = maxDb - 1;
+      return v;
+    }
 
-      if (minDb >= maxDb - 1){
-        minDb = maxDb - 1;
-        minDbSlider.value = minDb;
-        minDbNumber.value = minDb;
-      }
-      analyser.minDecibels = minDb;
-      analyser.maxDecibels = maxDb;
+    function getMaxDb(){
+      let v = Number(maxDbSlider.value);
+      const minDb = Number(minDbSlider.value);
+      if (v <= minDb + 1) v = minDb + 1;
+      return v;
     }
 
     function resizeCanvasForDisplay(){
@@ -467,14 +515,15 @@
       const targetHeight = Math.max(420, Math.floor(targetWidth * 0.56));
       canvas.width = targetWidth;
       canvas.height = targetHeight;
-      clearSpectrogram();
-      updateOverlay();
+      clearCanvas();
       drawAxes();
+      updateCutoffOverlay();
+      if (spectrogramData) drawSpectrogram();
     }
 
-    function clearSpectrogram(){
+    function clearCanvas(){
       ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0,0,canvas.width,canvas.height);
       drawAxes();
     }
 
@@ -485,7 +534,6 @@
       const plotH = h - plotTop - plotBottom;
 
       ctx.save();
-
       ctx.strokeStyle = "rgba(255,255,255,0.22)";
       ctx.lineWidth = 1;
 
@@ -495,14 +543,14 @@
       ctx.lineTo(w - plotRight, h - plotBottom);
       ctx.stroke();
 
-      const nyquist = getNyquist();
-      const gridCount = 6;
       ctx.fillStyle = "rgba(255,255,255,0.65)";
       ctx.font = "12px Pretendard, sans-serif";
 
+      const gridCount = 6;
+      const nyquist = getNyquist();
       for(let i = 0; i <= gridCount; i++){
         const t = i / gridCount;
-        const f = displayMinFreq + (displayMaxFreq - displayMinFreq) * t;
+        const f = t * nyquist;
         const y = freqToY(f);
 
         ctx.strokeStyle = "rgba(255,255,255,0.08)";
@@ -523,72 +571,50 @@
         ctx.lineTo(x, h - plotBottom);
         ctx.stroke();
       }
-
       ctx.restore();
     }
 
+    function freqToY(freq){
+      const nyquist = getNyquist();
+      const plotH = canvas.height - plotTop - plotBottom;
+      const t = clamp(freq / nyquist, 0, 1);
+      return canvas.height - plotBottom - t * plotH;
+    }
+
     function yToFreq(y){
+      const nyquist = getNyquist();
       const plotH = canvas.height - plotTop - plotBottom;
       const t = clamp((canvas.height - plotBottom - y) / plotH, 0, 1);
-      return displayMinFreq + t * (displayMaxFreq - displayMinFreq);
-    }
-
-    function freqToY(freq){
-      const plotH = canvas.height - plotTop - plotBottom;
-      const t = (freq - displayMinFreq) / (displayMaxFreq - displayMinFreq);
-      return canvas.height - plotBottom - clamp(t, 0, 1) * plotH;
-    }
-
-    function updateOverlay(){
-      const minY = freqToY(displayMinFreq);
-      const maxY = freqToY(displayMaxFreq);
-
-      minHandle.style.top = `${minY}px`;
-      maxHandle.style.top = `${maxY}px`;
-      minLine.style.top = `${minY}px`;
-      maxLine.style.top = `${maxY}px`;
-
-      rangeFill.style.top = `${maxY}px`;
-      rangeFill.style.height = `${minY - maxY}px`;
-
-      minFreqInput.value = Math.round(displayMinFreq);
-      maxFreqInput.value = Math.round(displayMaxFreq);
-
-      minFreqView.textContent = fmtHz(displayMinFreq);
-      maxFreqView.textContent = fmtHz(displayMaxFreq);
-
-      drawAxes();
-    }
-
-    function setDisplayRange(minF, maxF){
-      const nyquist = getNyquist();
-      minF = clamp(minF, 0, nyquist - 50);
-      maxF = clamp(maxF, 50, nyquist);
-
-      if (maxF - minF < 50){
-        if (dragging === "min") {
-          minF = maxF - 50;
-        } else {
-          maxF = minF + 50;
-        }
-      }
-
-      minF = clamp(minF, 0, nyquist - 50);
-      maxF = clamp(maxF, 50, nyquist);
-
-      displayMinFreq = minF;
-      displayMaxFreq = maxF;
-
-      updateOverlay();
-      updateInfoViews();
+      return t * nyquist;
     }
 
     function updateInfoViews(){
+      if (decodedBuffer){
+        sampleRateView.textContent = Math.round(decodedBuffer.sampleRate) + " Hz";
+        durationView.textContent = fmtSec(decodedBuffer.duration);
+        nyquistView.textContent = fmtHz(decodedBuffer.sampleRate / 2);
+      } else {
+        sampleRateView.textContent = "-";
+        durationView.textContent = "-";
+        nyquistView.textContent = "-";
+      }
+      cutoffView.textContent = fmtHz(cutoffFreq);
+    }
+
+    function updateCutoffOverlay(){
+      const y = freqToY(cutoffFreq);
+      cutHandle.style.top = `${y}px`;
+      cutLine.style.top = `${y}px`;
+      cutFill.style.top = `${y}px`;
+      cutFill.style.bottom = `${plotBottom}px`;
+      cutoffView.textContent = fmtHz(cutoffFreq);
+    }
+
+    function setCutoffFreq(freq){
       const nyquist = getNyquist();
-      sampleRateView.textContent = audioContext ? `${Math.round(audioContext.sampleRate)} Hz` : "-";
-      nyquistView.textContent = `${Math.round(nyquist)} Hz`;
-      minFreqView.textContent = fmtHz(displayMinFreq);
-      maxFreqView.textContent = fmtHz(displayMaxFreq);
+      cutoffFreq = clamp(freq, 0, nyquist);
+      updateCutoffOverlay();
+      drawSpectrogram();
     }
 
     function getPointerY(event){
@@ -597,30 +623,25 @@
       return clientY - rect.top;
     }
 
-    function startDrag(which, event){
-      dragging = which;
+    function startDragCutoff(event){
+      if (!decodedBuffer) return;
+      draggingCutoff = true;
       event.preventDefault();
     }
 
-    function moveDrag(event){
-      if (!dragging) return;
+    function moveDragCutoff(event){
+      if (!draggingCutoff) return;
       const y = getPointerY(event);
-      const f = yToFreq(y);
-
-      if (dragging === "min"){
-        setDisplayRange(f, displayMaxFreq);
-      } else if (dragging === "max"){
-        setDisplayRange(displayMinFreq, f);
-      }
+      setCutoffFreq(yToFreq(y));
+      event.preventDefault();
     }
 
-    function stopDrag(){
-      dragging = null;
+    function stopDragCutoff(){
+      draggingCutoff = false;
     }
 
     function dbToColorNorm(norm){
       const t = clamp(norm, 0, 1);
-
       let r=0, g=0, b=0;
 
       if (t < 0.15){
@@ -658,179 +679,445 @@
       return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
     }
 
-    function drawSpectrogramFrame(){
-      if (!analyser || !freqData){
-        animationId = requestAnimationFrame(drawSpectrogramFrame);
+    function hannWindow(N){
+      const w = new Float32Array(N);
+      for(let n = 0; n < N; n++){
+        w[n] = 0.5 - 0.5 * Math.cos(2 * Math.PI * n / (N - 1));
+      }
+      return w;
+    }
+
+    function nextPow2(n){
+      let p = 1;
+      while(p < n) p <<= 1;
+      return p;
+    }
+
+    function fft(re, im, inverse=false){
+      const n = re.length;
+      let j = 0;
+      for(let i = 1; i < n; i++){
+        let bit = n >> 1;
+        while(j & bit){
+          j ^= bit;
+          bit >>= 1;
+        }
+        j ^= bit;
+        if(i < j){
+          [re[i], re[j]] = [re[j], re[i]];
+          [im[i], im[j]] = [im[j], im[i]];
+        }
+      }
+
+      for(let len = 2; len <= n; len <<= 1){
+        const ang = 2 * Math.PI / len * (inverse ? 1 : -1);
+        const wlenCos = Math.cos(ang);
+        const wlenSin = Math.sin(ang);
+
+        for(let i = 0; i < n; i += len){
+          let wCos = 1;
+          let wSin = 0;
+
+          for(let j = 0; j < len / 2; j++){
+            const uRe = re[i + j];
+            const uIm = im[i + j];
+            const vRe = re[i + j + len/2] * wCos - im[i + j + len/2] * wSin;
+            const vIm = re[i + j + len/2] * wSin + im[i + j + len/2] * wCos;
+
+            re[i + j] = uRe + vRe;
+            im[i + j] = uIm + vIm;
+            re[i + j + len/2] = uRe - vRe;
+            im[i + j + len/2] = uIm - vIm;
+
+            const nextCos = wCos * wlenCos - wSin * wlenSin;
+            const nextSin = wCos * wlenSin + wSin * wlenCos;
+            wCos = nextCos;
+            wSin = nextSin;
+          }
+        }
+      }
+
+      if (inverse){
+        for(let i = 0; i < n; i++){
+          re[i] /= n;
+          im[i] /= n;
+        }
+      }
+    }
+
+    function monoFromAudioBuffer(buffer){
+      const channels = buffer.numberOfChannels;
+      const length = buffer.length;
+      const out = new Float32Array(length);
+
+      for(let ch = 0; ch < channels; ch++){
+        const data = buffer.getChannelData(ch);
+        for(let i = 0; i < length; i++){
+          out[i] += data[i] / channels;
+        }
+      }
+      return out;
+    }
+
+    function computeSpectrogram(signal, sampleRate, fftSize, hopSize){
+      const window = hannWindow(fftSize);
+      const frameCount = Math.max(1, Math.floor((signal.length - fftSize) / hopSize) + 1);
+      const binCount = fftSize / 2 + 1;
+      const spec = Array.from({length: frameCount}, () => new Float32Array(binCount));
+
+      for(let frame = 0; frame < frameCount; frame++){
+        const start = frame * hopSize;
+        const re = new Float32Array(fftSize);
+        const im = new Float32Array(fftSize);
+
+        for(let n = 0; n < fftSize; n++){
+          const s = signal[start + n] || 0;
+          re[n] = s * window[n];
+        }
+
+        fft(re, im, false);
+
+        for(let k = 0; k < binCount; k++){
+          const mag = Math.sqrt(re[k]*re[k] + im[k]*im[k]);
+          const db = 20 * Math.log10(mag + 1e-9);
+          spec[frame][k] = db;
+        }
+      }
+
+      return {
+        data: spec,
+        frameCount,
+        binCount
+      };
+    }
+
+    function drawSpectrogram(){
+      clearCanvas();
+      if (!spectrogramData || !decodedBuffer) {
+        updateCutoffOverlay();
         return;
       }
 
-      analyser.getFloatFrequencyData(freqData);
+      const minDb = getMinDb();
+      const maxDb = getMaxDb();
+      const nyquist = decodedBuffer.sampleRate / 2;
 
-      const w = canvas.width;
-      const h = canvas.height;
-      const plotW = w - plotLeft - plotRight;
-      const plotH = h - plotTop - plotBottom;
+      const plotW = canvas.width - plotLeft - plotRight;
+      const plotH = canvas.height - plotTop - plotBottom;
 
-      // 한 칸씩 왼쪽으로 밀기
-      const imageData = ctx.getImageData(plotLeft + 1, plotTop, plotW - 1, plotH);
-      ctx.putImageData(imageData, plotLeft, plotTop);
+      for(let frame = 0; frame < spectrogramFrames; frame++){
+        const x0 = plotLeft + Math.floor(frame * plotW / spectrogramFrames);
+        const x1 = plotLeft + Math.floor((frame + 1) * plotW / spectrogramFrames);
+        const colW = Math.max(1, x1 - x0);
 
-      const nyquist = getNyquist();
-      const minDb = analyser.minDecibels;
-      const maxDb = analyser.maxDecibels;
+        for(let k = 0; k < spectrogramBins - 1; k++){
+          const f0 = (k / (spectrogramBins - 1)) * nyquist;
+          const f1 = ((k + 1) / (spectrogramBins - 1)) * nyquist;
 
-      const x = w - plotRight - 1;
+          const y1 = freqToY(f0);
+          const y0 = freqToY(f1);
+          const h = Math.max(1, y1 - y0);
 
-      for(let py = 0; py < plotH; py++){
-        const y = plotTop + py;
-
-        const f = yToFreq(y);
-        const idxFloat = (f / nyquist) * (freqData.length - 1);
-        const idx0 = Math.floor(idxFloat);
-        const idx1 = Math.min(freqData.length - 1, idx0 + 1);
-        const frac = idxFloat - idx0;
-
-        const db = freqData[idx0] * (1 - frac) + freqData[idx1] * frac;
-        const norm = (db - minDb) / (maxDb - minDb);
-
-        ctx.fillStyle = dbToColorNorm(norm);
-        ctx.fillRect(x, y, 1, 1);
+          const db = spectrogramData[frame][k];
+          const norm = (db - minDb) / (maxDb - minDb);
+          ctx.fillStyle = dbToColorNorm(norm);
+          ctx.fillRect(x0, y0, colW, h);
+        }
       }
 
-      // 축 다시 그림
       drawAxes();
 
-      animationId = requestAnimationFrame(drawSpectrogramFrame);
+      if (decodedBuffer){
+        const y = freqToY(cutoffFreq);
+        ctx.save();
+        ctx.strokeStyle = "rgba(125,211,252,0.95)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8,6]);
+        ctx.beginPath();
+        ctx.moveTo(plotLeft, y);
+        ctx.lineTo(canvas.width - plotRight, y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      updateCutoffOverlay();
     }
 
-    async function startMic(){
-      if (audioContext) return;
-
+    async function startRecording(){
       try{
+        stopPlayback();
+        ensureAudioContext();
+        if (audioContext.state === "suspended") await audioContext.resume();
+
         micStream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: false,
-            noiseSuppression: false,
-            autoGainControl: false
+          audio:{
+            echoCancellation:false,
+            noiseSuppression:false,
+            autoGainControl:false
           }
         });
 
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        sourceNode = audioContext.createMediaStreamSource(micStream);
-        analyser = audioContext.createAnalyser();
+        recordedChunks = [];
+        recordedBlob = null;
+        decodedBuffer = null;
+        spectrogramData = null;
+        spectrogramFrames = 0;
+        spectrogramBins = 0;
 
-        analyser.fftSize = Number(fftSizeSelect.value);
-        analyser.smoothingTimeConstant = 0.0;
-        analyser.minDecibels = Number(minDbSlider.value);
-        analyser.maxDecibels = Number(maxDbSlider.value);
+        mediaRecorder = new MediaRecorder(micStream);
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0){
+            recordedChunks.push(event.data);
+          }
+        };
 
-        sourceNode.connect(analyser);
+        mediaRecorder.onstop = async () => {
+          recordedBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+          const arrayBuffer = await recordedBlob.arrayBuffer();
+          const ctx0 = ensureAudioContext();
+          decodedBuffer = await ctx0.decodeAudioData(arrayBuffer.slice(0));
 
-        freqData = new Float32Array(analyser.frequencyBinCount);
+          cutoffFreq = Math.min(3000, decodedBuffer.sampleRate / 2);
+          updateInfoViews();
+          updateCutoffOverlay();
+          analyzeBtn.disabled = false;
+          playOriginalBtn.disabled = false;
 
-        const nyquist = getNyquist();
-        displayMinFreq = 0;
-        displayMaxFreq = Math.min(8000, nyquist);
-        minFreqInput.max = Math.round(nyquist);
-        maxFreqInput.max = Math.round(nyquist);
+          setStatus("녹음이 저장되었다. 이제 스펙트럼 전개를 눌러라.");
+        };
 
+        mediaRecorder.start();
+        recordBtn.disabled = true;
+        stopRecordBtn.disabled = false;
+        analyzeBtn.disabled = true;
+        playOriginalBtn.disabled = true;
+        playFilteredBtn.disabled = true;
+
+        clearCanvas();
         updateInfoViews();
-        updateOverlay();
-        clearSpectrogram();
-
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
-
-        drawSpectrogramFrame();
+        setStatus("녹음 중이다.");
       } catch (err){
-        alert("마이크 접근에 실패했습니다.\n브라우저 권한을 확인하세요.\n\n" + err.message);
+        setStatus("마이크 접근 실패: " + err.message);
       }
     }
 
-    async function stopMic(){
-      if (animationId){
-        cancelAnimationFrame(animationId);
-        animationId = null;
+    function stopRecording(){
+      if (!mediaRecorder) return;
+      if (mediaRecorder.state !== "inactive"){
+        mediaRecorder.stop();
       }
-
-      if (sourceNode){
-        sourceNode.disconnect();
-        sourceNode = null;
-      }
-
       if (micStream){
         micStream.getTracks().forEach(track => track.stop());
         micStream = null;
       }
-
-      if (audioContext){
-        await audioContext.close();
-        audioContext = null;
-      }
-
-      analyser = null;
-      freqData = null;
-
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-      updateInfoViews();
+      recordBtn.disabled = false;
+      stopRecordBtn.disabled = true;
     }
 
-    startBtn.addEventListener("click", startMic);
-    stopBtn.addEventListener("click", stopMic);
-    clearBtn.addEventListener("click", clearSpectrogram);
+    async function analyzeRecording(){
+      if (!decodedBuffer) return;
 
-    fftSizeSelect.addEventListener("change", () => {
-      if (!analyser) return;
-      analyser.fftSize = Number(fftSizeSelect.value);
-      freqData = new Float32Array(analyser.frequencyBinCount);
-      clearSpectrogram();
-    });
+      setStatus("스펙트럼 전개 중...");
+      await new Promise(resolve => setTimeout(resolve, 30));
+
+      const fftSize = Number(fftSizeSelect.value);
+      const hopRatio = Number(hopRatioSelect.value);
+      const hopSize = Math.max(1, Math.floor(fftSize * hopRatio));
+
+      const mono = monoFromAudioBuffer(decodedBuffer);
+      const spec = computeSpectrogram(mono, decodedBuffer.sampleRate, fftSize, hopSize);
+
+      spectrogramData = spec.data;
+      spectrogramFrames = spec.frameCount;
+      spectrogramBins = spec.binCount;
+
+      updateInfoViews();
+      drawSpectrogram();
+      playFilteredBtn.disabled = false;
+
+      setStatus("스펙트럼 전개 완료. 이제 y축에서 컷오프를 드래그해라.");
+    }
+
+    function stopPlayback(){
+      if (playbackSource){
+        try{ playbackSource.stop(); } catch(e){}
+        try{ playbackSource.disconnect(); } catch(e){}
+        playbackSource = null;
+      }
+      stopPlaybackBtn.disabled = true;
+    }
+
+    async function playOriginal(){
+      if (!decodedBuffer) return;
+      stopPlayback();
+      ensureAudioContext();
+      if (audioContext.state === "suspended") await audioContext.resume();
+
+      const src = audioContext.createBufferSource();
+      src.buffer = decodedBuffer;
+      src.connect(audioContext.destination);
+      src.onended = () => {
+        if (playbackSource === src) playbackSource = null;
+        stopPlaybackBtn.disabled = true;
+      };
+      playbackSource = src;
+      stopPlaybackBtn.disabled = false;
+      src.start();
+
+      setStatus("원본 소리를 재생 중이다.");
+    }
+
+    function rebuildFilteredBuffer(originalBuffer, cutoffHz, fftSize, hopSize){
+      const sampleRate = originalBuffer.sampleRate;
+      const mono = monoFromAudioBuffer(originalBuffer);
+      const window = hannWindow(fftSize);
+      const out = new Float32Array(mono.length + fftSize);
+      const norm = new Float32Array(mono.length + fftSize);
+
+      const frameCount = Math.max(1, Math.floor((mono.length - fftSize) / hopSize) + 1);
+      const binToKeep = Math.floor(cutoffHz / sampleRate * fftSize);
+
+      for(let frame = 0; frame < frameCount; frame++){
+        const start = frame * hopSize;
+        const re = new Float32Array(fftSize);
+        const im = new Float32Array(fftSize);
+
+        for(let n = 0; n < fftSize; n++){
+          re[n] = (mono[start + n] || 0) * window[n];
+        }
+
+        fft(re, im, false);
+
+        for(let k = 0; k < fftSize; k++){
+          let effectiveBin = k;
+          if (k > fftSize / 2) effectiveBin = fftSize - k;
+          if (effectiveBin > binToKeep){
+            re[k] = 0;
+            im[k] = 0;
+          }
+        }
+
+        fft(re, im, true);
+
+        for(let n = 0; n < fftSize; n++){
+          const w = window[n];
+          out[start + n] += re[n] * w;
+          norm[start + n] += w * w;
+        }
+      }
+
+      const finalData = new Float32Array(originalBuffer.length);
+      for(let i = 0; i < originalBuffer.length; i++){
+        finalData[i] = norm[i] > 1e-8 ? out[i] / norm[i] : 0;
+      }
+
+      const outBuffer = audioContext.createBuffer(1, finalData.length, sampleRate);
+      outBuffer.copyToChannel(finalData, 0);
+      return outBuffer;
+    }
+
+    async function playFiltered(){
+      if (!decodedBuffer) return;
+      stopPlayback();
+      ensureAudioContext();
+      if (audioContext.state === "suspended") await audioContext.resume();
+
+      const fftSize = Number(fftSizeSelect.value);
+      const hopRatio = Number(hopRatioSelect.value);
+      const hopSize = Math.max(1, Math.floor(fftSize * hopRatio));
+
+      setStatus(`0 ~ ${Math.round(cutoffFreq)} Hz 성분만 남겨 재합성 중...`);
+      await new Promise(resolve => setTimeout(resolve, 20));
+
+      const filteredBuffer = rebuildFilteredBuffer(decodedBuffer, cutoffFreq, fftSize, hopSize);
+
+      const src = audioContext.createBufferSource();
+      src.buffer = filteredBuffer;
+      src.connect(audioContext.destination);
+      src.onended = () => {
+        if (playbackSource === src) playbackSource = null;
+        stopPlaybackBtn.disabled = true;
+      };
+      playbackSource = src;
+      stopPlaybackBtn.disabled = false;
+      src.start();
+
+      setStatus(`필터 재생 중: 0 ~ ${Math.round(cutoffFreq)} Hz`);
+    }
+
+    function clearAll(){
+      stopRecording();
+      stopPlayback();
+
+      recordedChunks = [];
+      recordedBlob = null;
+      decodedBuffer = null;
+      spectrogramData = null;
+      spectrogramFrames = 0;
+      spectrogramBins = 0;
+
+      analyzeBtn.disabled = true;
+      playOriginalBtn.disabled = true;
+      playFilteredBtn.disabled = true;
+      stopPlaybackBtn.disabled = true;
+      recordBtn.disabled = false;
+      stopRecordBtn.disabled = true;
+
+      clearCanvas();
+      updateInfoViews();
+      setStatus("초기화 완료. 다시 녹음해라.");
+    }
 
     minDbSlider.addEventListener("input", () => {
       syncDbInputs();
-      applyAnalyserDb();
+      drawSpectrogram();
     });
 
     maxDbSlider.addEventListener("input", () => {
       syncDbInputs();
-      applyAnalyserDb();
+      drawSpectrogram();
     });
 
     minDbNumber.addEventListener("input", () => {
       syncDbSliders();
-      applyAnalyserDb();
+      drawSpectrogram();
     });
 
     maxDbNumber.addEventListener("input", () => {
       syncDbSliders();
-      applyAnalyserDb();
+      drawSpectrogram();
     });
 
-    minFreqInput.addEventListener("change", () => {
-      setDisplayRange(Number(minFreqInput.value), displayMaxFreq);
+    fftSizeSelect.addEventListener("change", () => {
+      if (decodedBuffer && spectrogramData) analyzeRecording();
     });
 
-    maxFreqInput.addEventListener("change", () => {
-      setDisplayRange(displayMinFreq, Number(maxFreqInput.value));
+    hopRatioSelect.addEventListener("change", () => {
+      if (decodedBuffer && spectrogramData) analyzeRecording();
     });
 
-    minHandle.addEventListener("mousedown", (e) => startDrag("min", e));
-    maxHandle.addEventListener("mousedown", (e) => startDrag("max", e));
-    minHandle.addEventListener("touchstart", (e) => startDrag("min", e), { passive:false });
-    maxHandle.addEventListener("touchstart", (e) => startDrag("max", e), { passive:false });
+    cutHandle.addEventListener("mousedown", startDragCutoff);
+    cutHandle.addEventListener("touchstart", startDragCutoff, { passive:false });
+    window.addEventListener("mousemove", moveDragCutoff);
+    window.addEventListener("touchmove", moveDragCutoff, { passive:false });
+    window.addEventListener("mouseup", stopDragCutoff);
+    window.addEventListener("touchend", stopDragCutoff);
+    window.addEventListener("touchcancel", stopDragCutoff);
 
-    window.addEventListener("mousemove", moveDrag);
-    window.addEventListener("touchmove", moveDrag, { passive:false });
-    window.addEventListener("mouseup", stopDrag);
-    window.addEventListener("touchend", stopDrag);
-    window.addEventListener("touchcancel", stopDrag);
+    recordBtn.addEventListener("click", startRecording);
+    stopRecordBtn.addEventListener("click", stopRecording);
+    analyzeBtn.addEventListener("click", analyzeRecording);
+    playOriginalBtn.addEventListener("click", playOriginal);
+    playFilteredBtn.addEventListener("click", playFiltered);
+    stopPlaybackBtn.addEventListener("click", stopPlayback);
+    clearBtn.addEventListener("click", clearAll);
 
     window.addEventListener("resize", resizeCanvasForDisplay);
 
     resizeCanvasForDisplay();
     updateInfoViews();
-    updateOverlay();
+    updateCutoffOverlay();
+    clearCanvas();
   </script>
 </body>
 </html>
