@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>소리 녹음 스펙트럼 분석기</title>
+  <title>녹음 기반 로그 스펙트럼 분석기</title>
   <style>
     :root{
       --bg:#0b1020;
@@ -320,12 +320,12 @@
 
     .cut-readout .k{
       color:var(--sub);
-      font-size:0.50rem;
+      font-size:0.72rem;
       margin-bottom:4px;
     }
 
     .cut-readout .v{
-      font-size:0.60rem;
+      font-size:0.96rem;
       font-weight:800;
       color:var(--text);
     }
@@ -583,7 +583,7 @@
   <div class="app">
     <section class="card main">
       <div class="title-row">
-        <h1 class="title">소리 녹음 스펙트럼 분석기</h1>
+        <h1 class="title">녹음 기반 로그 스펙트럼 분석기</h1>
         <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="설정 열기" aria-expanded="false">
           <span></span>
           <span></span>
@@ -594,7 +594,7 @@
       <p class="subtitle">
         녹음한 소리를 웹 메모리에 임시 저장한 뒤 <b>로그 주파수축</b> 스펙트로그램으로 전개하고,
         오른쪽 세로 컷오프 바에서 정한 컷오프에 따라 해당 주파수 이하만 남겨 다시 재생한다.
-        y축 범위는 <b>20 Hz ~ 20 kHz</b>다.
+        재생 중 컷오프를 바꾸면 소리에 실시간 반영된다.
       </p>
 
       <div class="toolbar">
@@ -602,7 +602,7 @@
         <button id="stopRecordBtn" class="stop" disabled>녹음 종료</button>
         <button id="analyzeBtn" class="warn" disabled>스펙트럼 전개</button>
         <button id="playOriginalBtn" disabled>원본 재생</button>
-        <button id="playFilteredBtn" class="good" disabled>필터 재생</button>
+        <button id="playFilteredBtn" class="good" disabled>실시간 필터 재생</button>
         <button id="stopPlaybackBtn" disabled>재생 정지</button>
         <button id="clearBtn">초기화</button>
       </div>
@@ -612,7 +612,7 @@
           <canvas id="specBgCanvas" width="900" height="900"></canvas>
           <canvas id="specFgCanvas" width="900" height="900"></canvas>
 
-          <div class="overlay" id="overlay">
+          <div class="overlay">
             <div class="axis-label label-time">시간 →</div>
             <div class="axis-label label-freq">log f ↑</div>
           </div>
@@ -669,8 +669,8 @@
           <select id="fftSizeSelect">
             <option value="512">512</option>
             <option value="1024">1024</option>
-            <option value="2048">2048</option>
-            <option value="4096" selected>4096</option>
+            <option value="2048" selected>2048</option>
+            <option value="4096">4096</option>
           </select>
         </div>
 
@@ -707,9 +707,9 @@
         <div class="tip">
           1. 녹음 시작 → 녹음 종료<br>
           2. 스펙트럼 전개<br>
-          3. 오른쪽 컷오프 바를 위아래로 드래그<br>
-          4. 도착한 로그축 위치의 주파수를 컷오프로 사용<br>
-          5. 필터 재생은 해당 컷오프 이하 주파수 성분만 남긴다
+          3. 실시간 필터 재생<br>
+          4. 오른쪽 컷오프 바를 위아래로 드래그<br>
+          5. 재생 중에도 컷오프가 즉시 반영된다
         </div>
       </div>
     </aside>
@@ -770,6 +770,9 @@
     let decodedBuffer = null;
 
     let playbackSource = null;
+    let playbackFilter = null;
+    let playbackGain = null;
+    let isFilteredLiveMode = false;
 
     let spectrogramData = null;
     let spectrogramFrames = 0;
@@ -913,17 +916,14 @@
 
     function resizeCanvasForDisplay(){
       const wrapRect = vizWrap.getBoundingClientRect();
-      const sideRect = cutScale.getBoundingClientRect();
+      const targetSize = Math.max(320, Math.floor(wrapRect.width));
 
-      const targetSize = Math.max(320, Math.floor(Math.min(wrapRect.width, wrapRect.height || wrapRect.width)));
       bgCanvas.width = targetSize;
       bgCanvas.height = targetSize;
       fgCanvas.width = targetSize;
       fgCanvas.height = targetSize;
 
-      if (sideRect.height > 0){
-        buildCutTicks();
-      }
+      buildCutTicks();
 
       clearBgCanvas();
       clearFgCanvas();
@@ -1092,9 +1092,22 @@
       drawCutoffOverlayToFg();
     }
 
+    function updateLiveFilterCutoff(){
+      if (!isFilteredLiveMode || !playbackFilter || !audioContext) return;
+
+      const now = audioContext.currentTime;
+      const target = getEffectiveCutoff();
+
+      playbackFilter.frequency.cancelScheduledValues(now);
+      playbackFilter.frequency.setTargetAtTime(target, now, 0.015);
+
+      setStatus(`실시간 필터 재생 중: 0 ~ ${Math.round(target)} Hz`);
+    }
+
     function setCutoffFreq(freq){
       cutoffFreq = clamp(freq, LOG_MIN_FREQ, LOG_MAX_FREQ);
       updateCutoffOverlay();
+      updateLiveFilterCutoff();
     }
 
     function startDragCutoff(event){
@@ -1385,20 +1398,31 @@
       drawCutoffOverlayToFg();
       playFilteredBtn.disabled = false;
 
-      setStatus("스펙트럼 전개 완료. 컷오프 바를 움직여라.");
+      setStatus("스펙트럼 전개 완료. 실시간 필터 재생을 눌러라.");
     }
 
     function stopPlayback(){
       if (playbackSource){
-        try{ playbackSource.stop(); } catch(e){}
-        try{ playbackSource.disconnect(); } catch(e){}
-        playbackSource = null;
+        try { playbackSource.stop(); } catch(e){}
+        try { playbackSource.disconnect(); } catch(e){}
       }
+      if (playbackFilter){
+        try { playbackFilter.disconnect(); } catch(e){}
+      }
+      if (playbackGain){
+        try { playbackGain.disconnect(); } catch(e){}
+      }
+
+      playbackSource = null;
+      playbackFilter = null;
+      playbackGain = null;
+      isFilteredLiveMode = false;
       stopPlaybackBtn.disabled = true;
     }
 
     async function playOriginal(){
       if (!decodedBuffer) return;
+
       stopPlayback();
       ensureAudioContext();
       if (audioContext.state === "suspended") await audioContext.resume();
@@ -1406,10 +1430,14 @@
       const src = audioContext.createBufferSource();
       src.buffer = decodedBuffer;
       src.connect(audioContext.destination);
+
       src.onended = () => {
-        if (playbackSource === src) playbackSource = null;
+        if (playbackSource === src){
+          playbackSource = null;
+        }
         stopPlaybackBtn.disabled = true;
       };
+
       playbackSource = src;
       stopPlaybackBtn.disabled = false;
       src.start();
@@ -1417,85 +1445,47 @@
       setStatus("원본 소리를 재생 중이다.");
     }
 
-    function rebuildFilteredBuffer(originalBuffer, cutoffHz, fftSize, hopSize){
-      const sampleRate = originalBuffer.sampleRate;
-      const mono = monoFromAudioBuffer(originalBuffer);
-      const window = hannWindow(fftSize);
-      const out = new Float32Array(mono.length + fftSize);
-      const norm = new Float32Array(mono.length + fftSize);
-
-      const frameCount = Math.max(1, Math.floor((mono.length - fftSize) / hopSize) + 1);
-      const effectiveCutoff = Math.min(cutoffHz, sampleRate / 2);
-      const binToKeep = Math.floor(effectiveCutoff / sampleRate * fftSize);
-
-      for(let frame = 0; frame < frameCount; frame++){
-        const start = frame * hopSize;
-        const re = new Float32Array(fftSize);
-        const im = new Float32Array(fftSize);
-
-        for(let n = 0; n < fftSize; n++){
-          re[n] = (mono[start + n] || 0) * window[n];
-        }
-
-        fft(re, im, false);
-
-        for(let k = 0; k < fftSize; k++){
-          let effectiveBin = k;
-          if (k > fftSize / 2) effectiveBin = fftSize - k;
-          if (effectiveBin > binToKeep){
-            re[k] = 0;
-            im[k] = 0;
-          }
-        }
-
-        fft(re, im, true);
-
-        for(let n = 0; n < fftSize; n++){
-          const w = window[n];
-          out[start + n] += re[n] * w;
-          norm[start + n] += w * w;
-        }
-      }
-
-      const finalData = new Float32Array(originalBuffer.length);
-      for(let i = 0; i < originalBuffer.length; i++){
-        finalData[i] = norm[i] > 1e-8 ? out[i] / norm[i] : 0;
-      }
-
-      const outBuffer = audioContext.createBuffer(1, finalData.length, sampleRate);
-      outBuffer.copyToChannel(finalData, 0);
-      return outBuffer;
-    }
-
-    async function playFiltered(){
+    async function playFilteredLive(){
       if (!decodedBuffer) return;
+
       stopPlayback();
       ensureAudioContext();
       if (audioContext.state === "suspended") await audioContext.resume();
 
-      const fftSize = Number(fftSizeSelect.value);
-      const hopRatio = Number(hopRatioSelect.value);
-      const hopSize = Math.max(1, Math.floor(fftSize * hopRatio));
-
-      const effectiveCutoff = getEffectiveCutoff();
-
-      setStatus(`0 ~ ${Math.round(effectiveCutoff)} Hz 성분만 남겨 재합성 중...`);
-      await new Promise(resolve => setTimeout(resolve, 20));
-
-      const filteredBuffer = rebuildFilteredBuffer(decodedBuffer, effectiveCutoff, fftSize, hopSize);
-
       const src = audioContext.createBufferSource();
-      src.buffer = filteredBuffer;
-      src.connect(audioContext.destination);
+      src.buffer = decodedBuffer;
+
+      const filter = audioContext.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.Q.value = 0.707;
+      filter.frequency.setValueAtTime(getEffectiveCutoff(), audioContext.currentTime);
+
+      const gainNode = audioContext.createGain();
+      gainNode.gain.value = 1.0;
+
+      src.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
       src.onended = () => {
-        if (playbackSource === src) playbackSource = null;
+        if (playbackSource === src){
+          playbackSource = null;
+          playbackFilter = null;
+          playbackGain = null;
+          isFilteredLiveMode = false;
+        }
         stopPlaybackBtn.disabled = true;
       };
+
       playbackSource = src;
+      playbackFilter = filter;
+      playbackGain = gainNode;
+      isFilteredLiveMode = true;
+
       stopPlaybackBtn.disabled = false;
       src.start();
 
-      setStatus(`필터 재생 중: 0 ~ ${Math.round(effectiveCutoff)} Hz`);
+      setStatus(`실시간 필터 재생 중: 0 ~ ${Math.round(getEffectiveCutoff())} Hz`);
     }
 
     function clearAll(){
@@ -1568,7 +1558,7 @@
     stopRecordBtn.addEventListener("click", stopRecording);
     analyzeBtn.addEventListener("click", analyzeRecording);
     playOriginalBtn.addEventListener("click", playOriginal);
-    playFilteredBtn.addEventListener("click", playFiltered);
+    playFilteredBtn.addEventListener("click", playFilteredLive);
     stopPlaybackBtn.addEventListener("click", stopPlayback);
     clearBtn.addEventListener("click", clearAll);
 
