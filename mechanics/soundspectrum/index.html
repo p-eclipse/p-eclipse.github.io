@@ -1,30 +1,1646 @@
-function resizeCanvasForDisplay(){
-  const wrapRect = vizWrap.getBoundingClientRect();
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>녹음 기반 로그 스펙트럼 분석기</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121933;
+      --panel2:#192346;
+      --line:#33406f;
+      --text:#ecf2ff;
+      --sub:#aebbe0;
+      --accent:#7dd3fc;
+      --accent2:#60a5fa;
+      --danger:#fb7185;
+      --good:#4ade80;
+      --warn:#fbbf24;
+      --mobileSidebarWidth:min(86vw, 340px);
+    }
 
-  const targetWidth = Math.max(1, Math.floor(wrapRect.width));
-  const targetHeight = Math.max(180, Math.floor(wrapRect.height));
+    *{box-sizing:border-box}
 
-  bgCanvas.width = targetWidth;
-  bgCanvas.height = targetHeight;
-  fgCanvas.width = targetWidth;
-  fgCanvas.height = targetHeight;
+    body{
+      margin:0;
+      font-family:Pretendard,"Noto Sans KR",system-ui,sans-serif;
+      background:linear-gradient(180deg,#0a0f1f,#121a31);
+      color:var(--text);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      height:100vh;
+      overflow:hidden;
+    }
 
-  plotLeft = Math.max(44, Math.floor(targetWidth * 0.07));
-  plotRight = 10;
-  plotTop = 10;
-  plotBottom = Math.max(28, Math.floor(targetHeight * 0.08));
+    .app{
+      width:min(1380px, calc(100% - 24px));
+      height:calc(100vh - 16px);
+      margin:8px auto;
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) 320px;
+      gap:16px;
+      align-items:stretch;
+    }
 
-  buildCutTicks();
+    .card{
+      background:rgba(18,25,51,0.92);
+      border:1px solid rgba(125,211,252,0.14);
+      border-radius:18px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.25);
+      overflow:hidden;
+    }
 
-  clearBgCanvas();
-  clearFgCanvas();
-  drawAxesOnBg();
+    .main{
+      padding:12px;
+      min-width:0;
+      min-height:0;
+      display:grid;
+      grid-template-rows:auto auto auto 1fr;
+      gap:10px;
+    }
 
-  if (spectrogramData && decodedBuffer){
-    rebuildFreqYCache();
-    drawSpectrogramToBg();
-  }
+    .sidebar{
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-width:0;
+      min-height:0;
+      height:100%;
+      overflow:hidden;
+    }
 
-  drawCutoffOverlayToFg();
-  updateCutoffOverlay();
-}
+    .title-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:0;
+    }
+
+    .title{
+      margin:0;
+      font-size:1.18rem;
+      font-weight:800;
+      line-height:1.2;
+    }
+
+    .mobile-menu-btn{
+      display:none;
+      width:46px;
+      height:46px;
+      border-radius:14px;
+      background:rgba(25,35,70,0.95);
+      border:1px solid rgba(255,255,255,0.08);
+      color:var(--text);
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      gap:5px;
+      padding:0;
+      flex:none;
+    }
+
+    .mobile-menu-btn span{
+      display:block;
+      width:20px;
+      height:2px;
+      border-radius:999px;
+      background:currentColor;
+    }
+
+    .subtitle{
+      margin:0;
+      color:var(--sub);
+      line-height:1.4;
+      font-size:0.84rem;
+    }
+
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom:0;
+    }
+
+    button{
+      border:none;
+      border-radius:10px;
+      padding:9px 12px;
+      font-size:0.88rem;
+      font-weight:700;
+      cursor:pointer;
+      background:var(--panel2);
+      color:var(--text);
+      border:1px solid rgba(255,255,255,0.08);
+    }
+
+    button.primary{
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#07111d;
+    }
+
+    button.stop{
+      background:linear-gradient(135deg,#fda4af,#fb7185);
+      color:#2b0911;
+    }
+
+    button.good{
+      background:linear-gradient(135deg,#86efac,#4ade80);
+      color:#08250f;
+    }
+
+    button.warn{
+      background:linear-gradient(135deg,#fde68a,#fbbf24);
+      color:#2b1e03;
+    }
+
+    button:disabled{
+      opacity:0.5;
+      cursor:not-allowed;
+    }
+
+    .viz-shell{
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) 86px;
+      gap:12px;
+      align-items:stretch;
+      min-width:0;
+      min-height:0;
+      height:100%;
+    }
+
+    .viz-wrap{
+      position:relative;
+      background:#030712;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.08);
+      overflow:hidden;
+      user-select:none;
+      min-width:0;
+      min-height:0;
+      width:100%;
+      height:100%;
+    }
+
+    #specBgCanvas,
+    #specFgCanvas{
+      position:absolute;
+      inset:0;
+      display:block;
+      width:100%;
+      height:100%;
+    }
+
+    #specBgCanvas{ z-index:1; }
+
+    #specFgCanvas{
+      z-index:2;
+      pointer-events:none;
+    }
+
+    .overlay{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index:3;
+    }
+
+    .axis-label{
+      position:absolute;
+      font-size:0.78rem;
+      color:rgba(255,255,255,0.75);
+      background:rgba(0,0,0,0.25);
+      padding:4px 8px;
+      border-radius:999px;
+      backdrop-filter:blur(6px);
+      pointer-events:none;
+    }
+
+    .label-time{
+      bottom:10px;
+      left:50%;
+      transform:translateX(-50%);
+    }
+
+    .label-freq{
+      top:50%;
+      left:8px;
+      transform:translateY(-50%) rotate(-90deg);
+      transform-origin:left top;
+    }
+
+    .cut-panel{
+      background:#09101f;
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:16px;
+      padding:10px 8px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+      min-height:0;
+      height:100%;
+    }
+
+    .cut-panel-title{
+      font-size:0.66rem;
+      font-weight:900;
+      color:#d6e9ff;
+      letter-spacing:0.08em;
+    }
+
+    .cut-scale-wrap{
+      position:relative;
+      flex:1;
+      width:100%;
+      display:flex;
+      justify-content:center;
+      align-items:stretch;
+      min-height:0;
+    }
+
+    .cut-scale{
+      position:relative;
+      width:54px;
+      height:100%;
+      min-height:0;
+      border-radius:999px;
+      border:1px solid rgba(125,211,252,0.18);
+      background:
+        linear-gradient(180deg,
+          rgba(255,255,255,0.08) 0%,
+          rgba(125,211,252,0.18) 18%,
+          rgba(96,165,250,0.28) 50%,
+          rgba(59,130,246,0.42) 100%);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,0.03);
+      touch-action:none;
+      cursor:ns-resize;
+      overflow:hidden;
+    }
+
+    .cut-scale::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0px,
+          transparent 27px,
+          rgba(255,255,255,0.06) 27px,
+          rgba(255,255,255,0.06) 28px
+        );
+      pointer-events:none;
+    }
+
+    .cut-active{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      background:linear-gradient(180deg, rgba(96,165,250,0.18), rgba(125,211,252,0.55));
+      pointer-events:none;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.22);
+    }
+
+    .cut-thumb{
+      position:absolute;
+      left:50%;
+      width:72px;
+      height:28px;
+      transform:translate(-50%, -50%);
+      border-radius:999px;
+      background:linear-gradient(135deg, rgba(125,211,252,0.95), rgba(96,165,250,0.95));
+      color:#07111d;
+      font-size:0.74rem;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 0 0 2px rgba(7,17,29,0.65), 0 6px 18px rgba(96,165,250,0.35);
+      pointer-events:none;
+    }
+
+    .cut-readout{
+      width:100%;
+      text-align:center;
+      padding:10px 8px;
+      border-radius:12px;
+      background:#0c1326;
+      border:1px solid rgba(255,255,255,0.08);
+    }
+
+    .cut-readout .k{
+      color:var(--sub);
+      font-size:0.72rem;
+      margin-bottom:4px;
+    }
+
+    .cut-readout .v{
+      font-size:0.82rem;
+      white-space:nowrap;
+      font-weight:800;
+      color:var(--text);
+    }
+
+    .cut-ticks{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+    }
+
+    .cut-tick{
+      position:absolute;
+      left:100%;
+      margin-left:8px;
+      transform:translateY(-50%);
+      color:rgba(255,255,255,0.72);
+      font-size:0.72rem;
+      white-space:nowrap;
+    }
+
+    .group{
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:14px;
+      padding:12px;
+    }
+
+    .group h3{
+      margin:0 0 8px;
+      font-size:0.95rem;
+    }
+
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin:6px 0;
+    }
+
+    .row label{
+      font-size:0.92rem;
+      color:var(--sub);
+      flex:1;
+    }
+
+    .row input[type="range"]{
+      flex:1.2;
+      accent-color:var(--accent);
+      min-width:0;
+    }
+
+    .row input[type="number"], .row select{
+      width:120px;
+      background:#0c1326;
+      color:var(--text);
+      border:1px solid rgba(255,255,255,0.1);
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:0.92rem;
+    }
+
+    .stat{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .pill{
+      background:#0c1326;
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:12px;
+      padding:8px 10px;
+    }
+
+    .pill .k{
+      color:var(--sub);
+      font-size:0.8rem;
+      margin-bottom:4px;
+    }
+
+    .pill .v{
+      font-size:1rem;
+      font-weight:800;
+      word-break:break-word;
+    }
+
+    .tip{
+      color:var(--sub);
+      line-height:1.45;
+      font-size:0.84rem;
+    }
+
+    .legend{
+      height:14px;
+      border-radius:999px;
+      background:linear-gradient(90deg,
+        #000000 0%,
+        #1d4ed8 20%,
+        #06b6d4 38%,
+        #22c55e 55%,
+        #fde047 75%,
+        #f97316 90%,
+        #ffffff 100%);
+      border:1px solid rgba(255,255,255,0.12);
+      margin-top:8px;
+    }
+
+    .status{
+      margin-top:2px;
+      padding:8px 10px;
+      border-radius:12px;
+      background:#0c1326;
+      border:1px solid rgba(255,255,255,0.08);
+      color:var(--sub);
+      font-size:0.86rem;
+      line-height:1.35;
+      min-height:42px;
+    }
+
+    .sidebar-backdrop{
+      display:none;
+    }
+
+
+    @media (min-width: 981px){
+      .app{
+        height:calc(100vh - 12px);
+        margin:6px auto;
+      }
+
+      .main,
+      .sidebar{
+        padding:10px;
+      }
+
+      .group{
+        padding:10px;
+      }
+
+      .toolbar button{
+        padding:8px 10px;
+        font-size:0.84rem;
+      }
+    }
+
+    @media (max-width: 980px){
+      .app{
+        grid-template-columns:1fr;
+        height:auto;
+        margin:16px auto 28px;
+      }
+
+      .mobile-menu-btn{
+        display:flex;
+      }
+
+      .sidebar{
+        position:fixed;
+        top:0;
+        right:0;
+        bottom:0;
+        width:var(--mobileSidebarWidth);
+        max-width:100%;
+        border-radius:0;
+        z-index:30;
+        transform:translateX(100%);
+        transition:transform 0.25s ease;
+        overflow-y:auto;
+        padding-top:70px;
+        box-shadow:-12px 0 32px rgba(0,0,0,0.35);
+      }
+
+      body.sidebar-open .sidebar{
+        transform:translateX(0);
+      }
+
+      .sidebar-backdrop{
+        display:block;
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,0.42);
+        opacity:0;
+        pointer-events:none;
+        transition:opacity 0.25s ease;
+        z-index:25;
+      }
+
+      body.sidebar-open .sidebar-backdrop{
+        opacity:1;
+        pointer-events:auto;
+      }
+
+      .viz-shell{
+        grid-template-columns:minmax(0, 1fr) 92px;
+      }
+
+      .cut-panel{
+        min-height:auto;
+      }
+
+      .row{
+        flex-wrap:wrap;
+        align-items:flex-start;
+      }
+
+      .row label{
+        width:100%;
+        flex:none;
+      }
+
+      .row input[type="range"]{
+        flex:1 1 100%;
+      }
+
+      .row input[type="number"],
+      .row select{
+        width:100%;
+      }
+    }
+
+    @media (max-width: 640px){
+      .app{
+        width:min(100%, calc(100% - 12px));
+        height:auto;
+        margin:6px auto 14px;
+        gap:10px;
+      }
+
+      .main{
+        padding:10px;
+        display:block;
+      }
+
+      .toolbar{
+        gap:8px;
+      }
+
+      .toolbar button{
+        flex:1 1 calc(50% - 8px);
+        min-width:0;
+        padding:10px 10px;
+        font-size:0.88rem;
+      }
+
+      .viz-shell{
+        gap:10px;
+        grid-template-columns:minmax(0, 1fr) 82px;
+        height:auto;
+        align-items:stretch;
+      }
+
+      .viz-wrap{
+        width:100%;
+        height:min(58vw, 360px);
+        min-height:220px;
+      }
+
+      .cut-panel{
+        padding:10px 8px;
+        height:min(58vw, 360px);
+        min-height:220px;
+      }
+
+      .cut-scale{
+        width:46px;
+      }
+
+      .cut-thumb{
+        width:64px;
+        font-size:0.68rem;
+      }
+
+      .cut-tick{
+        font-size:0.68rem;
+      }
+
+      .title{
+        font-size:1.15rem;
+      }
+
+      .subtitle{
+        font-size:0.88rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <div class="app">
+    <section class="card main">
+      <div class="title-row">
+        <h1 class="title">녹음 기반 로그 스펙트럼 분석기</h1>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="설정 열기" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+
+      <p class="subtitle">
+        녹음한 소리를 웹 메모리에 임시 저장한 뒤 <b>로그 주파수축</b> 스펙트로그램으로 전개하고,
+        오른쪽 세로 컷오프 바에서 정한 컷오프에 따라 해당 주파수 이하만 남겨 다시 재생한다.
+        재생 중 컷오프를 바꾸면 소리에 실시간 반영된다.
+      </p>
+
+      <div class="toolbar">
+        <button id="recordBtn" class="primary">녹음 시작</button>
+        <button id="stopRecordBtn" class="stop" disabled>녹음 종료</button>
+        <button id="analyzeBtn" class="warn" disabled>스펙트럼 전개</button>
+        <button id="playOriginalBtn" disabled>원본 재생</button>
+        <button id="playFilteredBtn" class="good" disabled>실시간 필터 재생</button>
+        <button id="stopPlaybackBtn" disabled>재생 정지</button>
+        <button id="clearBtn">초기화</button>
+      </div>
+
+      <div class="viz-shell">
+        <div class="viz-wrap" id="vizWrap">
+          <canvas id="specBgCanvas" width="900" height="900"></canvas>
+          <canvas id="specFgCanvas" width="900" height="900"></canvas>
+
+          <div class="overlay">
+            <div class="axis-label label-time">시간 →</div>
+            <div class="axis-label label-freq">log f ↑</div>
+          </div>
+        </div>
+
+        <div class="cut-panel">
+          <div class="cut-panel-title">CUTOFF</div>
+
+          <div class="cut-scale-wrap">
+            <div class="cut-scale" id="cutScale">
+              <div class="cut-active" id="cutActive"></div>
+              <div class="cut-thumb" id="cutThumb">CUT</div>
+            </div>
+            <div class="cut-ticks" id="cutTicks"></div>
+          </div>
+
+          <div class="cut-readout">
+            <div class="k">현재 컷오프</div>
+            <div class="v" id="cutoffViewBar">-</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="card sidebar" id="sidebar">
+      <div class="group">
+        <h3>현재 상태</h3>
+        <div class="stat">
+          <div class="pill">
+            <div class="k">샘플링 주파수</div>
+            <div class="v" id="sampleRateView">-</div>
+          </div>
+          <div class="pill">
+            <div class="k">오디오 길이</div>
+            <div class="v" id="durationView">-</div>
+          </div>
+          <div class="pill">
+            <div class="k">축 상한</div>
+            <div class="v" id="nyquistView">20.0 kHz</div>
+          </div>
+          <div class="pill">
+            <div class="k">재생 컷오프</div>
+            <div class="v" id="cutoffView">-</div>
+          </div>
+        </div>
+        <div class="status" id="statusBox">녹음을 시작해라.</div>
+      </div>
+
+      <div class="group">
+        <h3>분석 설정</h3>
+
+        <div class="row">
+          <label for="fftSizeSelect">FFT 크기</label>
+          <select id="fftSizeSelect">
+            <option value="512">512</option>
+            <option value="1024">1024</option>
+            <option value="2048" selected>2048</option>
+            <option value="4096">4096</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label for="hopRatioSelect">Hop 비율</label>
+          <select id="hopRatioSelect">
+            <option value="0.125">1/8</option>
+            <option value="0.25" selected>1/4</option>
+            <option value="0.5">1/2</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label for="minDbSlider">최소 dB</label>
+          <input type="range" id="minDbSlider" min="-120" max="-20" step="1" value="-100">
+          <input type="number" id="minDbNumber" min="-120" max="-20" step="1" value="-100">
+        </div>
+
+        <div class="row">
+          <label for="maxDbSlider">최대 dB</label>
+          <input type="range" id="maxDbSlider" min="-80" max="0" step="1" value="-20">
+          <input type="number" id="maxDbNumber" min="-80" max="0" step="1" value="-20">
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>색상 해석</h3>
+        <div class="tip">검을수록 약하고, 밝고 따뜻한 색일수록 진폭이 큰 영역이다.</div>
+        <div class="legend"></div>
+      </div>
+
+      <div class="group">
+        <h3>조작 방식</h3>
+        <div class="tip">
+          1. 녹음 시작 → 녹음 종료<br>
+          2. 스펙트럼 전개<br>
+          3. 실시간 필터 재생<br>
+          4. 오른쪽 컷오프 바를 위아래로 드래그<br>
+          5. 재생 중에도 컷오프가 즉시 반영된다
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const bgCanvas = document.getElementById("specBgCanvas");
+    const bgCtx = bgCanvas.getContext("2d");
+
+    const fgCanvas = document.getElementById("specFgCanvas");
+    const fgCtx = fgCanvas.getContext("2d");
+
+    const vizWrap = document.getElementById("vizWrap");
+    const cutScale = document.getElementById("cutScale");
+    const cutActive = document.getElementById("cutActive");
+    const cutThumb = document.getElementById("cutThumb");
+    const cutTicks = document.getElementById("cutTicks");
+
+    const recordBtn = document.getElementById("recordBtn");
+    const stopRecordBtn = document.getElementById("stopRecordBtn");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const playOriginalBtn = document.getElementById("playOriginalBtn");
+    const playFilteredBtn = document.getElementById("playFilteredBtn");
+    const stopPlaybackBtn = document.getElementById("stopPlaybackBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    const fftSizeSelect = document.getElementById("fftSizeSelect");
+    const hopRatioSelect = document.getElementById("hopRatioSelect");
+    const minDbSlider = document.getElementById("minDbSlider");
+    const maxDbSlider = document.getElementById("maxDbSlider");
+    const minDbNumber = document.getElementById("minDbNumber");
+    const maxDbNumber = document.getElementById("maxDbNumber");
+
+    const sampleRateView = document.getElementById("sampleRateView");
+    const durationView = document.getElementById("durationView");
+    const nyquistView = document.getElementById("nyquistView");
+    const cutoffView = document.getElementById("cutoffView");
+    const cutoffViewBar = document.getElementById("cutoffViewBar");
+    const statusBox = document.getElementById("statusBox");
+
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+
+    const LOG_MIN_FREQ = 20;
+    const LOG_MAX_FREQ = 20000;
+    const MOBILE_WIDTH = 980;
+
+    let plotLeft = 56;
+    let plotRight = 10;
+    let plotTop = 10;
+    let plotBottom = 34;
+
+    let audioContext = null;
+    let micStream = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recordedBlob = null;
+    let decodedBuffer = null;
+
+    let playbackSource = null;
+    let playbackFilter = null;
+    let playbackGain = null;
+    let isFilteredLiveMode = false;
+
+    let spectrogramData = null;
+    let spectrogramFrames = 0;
+    let spectrogramBins = 0;
+    let freqYCache = null;
+
+    let cutoffFreq = 3000;
+    let draggingCutoff = false;
+
+    function setStatus(msg){
+      statusBox.textContent = msg;
+    }
+
+    function clamp(v, min, max){
+      return Math.max(min, Math.min(max, v));
+    }
+
+    function fmtHz(v){
+      if (!isFinite(v)) return "-";
+      if (v >= 1000) return (v / 1000).toFixed(v >= 10000 ? 0 : 1) + " kHz";
+      return Math.round(v) + " Hz";
+    }
+
+    function fmtSec(v){
+      if (!isFinite(v)) return "-";
+      return v.toFixed(2) + " s";
+    }
+
+    function ensureAudioContext(){
+      if (!audioContext){
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      return audioContext;
+    }
+
+    function isMobileLayout(){
+      return window.innerWidth <= MOBILE_WIDTH;
+    }
+
+    function openSidebar(){
+      if (!isMobileLayout()) return;
+      document.body.classList.add("sidebar-open");
+      mobileMenuBtn.setAttribute("aria-expanded", "true");
+    }
+
+    function closeSidebar(){
+      document.body.classList.remove("sidebar-open");
+      mobileMenuBtn.setAttribute("aria-expanded", "false");
+    }
+
+    function toggleSidebar(){
+      if (!isMobileLayout()) return;
+      document.body.classList.toggle("sidebar-open");
+      mobileMenuBtn.setAttribute(
+        "aria-expanded",
+        document.body.classList.contains("sidebar-open") ? "true" : "false"
+      );
+    }
+
+    function getEffectiveCutoff(){
+      if (!decodedBuffer) return cutoffFreq;
+      return Math.min(cutoffFreq, decodedBuffer.sampleRate / 2);
+    }
+
+    function syncDbInputs(){
+      minDbNumber.value = minDbSlider.value;
+      maxDbNumber.value = maxDbSlider.value;
+    }
+
+    function syncDbSliders(){
+      minDbSlider.value = minDbNumber.value;
+      maxDbSlider.value = maxDbNumber.value;
+    }
+
+    function getMinDb(){
+      let v = Number(minDbSlider.value);
+      const maxDb = Number(maxDbSlider.value);
+      if (v >= maxDb - 1) v = maxDb - 1;
+      return v;
+    }
+
+    function getMaxDb(){
+      let v = Number(maxDbSlider.value);
+      const minDb = Number(minDbSlider.value);
+      if (v <= minDb + 1) v = minDb + 1;
+      return v;
+    }
+
+    function logFreqToNorm(freq){
+      const f = clamp(freq, LOG_MIN_FREQ, LOG_MAX_FREQ);
+      return (Math.log10(f) - Math.log10(LOG_MIN_FREQ)) /
+             (Math.log10(LOG_MAX_FREQ) - Math.log10(LOG_MIN_FREQ));
+    }
+
+    function normToLogFreq(norm){
+      const t = clamp(norm, 0, 1);
+      const logF = Math.log10(LOG_MIN_FREQ) +
+                   t * (Math.log10(LOG_MAX_FREQ) - Math.log10(LOG_MIN_FREQ));
+      return Math.pow(10, logF);
+    }
+
+    function freqToY(freq){
+      const plotH = bgCanvas.height - plotTop - plotBottom;
+      const t = logFreqToNorm(freq);
+      return bgCanvas.height - plotBottom - t * plotH;
+    }
+
+    function cutNormToFreq(norm){
+      return normToLogFreq(norm);
+    }
+
+    function cutFreqToNorm(freq){
+      return logFreqToNorm(freq);
+    }
+
+    function getCutScaleHeight(){
+      return cutScale.getBoundingClientRect().height;
+    }
+
+    function pointerYToCutFreq(clientY){
+      const rect = cutScale.getBoundingClientRect();
+      const y = clamp(clientY - rect.top, 0, rect.height);
+      const norm = 1 - (y / rect.height);
+      return cutNormToFreq(norm);
+    }
+
+    function buildCutTicks(){
+      cutTicks.innerHTML = "";
+      const rect = cutScale.getBoundingClientRect();
+      const ticks = [20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50, 20];
+
+      ticks.forEach(freq => {
+        const tick = document.createElement("div");
+        tick.className = "cut-tick";
+        const norm = cutFreqToNorm(freq);
+        tick.style.top = `${(1 - norm) * rect.height}px`;
+        tick.textContent = freq >= 1000 ? `${freq / 1000}k` : `${freq}`;
+        cutTicks.appendChild(tick);
+      });
+    }
+
+    function resizeCanvasForDisplay(){
+      const wrapRect = vizWrap.getBoundingClientRect();
+
+      const targetWidth = Math.max(1, Math.floor(wrapRect.width));
+      const targetHeight = Math.max(180, Math.floor(wrapRect.height));
+
+      bgCanvas.width = targetWidth;
+      bgCanvas.height = targetHeight;
+      fgCanvas.width = targetWidth;
+      fgCanvas.height = targetHeight;
+
+      plotLeft = Math.max(44, Math.floor(targetWidth * 0.07));
+      plotRight = 10;
+      plotTop = 10;
+      plotBottom = Math.max(28, Math.floor(targetHeight * 0.08));
+
+      buildCutTicks();
+
+      clearBgCanvas();
+      clearFgCanvas();
+      drawAxesOnBg();
+
+      if (spectrogramData && decodedBuffer){
+        rebuildFreqYCache();
+        drawSpectrogramToBg();
+      }
+
+      drawCutoffOverlayToFg();
+      updateCutoffOverlay();
+    }
+
+    function clearBgCanvas(){
+      bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+      bgCtx.fillStyle = "#000";
+      bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+    }
+
+    function clearFgCanvas(){
+      fgCtx.clearRect(0, 0, fgCanvas.width, fgCanvas.height);
+    }
+
+    function rebuildFreqYCache(){
+      if (!decodedBuffer || !spectrogramBins){
+        freqYCache = null;
+        return;
+      }
+
+      const nyquistData = decodedBuffer.sampleRate / 2;
+      freqYCache = new Array(spectrogramBins + 1);
+
+      for(let k = 0; k <= spectrogramBins; k++){
+        const f = (k / Math.max(1, spectrogramBins - 1)) * nyquistData;
+        freqYCache[k] = freqToY(clamp(f, LOG_MIN_FREQ, LOG_MAX_FREQ));
+      }
+    }
+
+    function drawAxesOnBg(){
+      const w = bgCanvas.width;
+      const h = bgCanvas.height;
+      const plotW = w - plotLeft - plotRight;
+
+      bgCtx.save();
+      bgCtx.strokeStyle = "rgba(255,255,255,0.22)";
+      bgCtx.lineWidth = 1;
+
+      bgCtx.beginPath();
+      bgCtx.moveTo(plotLeft, plotTop);
+      bgCtx.lineTo(plotLeft, h - plotBottom);
+      bgCtx.lineTo(w - plotRight, h - plotBottom);
+      bgCtx.stroke();
+
+      bgCtx.fillStyle = "rgba(255,255,255,0.65)";
+      bgCtx.font = "12px Pretendard, sans-serif";
+
+      const ticks = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
+      for(const f of ticks){
+        const y = freqToY(f);
+
+        bgCtx.strokeStyle = "rgba(255,255,255,0.08)";
+        bgCtx.beginPath();
+        bgCtx.moveTo(plotLeft, y);
+        bgCtx.lineTo(w - plotRight, y);
+        bgCtx.stroke();
+
+        const label = f >= 1000 ? `${f / 1000}k` : `${f}`;
+        bgCtx.fillText(label, 6, y + 4);
+      }
+
+      const timeGrid = 8;
+      for(let i = 0; i <= timeGrid; i++){
+        const x = plotLeft + (plotW * i / timeGrid);
+        bgCtx.strokeStyle = "rgba(255,255,255,0.05)";
+        bgCtx.beginPath();
+        bgCtx.moveTo(x, plotTop);
+        bgCtx.lineTo(x, h - plotBottom);
+        bgCtx.stroke();
+      }
+
+      bgCtx.restore();
+    }
+
+    function updateInfoViews(){
+      if (decodedBuffer){
+        sampleRateView.textContent = Math.round(decodedBuffer.sampleRate) + " Hz";
+        durationView.textContent = fmtSec(decodedBuffer.duration);
+      } else {
+        sampleRateView.textContent = "-";
+        durationView.textContent = "-";
+      }
+
+      nyquistView.textContent = "20.0 kHz";
+      cutoffView.textContent = fmtHz(cutoffFreq);
+      cutoffViewBar.textContent = fmtHz(cutoffFreq);
+    }
+
+    function drawCutoffOverlayToFg(){
+      clearFgCanvas();
+
+      if (!decodedBuffer) return;
+
+      const y = freqToY(cutoffFreq);
+
+      fgCtx.save();
+
+      fgCtx.fillStyle = "rgba(96,165,250,0.14)";
+      fgCtx.fillRect(
+        plotLeft,
+        y,
+        fgCanvas.width - plotLeft - plotRight,
+        fgCanvas.height - plotBottom - y
+      );
+
+      fgCtx.strokeStyle = "rgba(125,211,252,0.95)";
+      fgCtx.lineWidth = 2;
+      fgCtx.setLineDash([8, 6]);
+      fgCtx.beginPath();
+      fgCtx.moveTo(plotLeft, y);
+      fgCtx.lineTo(fgCanvas.width - plotRight, y);
+      fgCtx.stroke();
+
+      fgCtx.setLineDash([]);
+      fgCtx.fillStyle = "rgba(125,211,252,0.18)";
+      fgCtx.strokeStyle = "rgba(125,211,252,0.72)";
+      fgCtx.lineWidth = 1;
+
+      const tagX = 10;
+      const tagW = 44;
+      const tagH = 24;
+      const r = 12;
+      const safeY = clamp(y - 12, plotTop, fgCanvas.height - plotBottom - tagH);
+
+      fgCtx.beginPath();
+      fgCtx.moveTo(tagX + r, safeY);
+      fgCtx.arcTo(tagX + tagW, safeY, tagX + tagW, safeY + tagH, r);
+      fgCtx.arcTo(tagX + tagW, safeY + tagH, tagX, safeY + tagH, r);
+      fgCtx.arcTo(tagX, safeY + tagH, tagX, safeY, r);
+      fgCtx.arcTo(tagX, safeY, tagX + tagW, safeY, r);
+      fgCtx.closePath();
+      fgCtx.fill();
+      fgCtx.stroke();
+
+      fgCtx.fillStyle = "#dff6ff";
+      fgCtx.font = "800 12px Pretendard, sans-serif";
+      fgCtx.textAlign = "center";
+      fgCtx.textBaseline = "middle";
+      fgCtx.fillText("CUT", tagX + tagW / 2, safeY + tagH / 2);
+
+      fgCtx.restore();
+    }
+
+    function updateCutoffOverlay(){
+      const scaleHeight = getCutScaleHeight();
+      if (scaleHeight > 0){
+        const norm = cutFreqToNorm(cutoffFreq);
+        const thumbTop = (1 - norm) * scaleHeight;
+        cutThumb.style.top = `${thumbTop}px`;
+        cutActive.style.height = `${norm * scaleHeight}px`;
+      }
+
+      cutoffView.textContent = fmtHz(cutoffFreq);
+      cutoffViewBar.textContent = fmtHz(cutoffFreq);
+
+      drawCutoffOverlayToFg();
+    }
+
+    function updateLiveFilterCutoff(){
+      if (!isFilteredLiveMode || !playbackFilter || !audioContext) return;
+
+      const now = audioContext.currentTime;
+      const target = getEffectiveCutoff();
+
+      playbackFilter.frequency.cancelScheduledValues(now);
+      playbackFilter.frequency.setTargetAtTime(target, now, 0.015);
+
+      setStatus(`실시간 필터 재생 중: 0 ~ ${Math.round(target)} Hz`);
+    }
+
+    function setCutoffFreq(freq){
+      cutoffFreq = clamp(freq, LOG_MIN_FREQ, LOG_MAX_FREQ);
+      updateCutoffOverlay();
+      updateLiveFilterCutoff();
+    }
+
+    function startDragCutoff(event){
+      if (!decodedBuffer) return;
+      draggingCutoff = true;
+
+      const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+      setCutoffFreq(pointerYToCutFreq(clientY));
+      event.preventDefault();
+    }
+
+    function moveDragCutoff(event){
+      if (!draggingCutoff) return;
+      const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+      setCutoffFreq(pointerYToCutFreq(clientY));
+      event.preventDefault();
+    }
+
+    function stopDragCutoff(){
+      draggingCutoff = false;
+    }
+
+    function dbToColorNorm(norm){
+      const t = clamp(norm, 0, 1);
+      let r = 0, g = 0, b = 0;
+
+      if (t < 0.15){
+        const u = t / 0.15;
+        r = 0; g = 0; b = 40 + 120 * u;
+      } else if (t < 0.35){
+        const u = (t - 0.15) / 0.20;
+        r = 0; g = 80 * u; b = 160 + 80 * u;
+      } else if (t < 0.55){
+        const u = (t - 0.35) / 0.20;
+        r = 0; g = 160 + 80 * u; b = 240 - 120 * u;
+      } else if (t < 0.75){
+        const u = (t - 0.55) / 0.20;
+        r = 50 + 200 * u; g = 240; b = 120 - 120 * u;
+      } else if (t < 0.92){
+        const u = (t - 0.75) / 0.17;
+        r = 250; g = 240 - 120 * u; b = 0;
+      } else {
+        const u = (t - 0.92) / 0.08;
+        r = 250 + 5 * u; g = 120 + 135 * u; b = 255 * u;
+      }
+
+      return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
+    }
+
+    function hannWindow(N){
+      const w = new Float32Array(N);
+      for(let n = 0; n < N; n++){
+        w[n] = 0.5 - 0.5 * Math.cos(2 * Math.PI * n / (N - 1));
+      }
+      return w;
+    }
+
+    function fft(re, im, inverse = false){
+      const n = re.length;
+      let j = 0;
+
+      for(let i = 1; i < n; i++){
+        let bit = n >> 1;
+        while(j & bit){
+          j ^= bit;
+          bit >>= 1;
+        }
+        j ^= bit;
+        if(i < j){
+          [re[i], re[j]] = [re[j], re[i]];
+          [im[i], im[j]] = [im[j], im[i]];
+        }
+      }
+
+      for(let len = 2; len <= n; len <<= 1){
+        const ang = 2 * Math.PI / len * (inverse ? 1 : -1);
+        const wlenCos = Math.cos(ang);
+        const wlenSin = Math.sin(ang);
+
+        for(let i = 0; i < n; i += len){
+          let wCos = 1;
+          let wSin = 0;
+
+          for(let j = 0; j < len / 2; j++){
+            const uRe = re[i + j];
+            const uIm = im[i + j];
+            const vRe = re[i + j + len / 2] * wCos - im[i + j + len / 2] * wSin;
+            const vIm = re[i + j + len / 2] * wSin + im[i + j + len / 2] * wCos;
+
+            re[i + j] = uRe + vRe;
+            im[i + j] = uIm + vIm;
+            re[i + j + len / 2] = uRe - vRe;
+            im[i + j + len / 2] = uIm - vIm;
+
+            const nextCos = wCos * wlenCos - wSin * wlenSin;
+            const nextSin = wCos * wlenSin + wSin * wlenCos;
+            wCos = nextCos;
+            wSin = nextSin;
+          }
+        }
+      }
+
+      if (inverse){
+        for(let i = 0; i < n; i++){
+          re[i] /= n;
+          im[i] /= n;
+        }
+      }
+    }
+
+    function monoFromAudioBuffer(buffer){
+      const channels = buffer.numberOfChannels;
+      const length = buffer.length;
+      const out = new Float32Array(length);
+
+      for(let ch = 0; ch < channels; ch++){
+        const data = buffer.getChannelData(ch);
+        for(let i = 0; i < length; i++){
+          out[i] += data[i] / channels;
+        }
+      }
+
+      return out;
+    }
+
+    function computeSpectrogram(signal, sampleRate, fftSize, hopSize){
+      const window = hannWindow(fftSize);
+      const frameCount = Math.max(1, Math.floor((signal.length - fftSize) / hopSize) + 1);
+      const binCount = fftSize / 2 + 1;
+      const spec = Array.from({length: frameCount}, () => new Float32Array(binCount));
+
+      for(let frame = 0; frame < frameCount; frame++){
+        const start = frame * hopSize;
+        const re = new Float32Array(fftSize);
+        const im = new Float32Array(fftSize);
+
+        for(let n = 0; n < fftSize; n++){
+          const s = signal[start + n] || 0;
+          re[n] = s * window[n];
+        }
+
+        fft(re, im, false);
+
+        for(let k = 0; k < binCount; k++){
+          const mag = Math.sqrt(re[k] * re[k] + im[k] * im[k]);
+          const db = 20 * Math.log10(mag + 1e-9);
+          spec[frame][k] = db;
+        }
+      }
+
+      return { data: spec, frameCount, binCount };
+    }
+
+    function drawSpectrogramToBg(){
+      clearBgCanvas();
+      drawAxesOnBg();
+
+      if (!spectrogramData || !decodedBuffer) return;
+
+      const minDb = getMinDb();
+      const maxDb = getMaxDb();
+      const plotW = bgCanvas.width - plotLeft - plotRight;
+
+      if (!freqYCache) rebuildFreqYCache();
+
+      for(let frame = 0; frame < spectrogramFrames; frame++){
+        const x0 = plotLeft + Math.floor(frame * plotW / spectrogramFrames);
+        const x1 = plotLeft + Math.floor((frame + 1) * plotW / spectrogramFrames);
+        const colW = Math.max(1, x1 - x0);
+
+        for(let k = 1; k < spectrogramBins - 1; k++){
+          const y1 = freqYCache[k];
+          const y0 = freqYCache[k + 1];
+
+          if (y0 > bgCanvas.height - plotBottom) continue;
+          if (y1 < plotTop) continue;
+
+          const h = Math.max(1, y1 - y0);
+          const db = spectrogramData[frame][k];
+          const norm = (db - minDb) / (maxDb - minDb);
+
+          bgCtx.fillStyle = dbToColorNorm(norm);
+          bgCtx.fillRect(x0, y0, colW, h);
+        }
+      }
+
+      drawAxesOnBg();
+    }
+
+    async function startRecording(){
+      try{
+        stopPlayback();
+        ensureAudioContext();
+        if (audioContext.state === "suspended") await audioContext.resume();
+
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio:{
+            echoCancellation:false,
+            noiseSuppression:false,
+            autoGainControl:false
+          }
+        });
+
+        recordedChunks = [];
+        recordedBlob = null;
+        decodedBuffer = null;
+        spectrogramData = null;
+        spectrogramFrames = 0;
+        spectrogramBins = 0;
+        freqYCache = null;
+
+        mediaRecorder = new MediaRecorder(micStream);
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0){
+            recordedChunks.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          recordedBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+          const arrayBuffer = await recordedBlob.arrayBuffer();
+          const ctx0 = ensureAudioContext();
+          decodedBuffer = await ctx0.decodeAudioData(arrayBuffer.slice(0));
+
+          cutoffFreq = 3000;
+          updateInfoViews();
+          updateCutoffOverlay();
+          analyzeBtn.disabled = false;
+          playOriginalBtn.disabled = false;
+
+          clearBgCanvas();
+          drawAxesOnBg();
+          clearFgCanvas();
+
+          setStatus("녹음이 저장되었다. 이제 스펙트럼 전개를 눌러라.");
+        };
+
+        mediaRecorder.start();
+        recordBtn.disabled = true;
+        stopRecordBtn.disabled = false;
+        analyzeBtn.disabled = true;
+        playOriginalBtn.disabled = true;
+        playFilteredBtn.disabled = true;
+
+        clearBgCanvas();
+        drawAxesOnBg();
+        clearFgCanvas();
+        updateInfoViews();
+        setStatus("녹음 중이다.");
+      } catch (err){
+        setStatus("마이크 접근 실패: " + err.message);
+      }
+    }
+
+    function stopRecording(){
+      if (!mediaRecorder) return;
+      if (mediaRecorder.state !== "inactive"){
+        mediaRecorder.stop();
+      }
+      if (micStream){
+        micStream.getTracks().forEach(track => track.stop());
+        micStream = null;
+      }
+      recordBtn.disabled = false;
+      stopRecordBtn.disabled = true;
+    }
+
+    async function analyzeRecording(){
+      if (!decodedBuffer) return;
+
+      setStatus("스펙트럼 전개 중...");
+      await new Promise(resolve => setTimeout(resolve, 30));
+
+      const fftSize = Number(fftSizeSelect.value);
+      const hopRatio = Number(hopRatioSelect.value);
+      const hopSize = Math.max(1, Math.floor(fftSize * hopRatio));
+
+      const mono = monoFromAudioBuffer(decodedBuffer);
+      const spec = computeSpectrogram(mono, decodedBuffer.sampleRate, fftSize, hopSize);
+
+      spectrogramData = spec.data;
+      spectrogramFrames = spec.frameCount;
+      spectrogramBins = spec.binCount;
+
+      updateInfoViews();
+      rebuildFreqYCache();
+      drawSpectrogramToBg();
+      drawCutoffOverlayToFg();
+      playFilteredBtn.disabled = false;
+
+      setStatus("스펙트럼 전개 완료. 실시간 필터 재생을 눌러라.");
+    }
+
+    function stopPlayback(){
+      if (playbackSource){
+        try { playbackSource.stop(); } catch(e){}
+        try { playbackSource.disconnect(); } catch(e){}
+      }
+      if (playbackFilter){
+        try { playbackFilter.disconnect(); } catch(e){}
+      }
+      if (playbackGain){
+        try { playbackGain.disconnect(); } catch(e){}
+      }
+
+      playbackSource = null;
+      playbackFilter = null;
+      playbackGain = null;
+      isFilteredLiveMode = false;
+      stopPlaybackBtn.disabled = true;
+    }
+
+    async function playOriginal(){
+      if (!decodedBuffer) return;
+
+      stopPlayback();
+      ensureAudioContext();
+      if (audioContext.state === "suspended") await audioContext.resume();
+
+      const src = audioContext.createBufferSource();
+      src.buffer = decodedBuffer;
+      src.connect(audioContext.destination);
+
+      src.onended = () => {
+        if (playbackSource === src){
+          playbackSource = null;
+        }
+        stopPlaybackBtn.disabled = true;
+      };
+
+      playbackSource = src;
+      stopPlaybackBtn.disabled = false;
+      src.start();
+
+      setStatus("원본 소리를 재생 중이다.");
+    }
+
+    async function playFilteredLive(){
+      if (!decodedBuffer) return;
+
+      stopPlayback();
+      ensureAudioContext();
+      if (audioContext.state === "suspended") await audioContext.resume();
+
+      const src = audioContext.createBufferSource();
+      src.buffer = decodedBuffer;
+
+      const filter = audioContext.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.Q.value = 0.707;
+      filter.frequency.setValueAtTime(getEffectiveCutoff(), audioContext.currentTime);
+
+      const gainNode = audioContext.createGain();
+      gainNode.gain.value = 1.0;
+
+      src.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      src.onended = () => {
+        if (playbackSource === src){
+          playbackSource = null;
+          playbackFilter = null;
+          playbackGain = null;
+          isFilteredLiveMode = false;
+        }
+        stopPlaybackBtn.disabled = true;
+      };
+
+      playbackSource = src;
+      playbackFilter = filter;
+      playbackGain = gainNode;
+      isFilteredLiveMode = true;
+
+      stopPlaybackBtn.disabled = false;
+      src.start();
+
+      setStatus(`실시간 필터 재생 중: 0 ~ ${Math.round(getEffectiveCutoff())} Hz`);
+    }
+
+    function clearAll(){
+      stopRecording();
+      stopPlayback();
+
+      recordedChunks = [];
+      recordedBlob = null;
+      decodedBuffer = null;
+      spectrogramData = null;
+      spectrogramFrames = 0;
+      spectrogramBins = 0;
+      freqYCache = null;
+
+      analyzeBtn.disabled = true;
+      playOriginalBtn.disabled = true;
+      playFilteredBtn.disabled = true;
+      stopPlaybackBtn.disabled = true;
+      recordBtn.disabled = false;
+      stopRecordBtn.disabled = true;
+
+      cutoffFreq = 3000;
+
+      clearBgCanvas();
+      drawAxesOnBg();
+      clearFgCanvas();
+
+      updateInfoViews();
+      updateCutoffOverlay();
+      setStatus("초기화 완료. 다시 녹음해라.");
+    }
+
+    minDbSlider.addEventListener("input", () => {
+      syncDbInputs();
+      if (spectrogramData) drawSpectrogramToBg();
+    });
+
+    maxDbSlider.addEventListener("input", () => {
+      syncDbInputs();
+      if (spectrogramData) drawSpectrogramToBg();
+    });
+
+    minDbNumber.addEventListener("input", () => {
+      syncDbSliders();
+      if (spectrogramData) drawSpectrogramToBg();
+    });
+
+    maxDbNumber.addEventListener("input", () => {
+      syncDbSliders();
+      if (spectrogramData) drawSpectrogramToBg();
+    });
+
+    fftSizeSelect.addEventListener("change", () => {
+      if (decodedBuffer) analyzeRecording();
+    });
+
+    hopRatioSelect.addEventListener("change", () => {
+      if (decodedBuffer) analyzeRecording();
+    });
+
+    cutScale.addEventListener("mousedown", startDragCutoff);
+    cutScale.addEventListener("touchstart", startDragCutoff, { passive:false });
+    window.addEventListener("mousemove", moveDragCutoff);
+    window.addEventListener("touchmove", moveDragCutoff, { passive:false });
+    window.addEventListener("mouseup", stopDragCutoff);
+    window.addEventListener("touchend", stopDragCutoff);
+    window.addEventListener("touchcancel", stopDragCutoff);
+
+    recordBtn.addEventListener("click", startRecording);
+    stopRecordBtn.addEventListener("click", stopRecording);
+    analyzeBtn.addEventListener("click", analyzeRecording);
+    playOriginalBtn.addEventListener("click", playOriginal);
+    playFilteredBtn.addEventListener("click", playFilteredLive);
+    stopPlaybackBtn.addEventListener("click", stopPlayback);
+    clearBtn.addEventListener("click", clearAll);
+
+    mobileMenuBtn.addEventListener("click", toggleSidebar);
+    sidebarBackdrop.addEventListener("click", closeSidebar);
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeSidebar();
+    });
+
+    window.addEventListener("resize", () => {
+      if (!isMobileLayout()) closeSidebar();
+      resizeCanvasForDisplay();
+      buildCutTicks();
+    });
+
+    resizeCanvasForDisplay();
+    buildCutTicks();
+    updateInfoViews();
+    clearBgCanvas();
+    drawAxesOnBg();
+    clearFgCanvas();
+    drawCutoffOverlayToFg();
+  </script>
+</body>
+</html>
