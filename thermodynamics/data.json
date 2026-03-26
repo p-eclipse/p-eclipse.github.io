@@ -17,6 +17,11 @@
       "description": "단열재 실험"
     },
     {
+      "name": "Heat Transfer in Insulation",
+      "path": "./insulation2/",
+      "description": "단열재에서의 열전달"
+    },
+    {
       "name": "Specific Heat",
       "path": "./specificheat/",
       "description": "비열의제왕"
