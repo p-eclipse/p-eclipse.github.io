@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>단열재의 열전달</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+      font-family: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+      background: #eef4fb;
+      color: #16324f;
+    }
+    body { overflow-x: hidden; }
+    .app {
+      width: min(1200px, calc(100% - 24px));
+      margin: 12px auto;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 12px;
+    }
+    .panel {
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(22,50,79,0.12);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(100,116,139,0.12);
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 18px;
+      flex-wrap: wrap;
+    }
+    .title-wrap h1 {
+      margin: 0;
+      font-size: clamp(1.2rem, 2vw, 1.7rem);
+      color: #16324f;
+    }
+    .title-wrap p {
+      margin: 6px 0 0;
+      color: #4a6480;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #f8fbff;
+      border: 1px solid rgba(22,50,79,0.12);
+      font-size: 0.92rem;
+      white-space: nowrap;
+      color: #24415f;
+    }
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.96rem;
+      background: #2563eb;
+      color: #ffffff;
+      transition: transform 0.12s ease, background 0.12s ease;
+      box-shadow: 0 8px 20px rgba(37,99,235,0.18);
+    }
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(1px); }
+    button.secondary {
+      background: #ffffff;
+      color: #24415f;
+      border: 1px solid rgba(22,50,79,0.12);
+      box-shadow: none;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .section {
+      padding: 14px;
+      min-width: 0;
+    }
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      color: #16324f;
+    }
+    .section p {
+      margin: 0;
+      color: #3f5c79;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+    .legend {
+      display: grid;
+      gap: 8px;
+    }
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.93rem;
+      color: #294866;
+    }
+    .swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1px solid rgba(22,50,79,0.2);
+      flex: 0 0 16px;
+    }
+    .sim-wrap {
+      position: relative;
+      height: 520px;
+      min-height: 520px;
+      overflow: auto;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: transparent;
+    }
+    .slowmo-banner, .combo-banner, .explain-banner {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      pointer-events: none;
+      display: none;
+    }
+    .slowmo-banner {
+      top: 16px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(239,68,68,0.10);
+      border: 1px solid rgba(239,68,68,0.16);
+      color: #b91c1c;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+    }
+    .combo-banner {
+      top: 56px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(37,99,235,0.10);
+      border: 1px solid rgba(37,99,235,0.18);
+      color: #1d4ed8;
+      font-weight: 800;
+    }
+    .explain-banner {
+      bottom: 18px;
+      padding: 10px 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(22,50,79,0.14);
+      color: #16324f;
+      font-weight: 700;
+      white-space: nowrap;
+      max-width: calc(100% - 24px);
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    .show { display: block; }
+    .quiz-overlay {
+      position: absolute;
+      display: none;
+      z-index: 20;
+    }
+    .quiz-overlay.show {
+      display: block;
+      animation: fadeIn 0.18s ease;
+    }
+    .quiz-card {
+      width: 100%;
+      height: 100%;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.97);
+      border: 1px solid rgba(22,50,79,0.14);
+      box-shadow: 0 16px 40px rgba(15,23,42,0.18);
+      overflow-y: auto;
+      overflow-x: hidden;
+      animation: popIn 0.2s ease;
+    }
+    .quiz-head {
+      padding: 12px 14px 8px;
+      border-bottom: 1px solid rgba(22,50,79,0.1);
+    }
+    .quiz-head .tag {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(59,130,246,0.12);
+      color: #24548a;
+      font-size: 0.78rem;
+      margin-bottom: 8px;
+      border: 1px solid rgba(59,130,246,0.15);
+    }
+    .quiz-head h2 {
+      margin: 0;
+      font-size: 0.96rem;
+      line-height: 1.5;
+      color: #16324f;
+      white-space: normal;
+      word-break: keep-all;
+    }
+    .quiz-body {
+      padding: 12px 14px 14px;
+      display: grid;
+      gap: 10px;
+    }
+    .choices {
+      display: grid;
+      gap: 8px;
+    }
+    .choice {
+      width: 100%;
+      text-align: left;
+      background: #f8fbff;
+      color: #16324f;
+      border: 1px solid rgba(22,50,79,0.12);
+      padding: 10px 12px;
+      border-radius: 12px;
+      box-shadow: none;
+      font-size: 0.92rem;
+      line-height: 1.35;
+      white-space: normal;
+      word-break: keep-all;
+    }
+    .choice:hover { background: #eef5ff; }
+    .feedback {
+      min-height: 24px;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .feedback.good { color: #15803d; }
+    .feedback.bad { color: #dc2626; }
+    .bottombar {
+      padding: 14px 16px;
+      color: #34526f;
+      font-size: 0.98rem;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.94); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @media (max-width: 900px) {
+      .info-grid { grid-template-columns: 1fr; }
+      .sim-wrap { min-height: 420px; height: 420px; }
+    }
+    @media (max-width: 640px) {
+      .app {
+        width: min(100%, calc(100% - 12px));
+        margin: 6px auto;
+      }
+      .topbar { padding: 14px; }
+      .toolbar { width: 100%; }
+      button { flex: 1 1 auto; }
+      .pill { font-size: 0.84rem; }
+      .sim-wrap { min-height: 340px; height: 340px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="panel topbar">
+      <div class="title-wrap">
+        <h1>단열재의 열전달</h1>
+        <p>단열재에서 일어나는 열전달을 관찰해봅시다.</p>
+      </div>
+      <div class="toolbar">
+        <button id="startBtn" type="button">시작</button>
+        <button id="resetBtn" type="button" class="secondary">초기화</button>
+        <div class="pill">점수: <span id="score">0</span></div>
+        <div class="pill">이벤트: <span id="eventCount">0</span> / 3</div>
+        <div class="pill">속도: <span id="speedLabel">대기</span></div>
+        <div class="pill">콤보: <span id="comboCount">0</span></div>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="panel section">
+        <h2>상황</h2>
+        <p>단열재는 텀블러 안과 텀블러 밖의 열의 이동을 차단합니다.</p>
+      </div>
+      <div class="panel section">
+        <h2>열전달의 종류</h2>
+        <p>열 전달에는 전도, 대류, 복사 세 가지가 있습니다. 특히 복사는 입자를 거치지 않고 열이 직접 전달됩니다.</p>
+      </div>
+      <div class="panel section">
+        <h2>표시 해설</h2>
+        <div class="legend">
+          <div class="legend-row"><span class="swatch" style="background:#9ca3af"></span> 스테인리스 입자</div>
+          <div class="legend-row"><span class="swatch" style="background:#60a5fa"></span> 단열재 입자</div>
+          <div class="legend-row"><span class="swatch" style="background:#fde68a"></span> 현재 표적 입자</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel sim-wrap" id="simWrap">
+      <div class="slowmo-banner" id="slowmoBanner">SLOW MOTION QUIZ EVENT</div>
+      <div class="combo-banner" id="comboBanner">COMBO!</div>
+      <div class="explain-banner" id="explainBanner">설명</div>
+      <canvas id="simCanvas"></canvas>
+      <div class="quiz-overlay" id="quizOverlay">
+        <div class="quiz-card">
+          <div class="quiz-head">
+            <div class="tag" id="quizTag">QTE 퀴즈</div>
+            <h2 id="quizQuestion">문제</h2>
+          </div>
+          <div class="quiz-body">
+            <div class="choices">
+              <button class="choice" data-choice="전도">(1) 전도</button>
+              <button class="choice" data-choice="대류">(2) 대류</button>
+              <button class="choice" data-choice="복사">(3) 복사</button>
+            </div>
+            <div class="feedback" id="feedback"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel bottombar">
+      <div id="messageBox">시작 버튼을 누르면 시뮬레이션이 시작됩니다.</div>
+      <div>퀴즈는 사건 근처의 작은 네모 상자로 뜨고, 마지막 종합문제는 중앙의 큰 상자로 뜹니다.</div>
+      <div>두 개의 이벤트를 통과하면 마지막 종합문제가 나옵니다.</div>
+      <div>표적 입자가 외벽에 닿으면 표적은 사라지고, 다음 고체벽 충돌 입자가 새 표적이 됩니다.</div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const scoreEl = document.getElementById('score');
+    const comboCountEl = document.getElementById('comboCount');
+    const eventCountEl = document.getElementById('eventCount');
+    const speedLabelEl = document.getElementById('speedLabel');
+    const messageBox = document.getElementById('messageBox');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const quizOverlay = document.getElementById('quizOverlay');
+    const quizQuestion = document.getElementById('quizQuestion');
+    const quizTag = document.getElementById('quizTag');
+    const feedback = document.getElementById('feedback');
+    const slowmoBanner = document.getElementById('slowmoBanner');
+    const comboBanner = document.getElementById('comboBanner');
+    const explainBanner = document.getElementById('explainBanner');
+
+    let dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+
+    const state = {
+      running: false,
+      score: 0,
+      combo: 0,
+      stage: 0,
+      slowmo: false,
+      slowmoFactor: 0.16,
+      particles: [],
+      lastTime: 0,
+      pendingQuiz: null,
+      complete: false,
+      flowOffset: 0,
+      conductionWave: 0,
+      convectionBurst: 0,
+      insulatorConductionPulse: 0,
+      finalQuizShown: false,
+      particleCollisionRestitution: 0.98,
+      wallFlashHot: 0,
+      wallFlashInsulator: 0,
+      latticePhase: 0,
+      wallOscillators: [],
+      insulatorFocusParticle: null,
+      highlightParticleId: null,
+      nextParticleId: 1,
+      highlightTransferFlash: 0,
+      highlightDormant: false,
+    };
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width || canvas.offsetWidth || 600;
+      const h = rect.height || canvas.offsetHeight || 400;
+      canvas.width = Math.max(300, Math.floor(w * dpr));
+      canvas.height = Math.max(220, Math.floor(h * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function getScene() {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      const leftWall = Math.max(120, w * 0.24);
+      const insulWidth = Math.max(180, w * 0.58);
+      const insulEnd = Math.min(w - 52, leftWall + insulWidth);
+      return { w, h, leftWall, insulEnd, midY: h * 0.5 };
+    }
+
+    function createParticles() {
+      const { h, leftWall, insulEnd } = getScene();
+      state.particles = [];
+      state.wallOscillators = [];
+      state.nextParticleId = 1;
+
+      for (let i = 0; i < 20; i++) {
+        state.particles.push({
+          id: state.nextParticleId++,
+          x: leftWall + 34 + Math.random() * Math.max(20, insulEnd - leftWall - 90),
+          y: 34 + Math.random() * Math.max(20, h - 68),
+          vx: (Math.random() - 0.5) * 24,
+          vy: (Math.random() - 0.5) * 24,
+          r: 5.5,
+          baseR: 5.5,
+          glow: 0,
+          highlighted: false,
+          transferFlash: 0,
+        });
+      }
+
+      const oscRows = 15;
+      for (let i = 0; i < oscRows; i++) {
+        state.wallOscillators.push({
+          y: 28 + i * ((h - 56) / Math.max(1, oscRows - 1)),
+          amp: 1.8 + Math.random() * 1.1,
+          phase: Math.random() * Math.PI * 2,
+          baseX: leftWall - 12,
+          r: 4.8,
+        });
+      }
+
+      state.insulatorFocusParticle = {
+        id: state.nextParticleId++,
+        x: leftWall + 34,
+        y: h * 0.5 - 10,
+        vx: -12,
+        vy: 0,
+        r: 5.5,
+        baseR: 5.5,
+        glow: 0,
+        phase: 'approach',
+        highlighted: true,
+        transferFlash: 0,
+      };
+      state.highlightParticleId = state.insulatorFocusParticle.id;
+    }
+
+    function updateHud() {
+      scoreEl.textContent = String(state.score);
+      eventCountEl.textContent = String(state.stage);
+      comboCountEl.textContent = String(state.combo);
+      if (!state.running && !state.complete) speedLabelEl.textContent = '대기';
+      else if (state.slowmo) speedLabelEl.textContent = '슬로모션';
+      else if (state.complete) speedLabelEl.textContent = '완료';
+      else speedLabelEl.textContent = '정상';
+    }
+
+    function hideQuiz() {
+      quizOverlay.classList.remove('show');
+      feedback.textContent = '';
+      feedback.className = 'feedback';
+    }
+
+    function showCombo(text) {
+      comboBanner.textContent = text;
+      comboBanner.classList.add('show');
+      window.setTimeout(() => comboBanner.classList.remove('show'), 900);
+    }
+
+    function showExplain(text) {
+      explainBanner.textContent = text;
+      explainBanner.classList.add('show');
+      window.setTimeout(() => explainBanner.classList.remove('show'), 1400);
+    }
+
+    function positionQuizNear(anchorX, anchorY, mode = 'small') {
+      const scene = getScene();
+      const isCenter = mode === 'center';
+      const boxWidth = isCenter ? Math.min(520, Math.max(320, scene.w * 0.58)) : Math.min(420, Math.max(280, scene.w * 0.42));
+      const boxHeight = isCenter ? Math.min(320, scene.h - 36) : Math.min(290, scene.h - 24);
+      const left = isCenter
+        ? Math.max(12, (scene.w - boxWidth) * 0.5)
+        : Math.max(12, Math.min(scene.w - boxWidth - 12, anchorX - boxWidth * 0.5));
+      const top = isCenter
+        ? Math.max(18, (scene.h - boxHeight) * 0.24)
+        : Math.max(12, Math.min(scene.h - boxHeight - 12, anchorY - boxHeight - 18));
+      quizOverlay.style.left = `${left}px`;
+      quizOverlay.style.top = `${top}px`;
+      quizOverlay.style.width = `${boxWidth}px`;
+      quizOverlay.style.height = `${boxHeight}px`;
+    }
+
+    function pauseForQuiz(question, answer, tag, anchorX, anchorY, mode = 'small') {
+      state.slowmo = true;
+      state.pendingQuiz = { answer, mode };
+      quizQuestion.textContent = question;
+      quizTag.textContent = tag;
+      feedback.textContent = '';
+      feedback.className = 'feedback';
+      positionQuizNear(anchorX, anchorY, mode);
+      quizOverlay.classList.add('show');
+      slowmoBanner.classList.add('show');
+      updateHud();
+    }
+
+    function getCurrentHighlightParticle() {
+      if (state.highlightDormant) {
+        return null;
+      }
+      const all = [...state.particles, state.insulatorFocusParticle].filter(Boolean);
+      return all.find((p) => p.id === state.highlightParticleId) || null;
+    }
+
+    function triggerStage1() {
+      if (state.pendingQuiz || state.stage !== 0) return;
+      const highlighted = getCurrentHighlightParticle() || state.insulatorFocusParticle;
+      pauseForQuiz(
+        '단열재 입자가 뜨거운 고체벽과 직접 접촉하는 이 순간의 열전달 방식은?',
+        '전도',
+        '1차 이벤트 · 고체벽 접촉',
+        highlighted.x,
+        highlighted.y
+      );
+      messageBox.textContent = '충돌에 주목하세요.';
+    }
+
+    function triggerStage2() {
+      if (state.pendingQuiz || state.stage !== 1) return;
+      const highlighted = getCurrentHighlightParticle() || state.insulatorFocusParticle;
+      pauseForQuiz(
+        '활발해진 단열재 입자가 직접 이동하여 열을 전달하는 방법은?',
+        '대류',
+        '2차 이벤트 · 이동 구간',
+        highlighted.x,
+        highlighted.y
+      );
+      messageBox.textContent = '입자의 운동에 주목하세요.';
+    }
+
+    function triggerFinalQuiz() {
+      if (state.pendingQuiz || state.finalQuizShown || state.stage !== 2) return;
+      state.finalQuizShown = true;
+      const scene = getScene();
+      pauseForQuiz(
+        '지금까지 본 장면을 종합하면, 텀블러속 단열재에서 일어나는 열의 전달 방식은?',
+        '전도+대류',
+        '최종 문제 · 종합',
+        scene.w * 0.5,
+        scene.h * 0.45,
+        'center'
+      );
+      const choices = quizOverlay.querySelectorAll('.choice');
+      choices[0].textContent = '(1) 전도';
+      choices[0].dataset.choice = '전도';
+      choices[1].textContent = '(2) 대류';
+      choices[1].dataset.choice = '대류';
+      choices[2].textContent = '(3) 전도+대류';
+      choices[2].dataset.choice = '전도+대류';
+      messageBox.textContent = '마지막 종합문제. 두 장면을 함께 해석해 보세요.';
+    }
+
+    function handleChoice(choice) {
+      if (!state.pendingQuiz) return;
+      if (choice === state.pendingQuiz.answer) {
+        state.score += 1;
+        state.combo += 1;
+        state.stage += 1;
+        feedback.textContent = '정답!';
+        feedback.className = 'feedback good';
+        showCombo(`COMBO x${state.combo}`);
+        updateHud();
+
+        window.setTimeout(() => {
+          const answered = state.pendingQuiz.answer;
+          state.pendingQuiz = null;
+          state.slowmo = false;
+          hideQuiz();
+          slowmoBanner.classList.remove('show');
+
+          if (state.stage === 1) {
+            state.insulatorFocusParticle.phase = 'flow';
+            state.insulatorFocusParticle.vx = 62;
+            state.insulatorFocusParticle.vy = 0;
+            state.conductionWave = 0;
+            state.insulatorConductionPulse = 0;
+            showExplain('고체벽과의 접촉, 그리고 입자 충돌 순간의 번쩍임에 주목하세요.');
+            messageBox.textContent = '좋습니다. 이제 단열재 내부 이동 장면을 보세요.';
+          } else if (state.stage === 2) {
+            state.insulatorFocusParticle.phase = 'free';
+            state.insulatorFocusParticle.vx = 30;
+            state.insulatorFocusParticle.vy = -10;
+            state.convectionBurst = 1.4;
+            showExplain('입자가 직접 움직여 열이 전달되므로 대류');
+            const choices = quizOverlay.querySelectorAll('.choice');
+            choices[0].textContent = '(1) 전도'; choices[0].dataset.choice = '전도';
+            choices[1].textContent = '(2) 대류'; choices[1].dataset.choice = '대류';
+            choices[2].textContent = '(3) 복사'; choices[2].dataset.choice = '복사';
+            triggerFinalQuiz();
+          } else if (state.stage >= 3) {
+            state.complete = true;
+            startBtn.textContent = '진행 중';
+            showExplain(answered === '전도+대류' ? '충돌에서 전도, 직접 이동에서 대류' : '완료');
+            const choices = quizOverlay.querySelectorAll('.choice');
+            choices[0].textContent = '(1) 전도'; choices[0].dataset.choice = '전도';
+            choices[1].textContent = '(2) 대류'; choices[1].dataset.choice = '대류';
+            choices[2].textContent = '(3) 복사'; choices[2].dataset.choice = '복사';
+            messageBox.textContent = '완료. 시뮬레이션은 계속 진행됩니다.';
+          }
+          updateHud();
+        }, 500);
+      } else {
+        state.combo = 0;
+        feedback.textContent = '오답입니다. 다시 선택하세요.';
+        feedback.className = 'feedback bad';
+        updateHud();
+      }
+    }
+
+    function resetAll() {
+      state.running = false;
+      state.score = 0;
+      state.combo = 0;
+      state.stage = 0;
+      state.slowmo = false;
+      state.pendingQuiz = null;
+      state.complete = false;
+      state.flowOffset = 0;
+      state.lastTime = 0;
+      state.conductionWave = 0;
+      state.convectionBurst = 0;
+      state.insulatorConductionPulse = 0;
+      state.finalQuizShown = false;
+      state.wallFlashHot = 0;
+      state.wallFlashInsulator = 0;
+      state.latticePhase = 0;
+      state.highlightTransferFlash = 0;
+      state.highlightDormant = false;
+      resizeCanvas();
+      createParticles();
+      hideQuiz();
+      slowmoBanner.classList.remove('show');
+      comboBanner.classList.remove('show');
+      explainBanner.classList.remove('show');
+      const choices = quizOverlay.querySelectorAll('.choice');
+      choices[0].textContent = '(1) 전도'; choices[0].dataset.choice = '전도';
+      choices[1].textContent = '(2) 대류'; choices[1].dataset.choice = '대류';
+      choices[2].textContent = '(3) 복사'; choices[2].dataset.choice = '복사';
+      messageBox.textContent = '시작 버튼을 누르면 시뮬레이션이 시작됩니다.';
+      startBtn.textContent = '시작';
+      updateHud();
+      draw();
+    }
+
+    function startSimulation() {
+      if (state.complete) resetAll();
+      if (state.running) return;
+      state.running = true;
+      startBtn.textContent = '진행 중';
+      messageBox.textContent = '단열재 입자가 뜨거운 스테인리스 고체벽과 상호작용하는 장면을 관찰하세요.';
+      updateHud();
+    }
+
+    function exciteWallOscillators(hitY, strength = 1) {
+      for (const osc of state.wallOscillators) {
+        const dy = Math.abs(osc.y - hitY);
+        const local = Math.max(0, 1 - dy / 90);
+        osc.amp = Math.max(osc.amp, local * strength * 10);
+      }
+    }
+
+    function resolveParticleCollisions(particles, scene) {
+      for (let i = 0; i < particles.length; i++) {
+        const a = particles[i];
+        for (let j = i + 1; j < particles.length; j++) {
+          const b = particles[j];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const distSq = dx * dx + dy * dy;
+          const minDist = a.r + b.r;
+          if (distSq === 0 || distSq >= minDist * minDist) continue;
+
+          const dist = Math.sqrt(distSq);
+          const nx = dx / dist;
+          const ny = dy / dist;
+          const overlap = minDist - dist;
+          a.x -= nx * overlap * 0.5;
+          a.y -= ny * overlap * 0.5;
+          b.x += nx * overlap * 0.5;
+          b.y += ny * overlap * 0.5;
+
+          const axPrev = a.vx;
+          const bxPrev = b.vx;
+          const rvx = b.vx - a.vx;
+          const rvy = b.vy - a.vy;
+          const velAlongNormal = rvx * nx + rvy * ny;
+          if (velAlongNormal > 0) continue;
+
+          const impulse = -(1 + state.particleCollisionRestitution) * velAlongNormal / 2;
+          const ix = impulse * nx;
+          const iy = impulse * ny;
+          a.vx -= ix;
+          a.vy -= iy;
+          b.vx += ix;
+          b.vy += iy;
+          a.glow = Math.max(a.glow, 0.35);
+          b.glow = Math.max(b.glow, 0.35);
+
+          const highlight = getCurrentHighlightParticle();
+          if (highlight) {
+            let candidate = null;
+            if (highlight.id === a.id && b.vx > a.vx + 0.8) candidate = b;
+            else if (highlight.id === b.id && a.vx > b.vx + 0.8) candidate = a;
+
+            if (candidate && candidate.id !== state.highlightParticleId && candidate.x >= scene.leftWall && candidate.x <= scene.insulEnd) {
+              const previous = highlight;
+              if (previous) {
+                previous.highlighted = false;
+                previous.transferFlash = 0;
+                previous.r = previous.baseR;
+              }
+              state.highlightParticleId = candidate.id;
+              state.highlightDormant = false;
+              candidate.highlighted = true;
+              candidate.glow = Math.max(candidate.glow, 1);
+              candidate.transferFlash = 1;
+              candidate.r = candidate.baseR + 6;
+              state.highlightTransferFlash = 1;
+            }
+          }
+        }
+      }
+    }
+
+    function update(dt) {
+      const scene = getScene();
+      const simDt = dt * (state.slowmo ? state.slowmoFactor : 1);
+      state.flowOffset += simDt * 28;
+      state.conductionWave = Math.max(0, state.conductionWave - simDt);
+      state.convectionBurst = Math.max(0, state.convectionBurst - simDt);
+      state.insulatorConductionPulse = Math.max(0, state.insulatorConductionPulse - simDt * 0.9);
+      state.wallFlashHot = Math.max(0, state.wallFlashHot - simDt * 2.8);
+      state.wallFlashInsulator = Math.max(0, state.wallFlashInsulator - simDt * 2.8);
+      state.latticePhase += simDt * 8;
+
+      for (const osc of state.wallOscillators) {
+        osc.amp = Math.max(1.2, osc.amp * (1 - simDt * 3.4));
+      }
+      state.highlightTransferFlash = Math.max(0, state.highlightTransferFlash - simDt * 2.4);
+
+      for (const p of state.particles) {
+        if (state.convectionBurst > 0) p.vx += 6 * simDt;
+
+        p.x += p.vx * simDt;
+        p.y += p.vy * simDt;
+        p.glow = Math.max(0, p.glow - simDt * 2.2);
+        p.transferFlash = Math.max(0, (p.transferFlash || 0) - simDt * 2.6);
+        p.r = p.baseR + ((p.highlighted ? 2.4 : 0) + (p.transferFlash || 0) * 3.8);
+
+        if (p.y < 18 + p.r) {
+          p.y = 18 + p.r;
+          p.vy = Math.abs(p.vy);
+        }
+        if (p.y > scene.h - 18 - p.r) {
+          p.y = scene.h - 18 - p.r;
+          p.vy = -Math.abs(p.vy);
+        }
+
+        if (p.x < scene.leftWall + p.r) {
+          p.x = scene.leftWall + p.r;
+          p.vx = Math.abs(p.vx) * 1.35 + 16;
+          p.vy += (Math.random() - 0.5) * 14;
+          p.glow = Math.max(p.glow, 0.55);
+          state.wallFlashHot = 1;
+          state.wallFlashInsulator = 1;
+          exciteWallOscillators(p.y, 1.2);
+          if (state.highlightDormant) {
+            state.highlightParticleId = p.id;
+            state.highlightDormant = false;
+            p.highlighted = true;
+            p.transferFlash = 1;
+            p.glow = Math.max(p.glow, 1);
+            state.highlightTransferFlash = 1;
+          }
+        }
+        if (p.x > scene.insulEnd - p.r) {
+          const wasHighlighted = !state.highlightDormant && p.id === state.highlightParticleId;
+          p.x = scene.insulEnd - p.r;
+          p.vx = -Math.abs(p.vx) * 0.55;
+          p.vy *= 0.82;
+          p.glow = Math.max(p.glow, 0.45);
+          if (wasHighlighted) {
+            state.highlightDormant = true;
+            p.highlighted = false;
+            p.transferFlash = 0;
+            p.r = p.baseR;
+            state.highlightTransferFlash = 0;
+          }
+        }
+      }
+
+      const ip = state.insulatorFocusParticle;
+      if (!ip) return;
+      ip.glow = Math.max(0, ip.glow - simDt * 1.8);
+      ip.transferFlash = Math.max(0, (ip.transferFlash || 0) - simDt * 2.6);
+      ip.r = ip.baseR + ((ip.highlighted ? 2.8 : 0) + (ip.transferFlash || 0) * 4.2);
+
+      if (ip.phase === 'approach') {
+        ip.x += ip.vx * simDt;
+        const collisionX = scene.leftWall + ip.r;
+        if (ip.x <= collisionX) {
+          ip.x = collisionX;
+          state.wallFlashHot = 1;
+          state.wallFlashInsulator = 1;
+          ip.vx = 18;
+          ip.vy = (Math.random() - 0.5) * 8;
+          ip.phase = 'wait';
+          ip.glow = 1;
+          exciteWallOscillators(ip.y, 1.35);
+          triggerStage1();
+        }
+      } else if (ip.phase === 'flow') {
+        ip.x += ip.vx * simDt;
+        ip.y += ip.vy * simDt;
+        const highlighted = getCurrentHighlightParticle() || ip;
+        const quizX = scene.leftWall + (scene.insulEnd - scene.leftWall) * 0.6;
+        if (highlighted.x >= quizX) {
+          ip.phase = 'quiz';
+          highlighted.glow = Math.max(highlighted.glow, 1);
+          triggerStage2();
+        }
+      } else if (ip.phase === 'free') {
+        ip.x += ip.vx * simDt;
+        ip.y += ip.vy * simDt;
+
+        if (ip.x < scene.leftWall + ip.r) {
+          ip.x = scene.leftWall + ip.r;
+          ip.vx = Math.abs(ip.vx) * 1.35 + 16;
+          ip.vy += (Math.random() - 0.5) * 14;
+          ip.glow = Math.max(ip.glow, 0.6);
+          state.wallFlashHot = 1;
+          state.wallFlashInsulator = 1;
+          exciteWallOscillators(ip.y, 1.1);
+        }
+        if (ip.x > scene.insulEnd - ip.r) {
+          const wasHighlighted = !state.highlightDormant && ip.id === state.highlightParticleId;
+          ip.x = scene.insulEnd - ip.r;
+          ip.vx = -Math.abs(ip.vx) * 0.55;
+          ip.vy *= 0.82;
+          ip.glow = Math.max(ip.glow, 0.45);
+          if (wasHighlighted) {
+            state.highlightDormant = true;
+            ip.highlighted = false;
+            ip.transferFlash = 0;
+            ip.r = ip.baseR;
+            state.highlightTransferFlash = 0;
+          }
+        }
+        if (ip.y < 24 + ip.r) {
+          ip.y = 24 + ip.r;
+          ip.vy = Math.abs(ip.vy);
+        }
+        if (ip.y > scene.h - 24 - ip.r) {
+          ip.y = scene.h - 24 - ip.r;
+          ip.vy = -Math.abs(ip.vy);
+        }
+      }
+
+      resolveParticleCollisions([...state.particles, state.insulatorFocusParticle].filter(Boolean), scene);
+
+      const current = getCurrentHighlightParticle();
+      for (const p of [...state.particles, state.insulatorFocusParticle].filter(Boolean)) {
+        p.highlighted = current ? p.id === current.id : false;
+        const highlightBoost = p.highlighted ? 2.8 : 0;
+        const transferBoost = (p.transferFlash || 0) * 4.2;
+        p.r = p.baseR + highlightBoost + transferBoost;
+      }
+    }
+
+    function drawLayerLabels(scene) {
+      ctx.save();
+      ctx.font = '700 15px Pretendard, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#294866';
+      ctx.fillText('뜨거운 스테인리스 고체벽', scene.leftWall * 0.5, 28);
+      ctx.fillText('단열재', (scene.leftWall + scene.insulEnd) * 0.5, 28);
+      ctx.fillText('텀블러 외벽', (scene.insulEnd + scene.w) * 0.5, 28);
+      ctx.restore();
+    }
+
+    function drawScene(scene) {
+      const { w, h, leftWall, insulEnd } = scene;
+      const bg = ctx.createLinearGradient(0, 0, 0, h);
+      bg.addColorStop(0, '#f8fbff');
+      bg.addColorStop(1, '#eaf2fb');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.fillStyle = 'rgba(120,120,120,0.25)';
+      ctx.fillRect(0, 0, leftWall, h);
+
+      ctx.fillStyle = state.wallFlashHot > 0
+        ? `rgba(250,204,21,${0.18 + state.wallFlashHot * 0.24})`
+        : 'rgba(100,116,139,0.16)';
+      ctx.fillRect(leftWall - 16, 0, 16, h);
+
+      for (const osc of state.wallOscillators) {
+        const offset = Math.sin(state.latticePhase + osc.phase) * osc.amp;
+        ctx.beginPath();
+        ctx.arc(osc.baseX + offset, osc.y, osc.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(71,85,105,${0.45 + Math.min(0.35, osc.amp * 0.03)})`;
+        ctx.fill();
+      }
+
+      ctx.fillStyle = 'rgba(255,255,255,0.65)';
+      ctx.fillRect(leftWall, 0, insulEnd - leftWall, h);
+      if (state.highlightTransferFlash > 0) {
+        const highlighted = getCurrentHighlightParticle();
+        if (highlighted) {
+          const alpha = 0.10 + state.highlightTransferFlash * 0.22;
+          const grad = ctx.createRadialGradient(highlighted.x, highlighted.y, 4, highlighted.x, highlighted.y, 34);
+          grad.addColorStop(0, `rgba(250,204,21,${alpha})`);
+          grad.addColorStop(1, 'rgba(250,204,21,0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(highlighted.x, highlighted.y, 34, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      if (state.wallFlashInsulator > 0) {
+        ctx.fillStyle = `rgba(96,165,250,${0.08 + state.wallFlashInsulator * 0.18})`;
+        ctx.fillRect(leftWall, 0, 16, h);
+      }
+
+      for (let i = 0; i < 14; i++) {
+        const y = 26 + i * ((h - 52) / 13);
+        const xShift = Math.sin((state.flowOffset + i * 22) * 0.02) * 8;
+        ctx.beginPath();
+        ctx.moveTo(leftWall + 18 + xShift, y);
+        ctx.lineTo(insulEnd - 18 + xShift, y);
+        ctx.strokeStyle = 'rgba(59,130,246,0.12)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = 'rgba(100,116,139,0.14)';
+      ctx.fillRect(insulEnd, 0, 10, h);
+      if (state.wallFlashInsulator > 0) {
+        ctx.fillStyle = `rgba(248,113,113,${0.08 + state.wallFlashInsulator * 0.16})`;
+        ctx.fillRect(insulEnd, 0, 10, h);
+      }
+      ctx.fillStyle = 'rgba(59,130,246,0.08)';
+      ctx.fillRect(insulEnd + 22, 0, w - insulEnd - 22, h);
+
+      drawLayerLabels(scene);
+    }
+
+    function drawParticles() {
+      for (const p of state.particles) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        if (p.highlighted || p.glow > 0.05 || (p.transferFlash || 0) > 0.01) {
+          ctx.shadowBlur = p.highlighted ? 26 : 18;
+          ctx.shadowColor = '#fde68a';
+          ctx.fillStyle = '#fde68a';
+        } else {
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = '#60a5fa';
+        }
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+
+      const ip = state.insulatorFocusParticle;
+      if (ip) {
+        ctx.beginPath();
+        ctx.arc(ip.x, ip.y, ip.r, 0, Math.PI * 2);
+        ctx.shadowBlur = ip.highlighted || ip.glow > 0.05 || (ip.transferFlash || 0) > 0.01 ? 28 : 0;
+        ctx.shadowColor = '#fde68a';
+        ctx.fillStyle = ip.highlighted || ip.glow > 0.05 ? '#fde68a' : '#60a5fa';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    function drawAnnotations(scene) {
+      const ip = state.insulatorFocusParticle;
+      ctx.save();
+      ctx.font = '700 15px Pretendard, sans-serif';
+      ctx.textAlign = 'left';
+
+      if (ip && (ip.phase === 'approach' || ip.phase === 'wait')) {
+        ctx.fillStyle = '#a16207';
+        ctx.fillText('단열재 입자가 고체벽에서 에너지를 크게 받고, 내부 전도도 함께 진행 중', 24, scene.h - 26);
+      } else if (ip && (ip.phase === 'flow' || ip.phase === 'quiz' || ip.phase === 'free')) {
+        ctx.fillStyle = '#1d4ed8';
+        ctx.fillText('표적 입자가 단열재 내부에서 전달을 이어가는 중', 24, scene.h - 26);
+      } else if (state.highlightDormant) {
+        ctx.fillStyle = '#46627e';
+        ctx.fillText('표적 입자가 외벽에서 사라짐. 다음 고체벽 충돌 입자가 새 표적이 됩니다.', 24, scene.h - 26);
+      } else {
+        ctx.fillStyle = '#46627e';
+        ctx.fillText('시작 버튼을 눌러 시뮬레이션을 시작하세요.', 24, scene.h - 26);
+      }
+      ctx.restore();
+    }
+
+    function draw() {
+      const scene = getScene();
+      drawScene(scene);
+      drawParticles();
+      drawAnnotations(scene);
+    }
+
+    function animate(ts) {
+      if (!state.lastTime) state.lastTime = ts;
+      const dt = Math.min(0.033, (ts - state.lastTime) / 1000);
+      state.lastTime = ts;
+      if (state.running) update(dt);
+      draw();
+      requestAnimationFrame(animate);
+    }
+
+    document.querySelectorAll('.choice').forEach((btn) => {
+      btn.addEventListener('click', () => handleChoice(btn.dataset.choice));
+    });
+
+    startBtn.addEventListener('click', startSimulation);
+    resetBtn.addEventListener('click', resetAll);
+
+    window.addEventListener('resize', () => {
+      const shouldResume = state.running;
+      const pendingMode = state.pendingQuiz ? state.pendingQuiz.mode : null;
+      resizeCanvas();
+      createParticles();
+      if (pendingMode) {
+        const scene = getScene();
+        if (pendingMode === 'center') {
+          positionQuizNear(scene.w * 0.5, scene.h * 0.45, 'center');
+        } else if (state.insulatorFocusParticle) {
+          const highlighted = getCurrentHighlightParticle() || state.insulatorFocusParticle;
+          positionQuizNear(highlighted.x, highlighted.y, 'small');
+        }
+      }
+      state.running = shouldResume && !state.complete;
+      draw();
+    });
+
+    resetAll();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
