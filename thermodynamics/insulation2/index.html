@@ -146,6 +146,11 @@
       height: 520px;
       min-height: 520px;
       overflow: hidden;
+      background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+      border: 1px solid rgba(15, 23, 42, 0.28);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.04),
+        0 14px 36px rgba(15,23,42,0.22);
     }
 
     canvas {
@@ -170,35 +175,38 @@
       top: 16px;
       padding: 10px 16px;
       border-radius: 999px;
-      background: rgba(239,68,68,0.10);
-      border: 1px solid rgba(239,68,68,0.16);
-      color: #b91c1c;
+      background: rgba(239,68,68,0.18);
+      border: 1px solid rgba(248,113,113,0.28);
+      color: #fecaca;
       font-weight: 800;
       letter-spacing: 0.03em;
+      backdrop-filter: blur(6px);
     }
 
     .combo-banner {
       top: 56px;
       padding: 10px 16px;
       border-radius: 999px;
-      background: rgba(37,99,235,0.10);
-      border: 1px solid rgba(37,99,235,0.18);
-      color: #1d4ed8;
+      background: rgba(37,99,235,0.18);
+      border: 1px solid rgba(96,165,250,0.28);
+      color: #dbeafe;
       font-weight: 800;
+      backdrop-filter: blur(6px);
     }
 
     .explain-banner {
       bottom: 18px;
       padding: 10px 16px;
       border-radius: 14px;
-      background: rgba(255,255,255,0.92);
-      border: 1px solid rgba(22,50,79,0.14);
-      color: #16324f;
+      background: rgba(15,23,42,0.84);
+      border: 1px solid rgba(148,163,184,0.24);
+      color: #f8fafc;
       font-weight: 700;
       white-space: nowrap;
       max-width: calc(100% - 24px);
       text-overflow: ellipsis;
       overflow: hidden;
+      backdrop-filter: blur(8px);
     }
 
     .show { display: block; }
@@ -221,7 +229,7 @@
       border-radius: 16px;
       background: rgba(255,255,255,0.98);
       border: 1px solid rgba(22,50,79,0.14);
-      box-shadow: 0 16px 36px rgba(15,23,42,0.18);
+      box-shadow: 0 16px 36px rgba(15,23,42,0.28);
       overflow: hidden;
       animation: popIn 0.18s ease;
       display: flex;
@@ -365,7 +373,7 @@
         <h2>표시 해설</h2>
         <div class="legend">
           <div class="legend-row"><span class="swatch" style="background:#9ca3af"></span> 스테인리스 입자</div>
-          <div class="legend-row"><span class="swatch" style="background:#60a5fa"></span> 단열재 입자</div>
+          <div class="legend-row"><span class="swatch" style="background:#7dd3fc"></span> 단열재 입자</div>
           <div class="legend-row"><span class="swatch" style="background:#fde68a"></span> 현재 표적 입자</div>
         </div>
       </div>
@@ -626,17 +634,9 @@
 
       let rect = makeRect(92, false);
 
-      if (rectOverlap(rect, protectedRect)) {
-        rect = makeRect(122, false);
-      }
-
-      if (rectOverlap(rect, protectedRect)) {
-        rect = makeRect(92, true);
-      }
-
-      if (rectOverlap(rect, protectedRect)) {
-        rect = makeRect(122, true);
-      }
+      if (rectOverlap(rect, protectedRect)) rect = makeRect(122, false);
+      if (rectOverlap(rect, protectedRect)) rect = makeRect(92, true);
+      if (rectOverlap(rect, protectedRect)) rect = makeRect(122, true);
 
       quizOverlay.style.left = `${rect.left}px`;
       quizOverlay.style.top = `${rect.top}px`;
@@ -1080,7 +1080,9 @@
       ctx.save();
       ctx.font = '700 15px Pretendard, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillStyle = '#294866';
+      ctx.fillStyle = '#e2e8f0';
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(15,23,42,0.9)';
       ctx.fillText('뜨거운 스테인리스 고체벽', scene.leftWall * 0.5, 28);
       ctx.fillText('단열재', (scene.leftWall + scene.insulEnd) * 0.5, 28);
       ctx.fillText('텀블러 외벽', (scene.insulEnd + scene.w) * 0.5, 28);
@@ -1091,46 +1093,53 @@
       const { w, h, leftWall, insulEnd } = scene;
 
       const bg = ctx.createLinearGradient(0, 0, 0, h);
-      bg.addColorStop(0, '#f8fbff');
-      bg.addColorStop(1, '#eaf2fb');
+      bg.addColorStop(0, '#0b1220');
+      bg.addColorStop(1, '#111c33');
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, w, h);
 
-      ctx.fillStyle = 'rgba(120,120,120,0.25)';
+      const steelGrad = ctx.createLinearGradient(0, 0, leftWall, 0);
+      steelGrad.addColorStop(0, '#1f2937');
+      steelGrad.addColorStop(1, '#334155');
+      ctx.fillStyle = steelGrad;
       ctx.fillRect(0, 0, leftWall, h);
 
       ctx.fillStyle = state.wallFlashHot > 0
-        ? `rgba(250,204,21,${0.18 + state.wallFlashHot * 0.24})`
-        : 'rgba(100,116,139,0.16)';
-      ctx.fillRect(leftWall - 16, 0, 16, h);
+        ? `rgba(251,191,36,${0.22 + state.wallFlashHot * 0.28})`
+        : 'rgba(148,163,184,0.18)';
+      ctx.fillRect(leftWall - 18, 0, 18, h);
 
       for (const osc of state.wallOscillators) {
         const offset = Math.sin(state.latticePhase + osc.phase) * osc.amp;
         ctx.beginPath();
         ctx.arc(osc.baseX + offset, osc.y, osc.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(71,85,105,${0.45 + Math.min(0.35, osc.amp * 0.03)})`;
+        ctx.fillStyle = `rgba(203,213,225,${0.38 + Math.min(0.36, osc.amp * 0.03)})`;
         ctx.fill();
       }
 
-      ctx.fillStyle = 'rgba(255,255,255,0.65)';
+      const insulatorGrad = ctx.createLinearGradient(leftWall, 0, insulEnd, 0);
+      insulatorGrad.addColorStop(0, 'rgba(15,23,42,0.20)');
+      insulatorGrad.addColorStop(0.5, 'rgba(30,41,59,0.08)');
+      insulatorGrad.addColorStop(1, 'rgba(15,23,42,0.20)');
+      ctx.fillStyle = insulatorGrad;
       ctx.fillRect(leftWall, 0, insulEnd - leftWall, h);
 
       if (state.highlightTransferFlash > 0) {
         const highlighted = getCurrentHighlightParticle();
         if (highlighted) {
-          const alpha = 0.10 + state.highlightTransferFlash * 0.22;
-          const grad = ctx.createRadialGradient(highlighted.x, highlighted.y, 4, highlighted.x, highlighted.y, 34);
+          const alpha = 0.12 + state.highlightTransferFlash * 0.26;
+          const grad = ctx.createRadialGradient(highlighted.x, highlighted.y, 4, highlighted.x, highlighted.y, 38);
           grad.addColorStop(0, `rgba(250,204,21,${alpha})`);
           grad.addColorStop(1, 'rgba(250,204,21,0)');
           ctx.fillStyle = grad;
           ctx.beginPath();
-          ctx.arc(highlighted.x, highlighted.y, 34, 0, Math.PI * 2);
+          ctx.arc(highlighted.x, highlighted.y, 38, 0, Math.PI * 2);
           ctx.fill();
         }
       }
 
       if (state.wallFlashInsulator > 0) {
-        ctx.fillStyle = `rgba(96,165,250,${0.08 + state.wallFlashInsulator * 0.18})`;
+        ctx.fillStyle = `rgba(96,165,250,${0.10 + state.wallFlashInsulator * 0.22})`;
         ctx.fillRect(leftWall, 0, 16, h);
       }
 
@@ -1140,21 +1149,30 @@
         ctx.beginPath();
         ctx.moveTo(leftWall + 18 + xShift, y);
         ctx.lineTo(insulEnd - 18 + xShift, y);
-        ctx.strokeStyle = 'rgba(59,130,246,0.12)';
+        ctx.strokeStyle = 'rgba(125,211,252,0.16)';
         ctx.lineWidth = 2;
         ctx.stroke();
       }
 
-      ctx.fillStyle = 'rgba(100,116,139,0.14)';
+      ctx.fillStyle = 'rgba(226,232,240,0.22)';
       ctx.fillRect(insulEnd, 0, 10, h);
 
       if (state.wallFlashInsulator > 0) {
-        ctx.fillStyle = `rgba(248,113,113,${0.08 + state.wallFlashInsulator * 0.16})`;
+        ctx.fillStyle = `rgba(248,113,113,${0.10 + state.wallFlashInsulator * 0.18})`;
         ctx.fillRect(insulEnd, 0, 10, h);
       }
 
-      ctx.fillStyle = 'rgba(59,130,246,0.08)';
-      ctx.fillRect(insulEnd + 22, 0, w - insulEnd - 22, h);
+      const outerGrad = ctx.createLinearGradient(insulEnd, 0, w, 0);
+      outerGrad.addColorStop(0, 'rgba(30,41,59,0.58)');
+      outerGrad.addColorStop(1, 'rgba(15,23,42,0.30)');
+      ctx.fillStyle = outerGrad;
+      ctx.fillRect(insulEnd + 10, 0, w - insulEnd - 10, h);
+
+      const vignette = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.18, w * 0.5, h * 0.5, Math.max(w, h) * 0.72);
+      vignette.addColorStop(0, 'rgba(255,255,255,0)');
+      vignette.addColorStop(1, 'rgba(0,0,0,0.22)');
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0, 0, w, h);
 
       drawLayerLabels(scene);
     }
@@ -1164,12 +1182,13 @@
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         if (p.highlighted || p.glow > 0.05 || (p.transferFlash || 0) > 0.01) {
-          ctx.shadowBlur = p.highlighted ? 26 : 18;
+          ctx.shadowBlur = p.highlighted ? 30 : 20;
           ctx.shadowColor = '#fde68a';
           ctx.fillStyle = '#fde68a';
         } else {
-          ctx.shadowBlur = 0;
-          ctx.fillStyle = '#60a5fa';
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = 'rgba(125,211,252,0.55)';
+          ctx.fillStyle = '#7dd3fc';
         }
         ctx.fill();
       }
@@ -1180,9 +1199,9 @@
       if (ip) {
         ctx.beginPath();
         ctx.arc(ip.x, ip.y, ip.r, 0, Math.PI * 2);
-        ctx.shadowBlur = ip.highlighted || ip.glow > 0.05 || (ip.transferFlash || 0) > 0.01 ? 28 : 0;
-        ctx.shadowColor = '#fde68a';
-        ctx.fillStyle = ip.highlighted || ip.glow > 0.05 ? '#fde68a' : '#60a5fa';
+        ctx.shadowBlur = ip.highlighted || ip.glow > 0.05 || (ip.transferFlash || 0) > 0.01 ? 30 : 10;
+        ctx.shadowColor = ip.highlighted || ip.glow > 0.05 ? '#fde68a' : 'rgba(125,211,252,0.55)';
+        ctx.fillStyle = ip.highlighted || ip.glow > 0.05 ? '#fde68a' : '#7dd3fc';
         ctx.fill();
         ctx.shadowBlur = 0;
       }
@@ -1194,18 +1213,20 @@
       ctx.save();
       ctx.font = '700 15px Pretendard, sans-serif';
       ctx.textAlign = 'left';
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(0,0,0,0.75)';
 
       if (ip && (ip.phase === 'approach' || ip.phase === 'wait')) {
-        ctx.fillStyle = '#a16207';
+        ctx.fillStyle = '#fde68a';
         ctx.fillText('단열재 입자가 고체벽에서 에너지를 크게 받고, 내부 전도도 함께 진행 중', 24, scene.h - 26);
       } else if (ip && (ip.phase === 'flow' || ip.phase === 'quiz' || ip.phase === 'free')) {
-        ctx.fillStyle = '#1d4ed8';
+        ctx.fillStyle = '#bfdbfe';
         ctx.fillText('표적 입자가 단열재 내부에서 전달을 이어가는 중', 24, scene.h - 26);
       } else if (state.highlightDormant) {
-        ctx.fillStyle = '#46627e';
+        ctx.fillStyle = '#cbd5e1';
         ctx.fillText('표적 입자가 외벽에서 사라짐. 다음 고체벽 충돌 입자가 새 표적이 됩니다.', 24, scene.h - 26);
       } else {
-        ctx.fillStyle = '#46627e';
+        ctx.fillStyle = '#cbd5e1';
         ctx.fillText('시작 버튼을 눌러 시뮬레이션을 시작하세요.', 24, scene.h - 26);
       }
 
