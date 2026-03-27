@@ -147,7 +147,7 @@
       min-height: 520px;
       overflow: hidden;
       background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
-      border: 1px solid rgba(15, 23, 42, 0.28);
+      border: 1px solid rgba(15,23,42,0.28);
       box-shadow:
         inset 0 0 0 1px rgba(255,255,255,0.04),
         0 14px 36px rgba(15,23,42,0.22);
@@ -433,6 +433,10 @@
 
     let dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
 
+    const MASS = 1.0;
+    const Q_HOT = 800;
+    const WALL_RESTITUTION = 0.64;
+
     const state = {
       running: false,
       score: 0,
@@ -449,7 +453,6 @@
       convectionBurst: 0,
       insulatorConductionPulse: 0,
       finalQuizShown: false,
-      particleCollisionRestitution: 1.0,
       wallFlashHot: 0,
       wallFlashInsulator: 0,
       latticePhase: 0,
@@ -570,6 +573,16 @@
       );
     }
 
+    function applyHotWallCollision(p, Q, m) {
+      const px = m * p.vx;
+      const newPx = Math.sqrt(px * px + 2 * m * Q);
+      p.vx = newPx / m;
+    }
+
+    function applyOuterWallCollision(p, eWall) {
+      p.vx = -eWall * Math.abs(p.vx);
+    }
+
     function positionQuizNear(anchorX, anchorY, vx = 0, vy = 0, mode = 'small') {
       const scene = getScene();
       const isCenter = mode === 'center';
@@ -590,7 +603,7 @@
       const bannerSafeTop = 92;
       const margin = 10;
 
-      let speed = Math.hypot(vx, vy);
+      const speed = Math.hypot(vx, vy);
       let dirX, dirY;
 
       if (speed < 0.001) {
@@ -633,7 +646,6 @@
       }
 
       let rect = makeRect(92, false);
-
       if (rectOverlap(rect, protectedRect)) rect = makeRect(122, false);
       if (rectOverlap(rect, protectedRect)) rect = makeRect(92, true);
       if (rectOverlap(rect, protectedRect)) rect = makeRect(122, true);
@@ -878,7 +890,8 @@
           const velAlongNormal = rvx * nx + rvy * ny;
           if (velAlongNormal > 0) continue;
 
-          const impulse = -(1 + state.particleCollisionRestitution) * velAlongNormal / 2;
+          // 완전탄성충돌(e = 1), 동일 질량
+          const impulse = -velAlongNormal;
           const ix = impulse * nx;
           const iy = impulse * ny;
 
@@ -957,8 +970,10 @@
 
         if (p.x < scene.leftWall + p.r) {
           p.x = scene.leftWall + p.r;
-          p.vx = Math.abs(p.vx) * 1.35 + 16;
-          p.vy += (Math.random() - 0.5) * 14;
+
+          applyHotWallCollision(p, Q_HOT, MASS);
+          p.vy += (Math.random() - 0.5) * 6;
+
           p.glow = Math.max(p.glow, 0.55);
           state.wallFlashHot = 1;
           state.wallFlashInsulator = 1;
@@ -977,8 +992,9 @@
         if (p.x > scene.insulEnd - p.r) {
           const wasHighlighted = !state.highlightDormant && p.id === state.highlightParticleId;
           p.x = scene.insulEnd - p.r;
-          p.vx = -Math.abs(p.vx) * 0.55;
-          p.vy *= 0.82;
+
+          applyOuterWallCollision(p, WALL_RESTITUTION);
+
           p.glow = Math.max(p.glow, 0.45);
 
           if (wasHighlighted) {
@@ -1006,8 +1022,10 @@
           ip.x = collisionX;
           state.wallFlashHot = 1;
           state.wallFlashInsulator = 1;
-          ip.vx = 18;
-          ip.vy = (Math.random() - 0.5) * 8;
+
+          applyHotWallCollision(ip, Q_HOT, MASS);
+          ip.vy += (Math.random() - 0.5) * 4;
+
           ip.phase = 'wait';
           ip.glow = 1;
           exciteWallOscillators(ip.y, 1.35);
@@ -1030,8 +1048,10 @@
 
         if (ip.x < scene.leftWall + ip.r) {
           ip.x = scene.leftWall + ip.r;
-          ip.vx = Math.abs(ip.vx) * 1.35 + 16;
-          ip.vy += (Math.random() - 0.5) * 14;
+
+          applyHotWallCollision(ip, Q_HOT, MASS);
+          ip.vy += (Math.random() - 0.5) * 6;
+
           ip.glow = Math.max(ip.glow, 0.6);
           state.wallFlashHot = 1;
           state.wallFlashInsulator = 1;
@@ -1041,8 +1061,9 @@
         if (ip.x > scene.insulEnd - ip.r) {
           const wasHighlighted = !state.highlightDormant && ip.id === state.highlightParticleId;
           ip.x = scene.insulEnd - ip.r;
-          ip.vx = -Math.abs(ip.vx) * 0.55;
-          ip.vy *= 0.82;
+
+          applyOuterWallCollision(ip, WALL_RESTITUTION);
+
           ip.glow = Math.max(ip.glow, 0.45);
 
           if (wasHighlighted) {
