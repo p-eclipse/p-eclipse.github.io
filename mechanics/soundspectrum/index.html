@@ -18,6 +18,8 @@
       --good:#4ade80;
       --warn:#fbbf24;
       --mobileSidebarWidth:min(86vw, 340px);
+      --cutTopPad:10px;
+      --cutBottomPad:34px;
     }
 
     *{box-sizing:border-box}
@@ -232,40 +234,45 @@
     }
 
     .cut-panel{
+      position:relative;
       background:#09101f;
       border:1px solid rgba(255,255,255,0.08);
       border-radius:16px;
-      padding:10px 8px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:8px;
+      padding:0;
       user-select:none;
       min-height:0;
       height:100%;
+      overflow:hidden;
     }
 
     .cut-panel-title{
+      position:absolute;
+      top:8px;
+      left:0;
+      right:0;
+      z-index:4;
+      text-align:center;
       font-size:0.66rem;
       font-weight:900;
       color:#d6e9ff;
       letter-spacing:0.08em;
+      pointer-events:none;
     }
 
     .cut-scale-wrap{
-      position:relative;
-      flex:1;
-      width:100%;
-      display:flex;
-      justify-content:center;
-      align-items:stretch;
+      position:absolute;
+      inset:0;
       min-height:0;
     }
 
     .cut-scale{
-      position:relative;
+      position:absolute;
+      left:50%;
+      top:var(--cutTopPad, 10px);
+      bottom:var(--cutBottomPad, 34px);
+      transform:translateX(-50%);
       width:54px;
-      height:100%;
+      height:auto;
       min-height:0;
       border-radius:999px;
       border:1px solid rgba(125,211,252,0.18);
@@ -325,7 +332,11 @@
     }
 
     .cut-readout{
-      width:100%;
+      position:absolute;
+      left:6px;
+      right:6px;
+      bottom:8px;
+      z-index:4;
       text-align:center;
       padding:10px 8px;
       border-radius:12px;
@@ -342,7 +353,10 @@
 
     .cut-ticks{
       position:absolute;
-      inset:0;
+      top:var(--cutTopPad, 10px);
+      bottom:var(--cutBottomPad, 34px);
+      left:0;
+      right:0;
       pointer-events:none;
     }
 
@@ -594,7 +608,6 @@
       }
 
       .cut-panel{
-        padding:10px 8px;
         height:min(58vw, 360px);
         min-height:220px;
       }
@@ -931,6 +944,27 @@
       return cutNormToFreq(norm);
     }
 
+    function updateCutTrackPads(){
+      const titleEl = document.querySelector(".cut-panel-title");
+      const readoutEl = document.querySelector(".cut-readout");
+
+      const titleH = titleEl ? Math.ceil(titleEl.getBoundingClientRect().height) : 0;
+      const readoutH = readoutEl ? Math.ceil(readoutEl.getBoundingClientRect().height) : 0;
+
+      const mobile = window.innerWidth <= 640;
+
+      if (mobile){
+        plotTop = Math.max(14, titleH + 14);
+        plotBottom = Math.max(34, readoutH + 16);
+      } else {
+        plotTop = 10;
+        plotBottom = Math.max(28, Math.floor(bgCanvas.height * 0.08));
+      }
+
+      document.documentElement.style.setProperty("--cutTopPad", `${plotTop}px`);
+      document.documentElement.style.setProperty("--cutBottomPad", `${plotBottom}px`);
+    }
+
     function buildCutTicks(){
       cutTicks.innerHTML = "";
       const rect = cutScale.getBoundingClientRect();
@@ -959,9 +993,8 @@
 
       plotLeft = Math.max(44, Math.floor(targetWidth * 0.07));
       plotRight = 10;
-      plotTop = 10;
-      plotBottom = Math.max(28, Math.floor(targetHeight * 0.08));
 
+      updateCutTrackPads();
       buildCutTicks();
 
       clearBgCanvas();
@@ -1117,7 +1150,8 @@
     }
 
     function updateCutoffOverlay(){
-      const scaleHeight = cutScale.getBoundingClientRect().height;
+      const rect = cutScale.getBoundingClientRect();
+      const scaleHeight = rect.height;
       if (scaleHeight > 0){
         const norm = cutFreqToNorm(cutoffFreq);
         const thumbTop = (1 - norm) * scaleHeight;
@@ -1710,11 +1744,9 @@
     window.addEventListener("resize", () => {
       if (!isMobileLayout()) closeSidebar();
       resizeCanvasForDisplay();
-      buildCutTicks();
     });
 
     resizeCanvasForDisplay();
-    buildCutTicks();
     updateInfoViews();
     clearBgCanvas();
     drawAxesOnBg();
