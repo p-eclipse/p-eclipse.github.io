@@ -333,12 +333,6 @@
       border:1px solid rgba(255,255,255,0.08);
     }
 
-    .cut-readout .k{
-      color:var(--sub);
-      font-size:0.72rem;
-      margin-bottom:4px;
-    }
-
     .cut-readout .v{
       font-size:0.82rem;
       white-space:nowrap;
@@ -465,7 +459,6 @@
     .sidebar-backdrop{
       display:none;
     }
-
 
     @media (min-width: 981px){
       .app{
@@ -652,7 +645,6 @@
         <button id="stopRecordBtn" class="stop" disabled>녹음 종료</button>
         <button id="analyzeBtn" class="warn" disabled>스펙트럼 전개</button>
         <button id="playOriginalBtn" disabled>원본 재생</button>
-        <button id="playFilteredBtn" class="good" disabled>실시간 필터 재생</button>
         <button id="stopPlaybackBtn" disabled>재생 정지</button>
         <button id="clearBtn">초기화</button>
       </div>
@@ -680,7 +672,6 @@
           </div>
 
           <div class="cut-readout">
-            <!--div class="k">현재 컷오프</div-->
             <div class="v" id="cutoffViewBar">-</div>
           </div>
         </div>
@@ -757,9 +748,9 @@
         <div class="tip">
           1. 녹음 시작 → 녹음 종료<br>
           2. 스펙트럼 전개<br>
-          3. 실시간 필터 재생<br>
-          4. 오른쪽 컷오프 바를 위아래로 드래그<br>
-          5. 재생 중에도 컷오프가 즉시 반영된다
+          3. 오른쪽 컷오프 바를 위아래로 드래그<br>
+          4. 손을 떼는 순간 현재 컷오프로 자동 재생된다<br>
+          5. 컷오프를 올리고 내리며 말소리 복원 변화를 비교한다
         </div>
       </div>
     </aside>
@@ -782,7 +773,6 @@
     const stopRecordBtn = document.getElementById("stopRecordBtn");
     const analyzeBtn = document.getElementById("analyzeBtn");
     const playOriginalBtn = document.getElementById("playOriginalBtn");
-    const playFilteredBtn = document.getElementById("playFilteredBtn");
     const stopPlaybackBtn = document.getElementById("stopPlaybackBtn");
     const clearBtn = document.getElementById("clearBtn");
 
@@ -820,9 +810,10 @@
     let decodedBuffer = null;
 
     let playbackSource = null;
-    let playbackFilter = null;
-    let playbackGain = null;
-    let isFilteredLiveMode = false;
+    let isFilteredPlayback = false;
+    let resumeOffsetSec = 0;
+    let playbackStartedAt = 0;
+    let filteredPlayRequestId = 0;
 
     let spectrogramData = null;
     let spectrogramFrames = 0;
@@ -882,11 +873,6 @@
       );
     }
 
-    function getEffectiveCutoff(){
-      if (!decodedBuffer) return cutoffFreq;
-      return Math.min(cutoffFreq, decodedBuffer.sampleRate / 2);
-    }
-
     function syncDbInputs(){
       minDbNumber.value = minDbSlider.value;
       maxDbNumber.value = maxDbSlider.value;
@@ -936,10 +922,6 @@
 
     function cutFreqToNorm(freq){
       return logFreqToNorm(freq);
-    }
-
-    function getCutScaleHeight(){
-      return cutScale.getBoundingClientRect().height;
     }
 
     function pointerYToCutFreq(clientY){
@@ -1135,7 +1117,7 @@
     }
 
     function updateCutoffOverlay(){
-      const scaleHeight = getCutScaleHeight();
+      const scaleHeight = cutScale.getBoundingClientRect().height;
       if (scaleHeight > 0){
         const norm = cutFreqToNorm(cutoffFreq);
         const thumbTop = (1 - norm) * scaleHeight;
@@ -1149,27 +1131,9 @@
       drawCutoffOverlayToFg();
     }
 
-    function updateLiveFilterCutoff(){
-      if (!isFilteredLiveMode || !playbackFilter || !audioContext) return;
-
-      const now = audioContext.currentTime;
-      const target = getEffectiveCutoff();
-
-      playbackFilter.frequency.cancelScheduledValues(now);
-      if (Array.isArray(playbackFilter)) {
-        playbackFilter.forEach(f => {
-          f.frequency.cancelScheduledValues(now);
-          f.frequency.setTargetAtTime(target, now, 0.015);
-        });
-      }
-
-      setStatus(`실시간 필터 재생 중: 0 ~ ${Math.round(target)} Hz`);
-    }
-
     function setCutoffFreq(freq){
       cutoffFreq = clamp(freq, LOG_MIN_FREQ, LOG_MAX_FREQ);
       updateCutoffOverlay();
-      updateLiveFilterCutoff();
     }
 
     function startDragCutoff(event){
@@ -1189,7 +1153,17 @@
     }
 
     function stopDragCutoff(){
+      if (!draggingCutoff) return;
       draggingCutoff = false;
+
+      if (!decodedBuffer) return;
+
+      if (isFilteredPlayback) {
+        const offset = getCurrentPlaybackOffset();
+        playFilteredAtCurrentCutoff(offset);
+      } else {
+        playFilteredAtCurrentCutoff(0);
+      }
     }
 
     function dbToColorNorm(norm){
@@ -1359,6 +1333,100 @@
       drawAxesOnBg();
     }
 
+    function overlapAddLowpass(signal, sampleRate, cutoffHz, fftSize = 2048, hopSize = 512){
+      const length = signal.length;
+      const window = hannWindow(fftSize);
+      const out = new Float32Array(length + fftSize);
+      const norm = new Float32Array(length + fftSize);
+
+      const maxCutoff = Math.min(cutoffHz, sampleRate / 2);
+      const binHz = sampleRate / fftSize;
+      const cutoffBin = Math.floor(maxCutoff / binHz);
+
+      for(let start = 0; start < length; start += hopSize){
+        const re = new Float32Array(fftSize);
+        const im = new Float32Array(fftSize);
+
+        for(let n = 0; n < fftSize; n++){
+          const idx = start + n;
+          const s = idx < length ? signal[idx] : 0;
+          re[n] = s * window[n];
+          im[n] = 0;
+        }
+
+        fft(re, im, false);
+
+        for(let k = 0; k < fftSize; k++){
+          const mirrorK = (k <= fftSize / 2) ? k : (fftSize - k);
+          if (mirrorK > cutoffBin){
+            re[k] = 0;
+            im[k] = 0;
+          }
+        }
+
+        fft(re, im, true);
+
+        for(let n = 0; n < fftSize; n++){
+          const idx = start + n;
+          if (idx < out.length){
+            const w = window[n];
+            out[idx] += re[n] * w;
+            norm[idx] += w * w;
+          }
+        }
+      }
+
+      const finalOut = new Float32Array(length);
+      for(let i = 0; i < length; i++){
+        finalOut[i] = norm[i] > 1e-8 ? out[i] / norm[i] : 0;
+      }
+
+      let peak = 0;
+      for(let i = 0; i < finalOut.length; i++){
+        peak = Math.max(peak, Math.abs(finalOut[i]));
+      }
+
+      if (peak > 0.99){
+        const g = 0.99 / peak;
+        for(let i = 0; i < finalOut.length; i++){
+          finalOut[i] *= g;
+        }
+      }
+
+      return finalOut;
+    }
+
+    function makeAudioBufferFromMono(ctx, mono, sampleRate){
+      const buffer = ctx.createBuffer(1, mono.length, sampleRate);
+      buffer.copyToChannel(mono, 0);
+      return buffer;
+    }
+
+    function getCurrentPlaybackOffset(){
+      if (!decodedBuffer) return 0;
+      if (!playbackSource) return resumeOffsetSec;
+      const elapsed = audioContext.currentTime - playbackStartedAt;
+      return clamp(resumeOffsetSec + elapsed, 0, decodedBuffer.duration);
+    }
+
+    function stopPlayback(resetOffset = true){
+      filteredPlayRequestId++;
+
+      if (playbackSource){
+        try { playbackSource.stop(); } catch(e){}
+        try { playbackSource.disconnect(); } catch(e){}
+      }
+
+      playbackSource = null;
+      isFilteredPlayback = false;
+
+      if (resetOffset){
+        resumeOffsetSec = 0;
+      }
+
+      stopPlaybackBtn.disabled = true;
+    }
+
     async function startRecording(){
       try{
         stopPlayback();
@@ -1412,7 +1480,6 @@
         stopRecordBtn.disabled = false;
         analyzeBtn.disabled = true;
         playOriginalBtn.disabled = true;
-        playFilteredBtn.disabled = true;
 
         clearBgCanvas();
         drawAxesOnBg();
@@ -1458,28 +1525,8 @@
       rebuildFreqYCache();
       drawSpectrogramToBg();
       drawCutoffOverlayToFg();
-      playFilteredBtn.disabled = false;
 
-      setStatus("스펙트럼 전개 완료. 실시간 필터 재생을 눌러라.");
-    }
-
-    function stopPlayback(){
-      if (playbackSource){
-        try { playbackSource.stop(); } catch(e){}
-        try { playbackSource.disconnect(); } catch(e){}
-      }
-      if (playbackFilter){
-        try { playbackFilter.disconnect(); } catch(e){}
-      }
-      if (playbackGain){
-        try { playbackGain.disconnect(); } catch(e){}
-      }
-
-      playbackSource = null;
-      playbackFilter = null;
-      playbackGain = null;
-      isFilteredLiveMode = false;
-      stopPlaybackBtn.disabled = true;
+      setStatus("스펙트럼 전개 완료. 이제 컷오프 바를 움직여라.");
     }
 
     async function playOriginal(){
@@ -1493,78 +1540,92 @@
       src.buffer = decodedBuffer;
       src.connect(audioContext.destination);
 
+      resumeOffsetSec = 0;
+      playbackStartedAt = audioContext.currentTime;
+      isFilteredPlayback = false;
+
       src.onended = () => {
         if (playbackSource === src){
           playbackSource = null;
+          isFilteredPlayback = false;
+          resumeOffsetSec = 0;
         }
         stopPlaybackBtn.disabled = true;
       };
 
       playbackSource = src;
       stopPlaybackBtn.disabled = false;
-      src.start();
+      src.start(0, 0);
 
       setStatus("원본 소리를 재생 중이다.");
     }
 
-    async function playFilteredLive(){
+    async function playFilteredAtCurrentCutoff(offsetSec = 0){
       if (!decodedBuffer) return;
 
-      stopPlayback();
+      const myRequestId = ++filteredPlayRequestId;
+
       ensureAudioContext();
       if (audioContext.state === "suspended") await audioContext.resume();
 
+      const mono = monoFromAudioBuffer(decodedBuffer);
+
+      const fftSize = Number(fftSizeSelect.value);
+      const hopRatio = Number(hopRatioSelect.value);
+      const hopSize = Math.max(1, Math.floor(fftSize * hopRatio));
+
+      setStatus(`${fmtHz(cutoffFreq)} 이하 성분만 남겨 재합성 중...`);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      const filteredMono = overlapAddLowpass(
+        mono,
+        decodedBuffer.sampleRate,
+        cutoffFreq,
+        fftSize,
+        hopSize
+      );
+
+      if (myRequestId !== filteredPlayRequestId) return;
+
+      const filteredBuffer = makeAudioBufferFromMono(
+        audioContext,
+        filteredMono,
+        decodedBuffer.sampleRate
+      );
+
+      if (myRequestId !== filteredPlayRequestId) return;
+
+      if (playbackSource){
+        try { playbackSource.stop(); } catch(e){}
+        try { playbackSource.disconnect(); } catch(e){}
+        playbackSource = null;
+      }
+
+      const safeOffset = clamp(offsetSec, 0, Math.max(0, filteredBuffer.duration - 0.02));
+
       const src = audioContext.createBufferSource();
-      src.buffer = decodedBuffer;
+      src.buffer = filteredBuffer;
+      src.connect(audioContext.destination);
 
-      /*const filter = audioContext.createBiquadFilter();
-      filter.type = "lowpass";
-      filter.Q.value = 2;//0.707;
-      filter.frequency.setValueAtTime(getEffectiveCutoff(), audioContext.currentTime);*/
-      
-      const filters = [];
-      
-      for (let i = 0; i < 4; i++) {
-        const f = audioContext.createBiquadFilter();
-        f.type = "lowpass";
-        f.Q.value = 0.707;
-        f.frequency.setValueAtTime(getEffectiveCutoff(), audioContext.currentTime);
-        filters.push(f);
-      }
-
-      const gainNode = audioContext.createGain();
-      gainNode.gain.value = 1.0;
-
-      /*src.connect(filter);
-      filter.connect(gainNode);*/
-      // 연결 (cascade)
-      src.connect(filters[0]);
-      for (let i = 0; i < filters.length - 1; i++) {
-        filters[i].connect(filters[i + 1]);
-      }
-      filters[filters.length - 1].connect(gainNode);
-      
-      gainNode.connect(audioContext.destination);
+      resumeOffsetSec = safeOffset;
+      playbackStartedAt = audioContext.currentTime;
+      isFilteredPlayback = true;
 
       src.onended = () => {
         if (playbackSource === src){
           playbackSource = null;
-          playbackFilter = null;
-          playbackGain = null;
-          isFilteredLiveMode = false;
+          isFilteredPlayback = false;
+          resumeOffsetSec = 0;
         }
         stopPlaybackBtn.disabled = true;
       };
 
       playbackSource = src;
-      playbackFilter = filters;
-      playbackGain = gainNode;
-      isFilteredLiveMode = true;
-
       stopPlaybackBtn.disabled = false;
-      src.start();
+      src.start(0, safeOffset);
 
-      setStatus(`실시간 필터 재생 중: 0 ~ ${Math.round(getEffectiveCutoff())} Hz`);
+      setStatus(`${fmtHz(cutoffFreq)} 이하만 남긴 소리를 재생 중이다.`);
     }
 
     function clearAll(){
@@ -1581,7 +1642,6 @@
 
       analyzeBtn.disabled = true;
       playOriginalBtn.disabled = true;
-      playFilteredBtn.disabled = true;
       stopPlaybackBtn.disabled = true;
       recordBtn.disabled = false;
       stopRecordBtn.disabled = true;
@@ -1637,8 +1697,7 @@
     stopRecordBtn.addEventListener("click", stopRecording);
     analyzeBtn.addEventListener("click", analyzeRecording);
     playOriginalBtn.addEventListener("click", playOriginal);
-    playFilteredBtn.addEventListener("click", playFilteredLive);
-    stopPlaybackBtn.addEventListener("click", stopPlayback);
+    stopPlaybackBtn.addEventListener("click", () => stopPlayback());
     clearBtn.addEventListener("click", clearAll);
 
     mobileMenuBtn.addEventListener("click", toggleSidebar);
