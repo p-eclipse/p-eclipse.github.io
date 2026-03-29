@@ -1156,7 +1156,12 @@
       const target = getEffectiveCutoff();
 
       playbackFilter.frequency.cancelScheduledValues(now);
-      playbackFilter.frequency.setTargetAtTime(target, now, 0.015);
+      if (Array.isArray(playbackFilter)) {
+        playbackFilter.forEach(f => {
+          f.frequency.cancelScheduledValues(now);
+          f.frequency.setTargetAtTime(target, now, 0.015);
+        });
+      }
 
       setStatus(`실시간 필터 재생 중: 0 ~ ${Math.round(target)} Hz`);
     }
@@ -1512,16 +1517,33 @@
       const src = audioContext.createBufferSource();
       src.buffer = decodedBuffer;
 
-      const filter = audioContext.createBiquadFilter();
+      /*const filter = audioContext.createBiquadFilter();
       filter.type = "lowpass";
       filter.Q.value = 0.707;
-      filter.frequency.setValueAtTime(getEffectiveCutoff(), audioContext.currentTime);
+      filter.frequency.setValueAtTime(getEffectiveCutoff(), audioContext.currentTime);*/
+      
+      const filters = [];
+      
+      for (let i = 0; i < 4; i++) {
+        const f = audioContext.createBiquadFilter();
+        f.type = "lowpass";
+        f.Q.value = 0.707;
+        f.frequency.setValueAtTime(getEffectiveCutoff(), audioContext.currentTime);
+        filters.push(f);
+      }
 
       const gainNode = audioContext.createGain();
       gainNode.gain.value = 1.0;
 
-      src.connect(filter);
-      filter.connect(gainNode);
+      /*src.connect(filter);
+      filter.connect(gainNode);*/
+      // 연결 (cascade)
+      src.connect(filters[0]);
+      for (let i = 0; i < filters.length - 1; i++) {
+        filters[i].connect(filters[i + 1]);
+      }
+      filters[filters.length - 1].connect(gainNode);
+      
       gainNode.connect(audioContext.destination);
 
       src.onended = () => {
@@ -1535,7 +1557,7 @@
       };
 
       playbackSource = src;
-      playbackFilter = filter;
+      playbackFilter = filters;
       playbackGain = gainNode;
       isFilteredLiveMode = true;
 
