@@ -5,6 +5,386 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>명예의전당</title>
   <link rel="stylesheet" href="style.css" /> </head>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: "Pretendard", "Noto Sans KR", sans-serif;
+      /* 듄: 사막의 한낮 - 고급스러운 샌드 베이지 배경 */
+      background-color: #f5eedf;
+      background-image: 
+        radial-gradient(circle at top right, rgba(196, 154, 81, 0.15) 0%, transparent 60%),
+        radial-gradient(circle at bottom left, rgba(0, 168, 255, 0.08) 0%, transparent 60%);
+      color: #2b251f;
+      min-height: 100vh;
+      padding-top: 40px;
+      padding-bottom: 60px;
+    }
+    
+    button, select, a {
+      font: inherit;
+    }
+    
+    /* =========================================
+       1. 전체 컨테이너 및 상단 바
+    ========================================= */
+    .wrap {
+      width: min(920px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+    
+    .topbar {
+      background: rgba(255, 252, 248, 0.6);
+      border: 1px solid rgba(196, 154, 81, 0.4);
+      border-left: 5px solid #c49a51;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      /* SF 느낌의 빗면 컷아웃 */
+      clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+      box-shadow: 0 10px 30px rgba(196, 154, 81, 0.1);
+    }
+    
+    .menu-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: #7a6a53;
+      font-size: 14px;
+      font-weight: 800;
+      transition: all 0.3s ease;
+    }
+    
+    .menu-link:hover {
+      color: #00a8ff; /* 스파이스 블루 */
+      transform: translateX(-4px);
+    }
+    
+    .topbar-right {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 13px;
+      font-weight: 900;
+      color: #00a8ff;
+      letter-spacing: 1px;
+    }
+    
+    /* =========================================
+       2. 메인 랭킹 패널 (헤더 & 컨트롤)
+    ========================================= */
+    .panel {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(196, 154, 81, 0.3);
+      padding: 40px;
+      box-shadow: 0 20px 50px rgba(43, 37, 31, 0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      clip-path: polygon(25px 0, 100% 0, 100% calc(100% - 25px), calc(100% - 25px) 100%, 0 100%, 0 25px);
+    }
+    
+    .header-title {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    
+    h1 {
+      font-size: 38px;
+      font-weight: 900;
+      color: transparent;
+      background: linear-gradient(135deg, #c49a51 0%, #8a5a2b 100%);
+      -webkit-background-clip: text;
+      margin-bottom: 12px;
+      letter-spacing: -1px;
+    }
+    
+    .title-icon {
+      font-size: 42px;
+      margin-bottom: 12px;
+      display: inline-block;
+    }
+    
+    .desc {
+      color: #8c7f6e;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+    
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(196, 154, 81, 0.05);
+      border: 1px solid rgba(196, 154, 81, 0.2);
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+    
+    select {
+      border: 1px solid rgba(196, 154, 81, 0.4);
+      border-radius: 6px;
+      padding: 12px 18px;
+      background: #ffffff;
+      color: #4a3e30;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      outline: none;
+      min-width: 160px;
+      box-shadow: 0 4px 10px rgba(196, 154, 81, 0.05);
+    }
+    
+    select:focus {
+      border-color: #00a8ff;
+      box-shadow: 0 0 0 3px rgba(0, 168, 255, 0.2);
+    }
+    
+    button.primary {
+      background: #c49a51;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      padding: 12px 24px;
+      font-weight: 800;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 15px rgba(196, 154, 81, 0.4);
+    }
+    
+    button.primary:hover {
+      background: #a8813f;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(196, 154, 81, 0.5);
+    }
+    
+    button.primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* =========================================
+       3. 데스크탑 랭킹 테이블 (구조 완벽 고정)
+    ========================================= */
+    .table-wrap {
+      width: 100%;
+    }
+    
+    table {
+      width: 100%;
+      table-layout: fixed; /* 텍스트 길이에 따라 표가 흔들리지 않게 고정 */
+      border-collapse: separate;
+      border-spacing: 0 10px; /* 행과 행 사이의 여백 */
+    }
+    
+    /* 각 열(Column) 넓이 강제 지정 */
+    th:nth-child(1), td:nth-child(1) { width: 12%; text-align: center; } /* 순위 */
+    th:nth-child(2), td:nth-child(2) { width: 18%; text-align: center; } /* 소속 */
+    th:nth-child(3), td:nth-child(3) { width: 40%; text-align: left; padding-left: 20px; } /* 닉네임 */
+    th:nth-child(4), td:nth-child(4) { width: 30%; text-align: right; padding-right: 24px; } /* 시간 */
+    
+    thead th {
+      color: #a69886;
+      font-size: 13px;
+      font-weight: 800;
+      padding-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 2px solid rgba(196, 154, 81, 0.3);
+    }
+    
+    /* 리스트 행 스타일 (독립된 카드 형태) */
+    tbody tr {
+      background: #ffffff;
+      box-shadow: 0 4px 15px rgba(196, 154, 81, 0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      animation: fadeInUp 0.4s ease forwards;
+      opacity: 0;
+    }
+    
+    tbody tr:hover {
+      transform: scale(1.01) translateY(-2px);
+      box-shadow: 0 12px 25px rgba(196, 154, 81, 0.15);
+      z-index: 10;
+      position: relative;
+    }
+    
+    /* 테이블 셀 스타일 및 테두리 */
+    tbody td {
+      padding: 18px 10px;
+      font-size: 16px;
+      vertical-align: middle;
+      border-top: 1px solid rgba(196, 154, 81, 0.15);
+      border-bottom: 1px solid rgba(196, 154, 81, 0.15);
+    }
+    
+    tbody td:first-child {
+      border-left: 4px solid #e0cead; /* 기본 왼쪽 장식선 */
+      border-radius: 8px 0 0 8px;
+    }
+    
+    tbody td:last-child {
+      border-right: 1px solid rgba(196, 154, 81, 0.15);
+      border-radius: 0 8px 8px 0;
+    }
+    
+    /* 텍스트 요소들 */
+    .rank-cell {
+      font-size: 20px;
+      font-weight: 900;
+      color: #b5a898;
+    }
+    
+    .class-badge {
+      display: inline-block;
+      background: rgba(0, 168, 255, 0.08);
+      color: #008cd6;
+      border: 1px solid rgba(0, 168, 255, 0.2);
+      font-size: 13px;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    
+    .name-cell {
+      font-weight: 800;
+      color: #3b3127;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis; /* 이름이 길면 ... 처리 */
+    }
+    
+    .time-cell {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-variant-numeric: tabular-nums;
+      font-size: 19px;
+      font-weight: 900;
+      color: #3b3127;
+      letter-spacing: -0.5px;
+    }
+    
+    /* =========================================
+       4. TOP 3 스페셜 하이라이트 스타일
+    ========================================= */
+    .rank-1 td { background: linear-gradient(to right, #fffdf5, #ffffff); border-top-color: #fde08b; border-bottom-color: #fde08b; }
+    .rank-1 td:first-child { border-left-color: #eab308; }
+    .rank-1 td:last-child { border-right-color: #fde08b; }
+    .rank-1 .rank-cell { font-size: 26px; color: #eab308; text-shadow: 0 2px 10px rgba(234, 179, 8, 0.4); }
+    .rank-1 .time-cell { color: #d97706; }
+    
+    .rank-2 td { background: linear-gradient(to right, #f8f9fa, #ffffff); border-top-color: #cbd5e1; border-bottom-color: #cbd5e1; }
+    .rank-2 td:first-child { border-left-color: #94a3b8; }
+    .rank-2 td:last-child { border-right-color: #cbd5e1; }
+    .rank-2 .rank-cell { font-size: 24px; color: #94a3b8; }
+    
+    .rank-3 td { background: linear-gradient(to right, #fffaf5, #ffffff); border-top-color: #fdba74; border-bottom-color: #fdba74; }
+    .rank-3 td:first-child { border-left-color: #f97316; }
+    .rank-3 td:last-child { border-right-color: #fdba74; }
+    .rank-3 .rank-cell { font-size: 24px; color: #f97316; }
+    
+    /* 상태 메시지 및 푸터 */
+    .empty {
+      padding: 60px 20px !important;
+      text-align: center !important;
+      color: #a69886 !important;
+      font-weight: 700;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+    
+    .foot {
+      margin-top: 30px;
+      text-align: center;
+      color: #a69886;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* =========================================
+       5. 모바일 대응 (표 -> 카드 형태로 완벽 변환)
+    ========================================= */
+    @media (max-width: 768px) {
+      .wrap { margin-top: 20px; width: 100%; padding: 0 16px; }
+      .topbar { padding: 12px 16px; flex-direction: column; gap: 12px; align-items: flex-start; }
+      .panel { padding: 24px 16px; clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px); }
+      h1 { font-size: 30px; }
+      .toolbar { flex-direction: column; gap: 10px; align-items: stretch; }
+    
+      /* 기존 Table의 레이아웃 성질을 전부 해제 */
+      table, thead, tbody, th, td, tr { display: block; width: 100%; }
+      thead { display: none; } /* 모바일에서는 헤더 숨김 */
+    
+      /* TR을 하나의 독립된 '플렉스 카드'로 변신 */
+      tbody tr {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 16px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(196, 154, 81, 0.2);
+        border-left: 5px solid #e0cead;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 4px 10px rgba(196, 154, 81, 0.08);
+      }
+    
+      /* 모바일 Top 3 테두리 재정의 */
+      .rank-1 { border-color: #fde08b; border-left-color: #eab308; background: linear-gradient(135deg, #fffdf5, #ffffff); }
+      .rank-2 { border-color: #cbd5e1; border-left-color: #94a3b8; background: linear-gradient(135deg, #f8f9fa, #ffffff); }
+      .rank-3 { border-color: #fdba74; border-left-color: #f97316; background: linear-gradient(135deg, #fffaf5, #ffffff); }
+    
+      /* TD의 잡다한 선 및 여백 제거 */
+      tbody td {
+        border: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+        text-align: left !important;
+      }
+    
+      /* [모바일 카드 내부 배치] */
+      /* 1. 순위 (왼쪽 고정) */
+      tbody td:nth-child(1) { flex: 0 0 50px; }
+      .rank-cell { font-size: 24px; }
+    
+      /* 2. 소속 반 (순위 바로 옆) */
+      tbody td:nth-child(2) { flex: 0 0 auto; margin-right: 12px; }
+      
+      /* 3. 닉네임 (남은 공간 차지) */
+      tbody td:nth-child(3) { flex: 1 1 auto; font-size: 16px; }
+    
+      /* 4. 기록 시간 (다음 줄로 넘겨서 강조) */
+      tbody td:nth-child(4) {
+        flex: 1 1 100%; /* 강제로 100% 폭을 차지하여 다음 줄로 내림 */
+        text-align: right !important;
+        margin-top: 12px;
+        padding-top: 12px !important;
+        border-top: 1px dashed rgba(196, 154, 81, 0.3) !important;
+        font-size: 22px;
+        color: #c49a51; /* 스파이스 골드 */
+      }
+    }
+  </style>
 <body>
   <div class="wrap">
     <div class="topbar">
