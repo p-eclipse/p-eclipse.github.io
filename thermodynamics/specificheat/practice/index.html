@@ -2,37 +2,42 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-  />
-  <title>비열 연습 게임</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>비열 연습 게임 - SYS.TRAINING</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="page">
     <div class="topbar">
-      <a class="menu-link" href="../">← 메뉴로 돌아가기</a>
-
+      <a class="menu-link" href="../">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        SYSTEM.RETURN
+      </a>
       <div class="top-right">
-        <div class="mode-badge">PRACTICE MODE</div>
+        <div class="mode-badge">PRACTICE_MODE // 01</div>
       </div>
     </div>
 
-    <div class="title">비열 연습 모드</div>
-
-    <div class="subtitle">
-      두 시료의 <strong>물질</strong>과 <strong>질량</strong>을 직접 선택해 보세요.
-      <br />
-      똑같이 가열해도 비열과 질량에 따라 온도 변화가 달라집니다.
+    <div class="title-section">
+      <h1 class="title">비열 시뮬레이터</h1>
+      <div class="subtitle">
+        두 시료의 [물질]과 [질량] 파라미터를 설정하십시오.<br />
+        동일한 열에너지를 가했을 때의 온도 변화율(ΔT)을 분석합니다.
+      </div>
     </div>
 
     <div class="cards" id="cardsContainer"></div>
 
     <div class="message-box">
-      <div class="main-message" id="mainMessage">자유 연습</div>
+      <div class="terminal-header">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        SYS.LOG
+      </div>
+      <div class="main-message" id="mainMessage">> 자유 연습 모드 활성화</div>
       <div class="sub-message" id="subMessage">
-        물질과 질량을 바꿔 가며 어떤 시료가 빨리 뜨거워지고 빨리 식는지 비교해 보세요.
+        물질과 질량을 변경하며 시료의 열전달 속도를 비교 분석하십시오.
       </div>
     </div>
   </div>
