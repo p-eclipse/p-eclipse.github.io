@@ -6,15 +6,13 @@
 
 body {
   margin: 0;
-  /* 메인 로비와 동일한 그리드 기반 어두운 배경 */
-  background-color: #0b0f19;
+  /* 아라키스의 깊은 사막 밤 배경 */
+  background-color: #0c0906;
   background-image: 
-    radial-gradient(circle at center, rgba(16, 27, 54, 0.8) 0%, rgba(11, 15, 25, 1) 100%),
-    linear-gradient(rgba(0, 195, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 195, 255, 0.03) 1px, transparent 1px);
-  background-size: 100% 100%, 30px 30px, 30px 30px;
+    radial-gradient(circle at top center, rgba(168, 102, 50, 0.1) 0%, rgba(12, 9, 6, 1) 70%),
+    radial-gradient(circle at bottom, rgba(0, 168, 255, 0.05) 0%, transparent 50%);
   font-family: "Pretendard", "Noto Sans KR", sans-serif;
-  color: #e2e8f0;
+  color: #e8dcc4; /* 가독성을 높인 밝은 모래색 텍스트 */
 }
 
 .page {
@@ -24,12 +22,12 @@ body {
   margin: 0 auto;
 }
 
-/* 상단 HUD 바 */
+/* 상단 HUD 바 - 거친 흑석과 황금빛 느낌 */
 .topbar {
-  background: rgba(16, 27, 54, 0.6);
-  border: 1px solid rgba(0, 240, 255, 0.2);
-  border-left: 4px solid #00f0ff;
-  border-radius: 8px;
+  background: rgba(20, 15, 10, 0.8);
+  border: 1px solid rgba(196, 154, 81, 0.2);
+  border-left: 4px solid #c49a51;
+  border-radius: 4px;
   padding: 12px 16px;
   display: flex;
   justify-content: space-between;
@@ -44,32 +42,33 @@ body {
   align-items: center;
   gap: 6px;
   text-decoration: none;
-  color: #00f0ff;
+  color: #c49a51;
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 13px;
   font-weight: 700;
   padding: 8px 12px;
   border-radius: 4px;
-  background: rgba(0, 240, 255, 0.1);
+  background: rgba(196, 154, 81, 0.1);
   transition: all 0.2s ease;
 }
 
 .menu-link:hover {
-  background: rgba(0, 240, 255, 0.2);
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+  background: rgba(196, 154, 81, 0.25);
+  color: #f7e6c4;
+  box-shadow: 0 0 10px rgba(196, 154, 81, 0.4);
 }
 
 .mode-badge {
-  background: rgba(0, 240, 255, 0.15);
-  color: #00f0ff;
-  border: 1px solid #00f0ff;
+  background: rgba(0, 168, 255, 0.15);
+  color: #00a8ff;
+  border: 1px solid #00a8ff;
   border-radius: 4px;
   padding: 6px 12px;
   font-family: "SFMono-Regular", Consolas, monospace;
   font-weight: 900;
   font-size: 12px;
   letter-spacing: 1px;
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+  box-shadow: 0 0 10px rgba(0, 168, 255, 0.2);
 }
 
 /* 타이틀 영역 */
@@ -82,22 +81,22 @@ body {
   font-size: 32px;
   font-weight: 900;
   color: transparent;
-  background: linear-gradient(90deg, #ffffff, #00f0ff);
+  background: linear-gradient(135deg, #f7e6c4 0%, #c49a51 50%, #8a5a2b 100%);
   -webkit-background-clip: text;
   margin: 0 0 12px;
   letter-spacing: 2px;
-  text-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+  text-shadow: 0 4px 15px rgba(196, 154, 81, 0.2);
 }
 
 .subtitle {
-  color: #94a3b8;
+  color: #9a8c78;
   font-size: 14px;
   line-height: 1.6;
   font-weight: 500;
 }
 
 .subtitle strong {
-  color: #00f0ff;
+  color: #00a8ff;
 }
 
 /* 카드 (데이터 패널) */
@@ -112,12 +111,12 @@ body {
 
 .card {
   width: 260px;
-  background: rgba(11, 15, 25, 0.85);
-  border: 1px solid rgba(0, 240, 255, 0.3);
-  /* 카드는 기존의 SF 느낌을 위해 잘린 모서리 유지 */
+  background: rgba(15, 11, 8, 0.85);
+  border: 1px solid rgba(196, 154, 81, 0.25);
   clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
   padding: 20px;
   position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 .card::before {
@@ -125,7 +124,7 @@ body {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: 100%;
-  box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.05);
+  box-shadow: inset 0 0 20px rgba(196, 154, 81, 0.05);
   pointer-events: none;
   z-index: 0;
 }
@@ -139,16 +138,16 @@ body {
   text-align: center;
   font-size: 18px;
   font-weight: 900;
-  color: #ffffff;
+  color: #f7e6c4;
   margin-bottom: 16px;
   letter-spacing: 1px;
-  border-bottom: 1px dashed rgba(0, 240, 255, 0.3);
+  border-bottom: 1px dashed rgba(196, 154, 81, 0.3);
   padding-bottom: 8px;
 }
 
 .info-box {
-  background: rgba(16, 27, 54, 0.8);
-  border-left: 2px solid #00f0ff;
+  background: rgba(25, 18, 12, 0.8);
+  border-left: 2px solid #c49a51;
   padding: 12px;
   margin-bottom: 20px;
 }
@@ -167,15 +166,15 @@ body {
 .info-label {
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 11px;
-  color: #00f0ff;
+  color: #c49a51;
   letter-spacing: 0.5px;
 }
 
 .select-box {
   width: 100%;
-  background: #0b0f19;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #ffffff;
+  background: #0c0906;
+  border: 1px solid rgba(196, 154, 81, 0.3);
+  color: #e8dcc4;
   padding: 8px 12px;
   font-size: 14px;
   font-weight: 600;
@@ -185,8 +184,8 @@ body {
 }
 
 .select-box:focus {
-  border-color: #00f0ff;
-  box-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+  border-color: #00a8ff;
+  box-shadow: 0 0 8px rgba(0, 168, 255, 0.4);
 }
 
 .divider {
@@ -197,11 +196,11 @@ body {
   text-align: right;
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 14px;
-  color: #8ab4f8;
+  color: #9a8c78;
   margin-top: 8px;
 }
 
-/* --- [수정 완료] 둥근 온도계 레이아웃 --- */
+/* 둥근 온도계 레이아웃 */
 .thermo-wrap {
   display: flex;
   justify-content: center;
@@ -209,69 +208,60 @@ body {
 }
 
 .thermometer {
-  /* 조금 더 도톰하게 width 증가 */
   --thermo-width: 48px;
   position: relative;
   width: var(--thermo-width);
   height: 220px;
-  background: rgba(0, 0, 0, 0.6);
-  /* 테두리를 밝게 하고, 그림자를 주어 유리 튜브 질감 표현 */
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  /* 핵심: 온도계 전체를 아주 둥글게 (pill shape) */
+  background: rgba(10, 6, 4, 0.8);
+  border: 3px solid rgba(196, 154, 81, 0.2);
   border-radius: 30px;
   overflow: hidden;
   box-shadow: 
-    0 0 15px rgba(0, 240, 255, 0.1), /* 은은한 네온 광 */
-    inset 0 0 10px rgba(0, 0, 0, 0.7); /* 내부 입체감 */
+    0 0 15px rgba(0, 0, 0, 0.6),
+    inset 0 0 15px rgba(0, 0, 0, 0.9);
 }
 
-/* 게이지 눈금선 */
 .thermometer::before, .thermometer::after {
   content: "";
   position: absolute;
   left: 0;
   width: 100%;
   height: 1px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(232, 220, 196, 0.15);
   z-index: 2;
 }
 
 .thermometer::before { top: 20%; }
 .thermometer::after { bottom: 20%; }
 
-/* 목표 지점 영역 */
+/* 목표 지점 영역 (스파이스 블루) */
 .target-zone {
   position: absolute;
   left: 0;
   width: 100%;
-  background: rgba(0, 255, 136, 0.1);
-  border-top: 1px dashed rgba(0, 255, 136, 0.6);
-  border-bottom: 1px dashed rgba(0, 255, 136, 0.6);
+  background: rgba(0, 168, 255, 0.1);
+  border-top: 1px dashed rgba(0, 168, 255, 0.6);
+  border-bottom: 1px dashed rgba(0, 168, 255, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 10px;
-  color: #00ff88;
+  color: #00a8ff;
   z-index: 3;
 }
 
-/* 내부 액체 게이지 */
+/* 내부 액체 게이지 (스파이스의 푸른 에너지) */
 .liquid {
   position: absolute;
   left: 0;
   bottom: 0;
   width: 100%;
   height: 0%;
-  /* 에너지 코어 같은 그라데이션 */
-  background: linear-gradient(to top, #0057ff, #00f0ff);
-  box-shadow: 0 0 15px #00f0ff;
+  background: linear-gradient(to top, #004d80, #00a8ff);
+  box-shadow: 0 0 15px rgba(0, 168, 255, 0.6);
   transition: height 0.08s linear;
-  
-  /* 수정됨: 윗부분을 플랫하게 만들기 위해 border-radius 제거 (0으로 설정) */
   border-radius: 0;
-
-  /* 스캔라인 효과 */
   background-image: repeating-linear-gradient(
     0deg,
     transparent,
@@ -281,21 +271,18 @@ body {
   );
 }
 
-/* 현재 온도 숫자 */
 .current-temp {
   position: absolute;
   left: 50%;
-  /* 둥근 바닥 안쪽에 위치하도록 조정 */
   bottom: 10px; 
   transform: translateX(-50%);
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 16px;
   font-weight: 900;
-  color: #00f0ff;
-  text-shadow: 0 0 5px #00f0ff, 0 1px 2px #000;
+  color: #e8dcc4;
+  text-shadow: 0 0 5px rgba(0, 168, 255, 0.8), 0 2px 4px rgba(0,0,0,0.8);
   z-index: 4;
 }
-/* --- [수정 완료] --- */
 
 .status-text {
   text-align: center;
@@ -303,50 +290,51 @@ body {
   font-size: 12px;
   min-height: 16px;
   margin-bottom: 16px;
-  color: #64748b;
+  color: #9a8c78;
   text-transform: uppercase;
+  font-weight: 600;
 }
 
-/* 상태별 네온 컬러 */
-.status-text.good { color: #00ff88; text-shadow: 0 0 8px #00ff88; }
-.status-text.hot { color: #ff0055; text-shadow: 0 0 8px #ff0055; }
-.status-text.low { color: #8ab4f8; }
+.status-text.good { color: #00a8ff; text-shadow: 0 0 8px rgba(0, 168, 255, 0.6); }
+.status-text.hot { color: #c94c4c; text-shadow: 0 0 8px rgba(201, 76, 76, 0.6); }
+.status-text.low { color: #c49a51; }
 
-/* 레이저 가열 버튼 */
+/* 가열 버튼 */
 .heat-btn {
   width: 100%;
-  border: 1px solid #00f0ff;
-  background: rgba(0, 240, 255, 0.1);
-  color: #00f0ff;
+  border: 1px solid #c49a51;
+  background: rgba(196, 154, 81, 0.1);
+  color: #c49a51;
   font-size: 16px;
   font-weight: 900;
   padding: 14px 0;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 2px;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
   clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
 }
 
 .heat-btn:hover {
-  background: #00f0ff;
-  color: #000;
-  box-shadow: 0 0 20px #00f0ff;
+  background: #c49a51;
+  color: #0c0906;
+  box-shadow: 0 0 15px rgba(196, 154, 81, 0.5);
 }
 
 .heat-btn:active {
   transform: scale(0.98);
 }
 
-/* 터미널 느낌의 메시지 박스 */
+/* 터미널 (SYS.LOG) */
 .message-box {
   max-width: 760px;
   margin: 18px auto 0;
-  background: rgba(0, 0, 0, 0.8);
-  border: 1px solid rgba(0, 240, 255, 0.3);
+  background: rgba(12, 9, 6, 0.9);
+  border: 1px solid rgba(196, 154, 81, 0.25);
   border-radius: 4px;
   padding: 16px 20px;
   position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .terminal-header {
@@ -355,9 +343,9 @@ body {
   gap: 6px;
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 10px;
-  color: #64748b;
+  color: #9a8c78;
   margin-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(196, 154, 81, 0.2);
   padding-bottom: 8px;
 }
 
@@ -366,21 +354,22 @@ body {
   border-radius: 50%;
   background: #334155;
 }
-.terminal-header .dot:nth-child(1) { background: #ff0055; }
-.terminal-header .dot:nth-child(2) { background: #ffbb00; }
-.terminal-header .dot:nth-child(3) { background: #00ff88; }
+
+.terminal-header .dot:nth-child(1) { background: #c94c4c; } /* 위험(가열) */
+.terminal-header .dot:nth-child(2) { background: #c49a51; } /* 모래(대기) */
+.terminal-header .dot:nth-child(3) { background: #00a8ff; } /* 스파이스(성공) */
 
 .main-message {
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 16px;
   font-weight: 700;
-  color: #00f0ff;
+  color: #00a8ff;
   margin-bottom: 6px;
 }
 
 .sub-message {
   font-size: 14px;
-  color: #94a3b8;
+  color: #e8dcc4;
   line-height: 1.6;
 }
 
