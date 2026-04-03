@@ -234,21 +234,23 @@ body {
 .thermometer::before { top: 20%; }
 .thermometer::after { bottom: 20%; }
 
-/* 목표 지점 영역 (스파이스 블루) */
+/* 1. 목표 지점 영역 (초록색으로 변경) */
 .target-zone {
   position: absolute;
   left: 0;
   width: 100%;
-  background: rgba(0, 168, 255, 0.1);
-  border-top: 1px dashed rgba(0, 168, 255, 0.6);
-  border-bottom: 1px dashed rgba(0, 168, 255, 0.6);
+  background: rgba(34, 197, 94, 0.1); /* 옅은 초록색 배경 */
+  border-top: 1px dashed rgba(34, 197, 94, 0.8); /* 초록색 점선 테두리 */
+  border-bottom: 1px dashed rgba(34, 197, 94, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "SFMono-Regular", Consolas, monospace;
+  font-family: "SFMono-Regular", Consolas, monospace; /* 연습게임용 (타임어택에 있어도 무방) */
   font-size: 10px;
-  color: #00a8ff;
+  font-weight: 900;
+  color: #22c55e; /* 초록색 텍스트 */
   z-index: 3;
+  pointer-events: none;
 }
 
 /* 내부 액체 게이지 (스파이스의 푸른 에너지) */
@@ -295,7 +297,7 @@ body {
   font-weight: 600;
 }
 
-.status-text.good { color: #00a8ff; text-shadow: 0 0 8px rgba(0, 168, 255, 0.6); }
+.status-text.good { color: #22c55e; text-shadow: 0 0 8px rgba(34, 197, 94, 0.6); }
 .status-text.hot { color: #c94c4c; text-shadow: 0 0 8px rgba(201, 76, 76, 0.6); }
 .status-text.low { color: #c49a51; }
 
