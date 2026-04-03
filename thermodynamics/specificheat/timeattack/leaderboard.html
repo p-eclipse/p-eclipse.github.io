@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>명예의 전당</title>
+  <title>명예의 전당 - 비열의 제왕</title>
   <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
     * {
       box-sizing: border-box;
     }
@@ -12,34 +14,33 @@
     body {
       margin: 0;
       font-family: "Pretendard", "Noto Sans KR", sans-serif;
-      background: #eef2f7;
+      background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
       color: #1e293b;
+      min-height: 100vh;
     }
 
-    button,
-    select,
-    a {
+    button, select, a {
       font: inherit;
     }
 
     .wrap {
-      width: min(980px, calc(100% - 28px));
-      margin: 32px auto 56px;
+      width: min(900px, calc(100% - 32px));
+      margin: 40px auto 60px;
     }
 
+    /* 상단 네비게이션 바 */
     .topbar {
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid #dbe3ee;
-      border-radius: 20px;
-      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 16px;
+      padding: 12px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
-      box-shadow: 0 12px 34px rgba(15, 23, 42, 0.08);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      margin-bottom: 18px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      margin-bottom: 24px;
     }
 
     .menu-link {
@@ -47,217 +48,330 @@
       align-items: center;
       gap: 6px;
       text-decoration: none;
-      color: #54709a;
+      color: #475569;
       font-size: 14px;
-      font-weight: 800;
-      padding: 10px 14px;
+      font-weight: 700;
+      padding: 8px 16px;
       border-radius: 999px;
-      background: #f1f5f9;
-      transition: filter 0.15s ease, transform 0.08s ease;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: all 0.2s ease;
     }
 
     .menu-link:hover {
-      filter: brightness(0.98);
-    }
-
-    .menu-link:active {
-      transform: translateY(1px);
+      background: #f8fafc;
+      transform: translateX(-2px);
     }
 
     .topbar-right {
       font-size: 14px;
       font-weight: 800;
-      color: #62748e;
-      background: #f1f4f8;
-      padding: 10px 14px;
-      border-radius: 999px;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
+    /* 메인 패널 */
     .panel {
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid #dbe3ee;
+      background: rgba(255, 255, 255, 0.95);
       border-radius: 24px;
-      padding: 24px;
-      box-shadow: 0 12px 34px rgba(15, 23, 42, 0.08);
+      padding: 32px;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
     }
 
+    .header-title {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
     h1 {
       margin: 0 0 8px;
-      font-size: 32px;
-      color: #1d4ed8;
+      font-size: 36px;
+      font-weight: 900;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+    }
+
+    .title-icon {
+      font-size: 40px;
+      margin-bottom: 8px;
+      display: inline-block;
     }
 
     .desc {
       color: #64748b;
-      line-height: 1.6;
-      margin-bottom: 20px;
+      font-size: 16px;
     }
 
+    /* 툴바 (필터 및 버튼) */
     .toolbar {
       display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+      justify-content: space-between;
       align-items: center;
-      margin-bottom: 22px;
+      gap: 12px;
+      margin-bottom: 24px;
+      background: #f8fafc;
+      padding: 12px 16px;
+      border-radius: 16px;
     }
 
     select {
       border: 1px solid #cbd5e1;
-      border-radius: 12px;
-      padding: 12px 14px;
+      border-radius: 10px;
+      padding: 10px 16px;
       background: white;
-      min-width: 140px;
+      min-width: 150px;
       color: #0f172a;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
     button {
       border: none;
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-weight: 800;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-weight: 700;
       cursor: pointer;
-      transition: filter 0.15s ease, transform 0.08s ease;
-    }
-
-    button:hover {
-      filter: brightness(0.98);
-    }
-
-    button:active {
-      transform: translateY(1px);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .primary {
       background: #2563eb;
       color: white;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
     }
 
+    .primary:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+    }
+
+    .primary:active {
+      transform: translateY(1px);
+    }
+
+    /* 랭킹 테이블 (카드형 디자인) */
     .table-wrap {
       overflow-x: auto;
-      border-radius: 16px;
     }
 
     table {
       width: 100%;
-      border-collapse: collapse;
-      overflow: hidden;
-      border-radius: 16px;
-      background: white;
-      min-width: 640px;
+      border-collapse: separate;
+      border-spacing: 0 8px; /* 행 사이 간격 */
+      min-width: 600px;
     }
 
     thead th {
-      background: #eff6ff;
-      color: #1d4ed8;
+      color: #64748b;
       text-align: left;
-      font-size: 14px;
-      padding: 14px 16px;
-      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 0 20px 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    tbody tr {
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      animation: fadeInUp 0.4s ease forwards;
+      opacity: 0;
+    }
+
+    tbody tr:hover {
+      transform: scale(1.01) translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+      z-index: 10;
+      position: relative;
     }
 
     tbody td {
-      padding: 14px 16px;
-      border-top: 1px solid #e2e8f0;
-      font-size: 15px;
-      white-space: nowrap;
+      padding: 16px 20px;
+      font-size: 16px;
+      font-weight: 600;
+      vertical-align: middle;
+      border-top: 1px solid #f1f5f9;
+      border-bottom: 1px solid #f1f5f9;
     }
 
-    tbody tr:first-child td {
-      border-top: none;
+    /* 양 끝 모서리 둥글게 */
+    tbody td:first-child {
+      border-left: 1px solid #f1f5f9;
+      border-top-left-radius: 12px;
+      border-bottom-left-radius: 12px;
+    }
+    tbody td:last-child {
+      border-right: 1px solid #f1f5f9;
+      border-top-right-radius: 12px;
+      border-bottom-right-radius: 12px;
     }
 
-    .rank {
+    /* 랭킹 순위 스타일 */
+    .rank-cell {
+      width: 80px;
+      font-size: 20px;
       font-weight: 900;
-      width: 90px;
+      color: #94a3b8;
+      text-align: center;
     }
 
-    .class-cell {
+    /* Top 3 하이라이트 */
+    .rank-1 td { background: linear-gradient(to right, #fffdf0, #ffffff); border-color: #fef08a !important; }
+    .rank-1 .rank-cell { font-size: 24px; color: #eab308; }
+    
+    .rank-2 td { background: linear-gradient(to right, #f8fafc, #ffffff); border-color: #e2e8f0 !important; }
+    .rank-2 .rank-cell { font-size: 24px; color: #94a3b8; }
+    
+    .rank-3 td { background: linear-gradient(to right, #fffcf9, #ffffff); border-color: #fed7aa !important; }
+    .rank-3 .rank-cell { font-size: 24px; color: #d97706; }
+
+    /* 반 뱃지 */
+    .class-badge {
+      display: inline-block;
+      background: #e0e7ff;
+      color: #4338ca;
+      font-size: 13px;
       font-weight: 800;
-      color: #334155;
-      width: 90px;
+      padding: 4px 10px;
+      border-radius: 8px;
     }
 
-    .top3 {
-      font-weight: 900;
-      color: #1d4ed8;
+    .name-cell {
+      color: #1e293b;
+      font-weight: 700;
+    }
+
+    /* 기록(시간) - 디지털 느낌의 고정폭 폰트 적용 */
+    .time-cell {
+      text-align: right;
+      font-weight: 800;
+      color: #0f172a;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 18px;
+      letter-spacing: -0.5px;
     }
 
     .empty {
-      padding: 28px 16px;
+      padding: 40px 20px !important;
       text-align: center;
-      color: #64748b;
+      color: #94a3b8;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    .empty:hover {
+      transform: none !important;
+      box-shadow: none !important;
     }
 
     .foot {
-      margin-top: 14px;
-      color: #64748b;
+      margin-top: 20px;
+      text-align: center;
+      color: #94a3b8;
       font-size: 14px;
+      font-weight: 500;
     }
 
+    /* 리스트 등장 애니메이션 */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 모바일 대응 */
     @media (max-width: 760px) {
       .wrap {
-        width: min(100%, calc(100% - 20px));
-        margin: 20px auto 32px;
+        width: 100%;
+        margin: 16px auto 32px;
+        padding: 0 16px;
       }
 
-      .topbar {
+      .panel {
+        padding: 24px 16px;
+      }
+
+      h1 { font-size: 28px; }
+
+      .toolbar {
         flex-direction: column;
         align-items: stretch;
       }
 
-      .topbar-right {
-        text-align: center;
+      thead {
+        display: none; /* 모바일에서는 헤더 숨김 */
       }
 
-      .panel {
-        padding: 18px;
-      }
-
-      h1 {
-        font-size: 26px;
-      }
-
-      thead th,
       tbody td {
-        padding: 12px 10px;
+        padding: 12px 16px;
         font-size: 14px;
       }
+
+      .rank-cell { width: 60px; font-size: 18px; }
+      .time-cell { font-size: 16px; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="topbar">
-      <a class="menu-link" href="../">← 메뉴로 돌아가기</a>
-      <div class="topbar-right">비열의 제왕 · 명예의 전당</div>
+      <a class="menu-link" href="../">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        메뉴로 돌아가기
+      </a>
+      <div class="topbar-right">🔥 비열의 제왕</div>
     </div>
 
     <div class="panel">
-      <h1>명예의 전당</h1>
-      <div class="desc">
-        반별 기록과 전체 순위를 확인해보세요!
+      <div class="header-title">
+        <span class="title-icon">👑</span>
+        <h1>명예의 전당</h1>
+        <div class="desc">가장 빠른 반응속도를 기록한 챔피언들입니다.</div>
       </div>
 
       <div class="toolbar">
         <select id="classSelect"></select>
-        <button class="primary" id="refreshBtn" type="button">새로고침</button>
+        <button class="primary" id="refreshBtn" type="button">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          새로고침
+        </button>
       </div>
 
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>순위</th>
-              <th>반</th>
+              <th style="text-align: center;">순위</th>
+              <th>소속</th>
               <th>닉네임</th>
-              <th>기록</th>
+              <th style="text-align: right;">기록 (초)</th>
             </tr>
           </thead>
           <tbody id="rankingBody">
             <tr>
-              <td class="empty" colspan="4">데이터를 불러오는 중.</td>
+              <td class="empty" colspan="4">데이터를 불러오는 중...</td>
             </tr>
           </tbody>
         </table>
@@ -324,13 +438,13 @@
     
       const allOption = document.createElement("option");
       allOption.value = "all";
-      allOption.textContent = "전체 순위";
+      allOption.textContent = "🏆 전체 순위";
       classSelect.appendChild(allOption);
     
       for (let i = 1; i <= MAX_CLASS; i += 1) {
         const option = document.createElement("option");
         option.value = String(i).padStart(2, "0");
-        option.textContent = `${i}반`;
+        option.textContent = `🏫 ${i}반 순위`;
         classSelect.appendChild(option);
       }
     
@@ -385,7 +499,7 @@
       rankingBody.innerHTML = "";
     
       if (!items.length) {
-        rankingBody.innerHTML = '<tr><td class="empty" colspan="4">아직 저장된 기록이 없습니다.</td></tr>';
+        rankingBody.innerHTML = '<tr><td class="empty" colspan="4">아직 저장된 기록이 없습니다. 도전을 시작하세요!</td></tr>';
         footText.textContent = labelText;
         return;
       }
@@ -393,12 +507,23 @@
       items.forEach((item, index) => {
         const tr = document.createElement("tr");
         const rank = index + 1;
-    
+        
+        // 지연 시간 애니메이션 효과 적용
+        tr.style.animationDelay = `${index * 0.05}s`;
+
+        let rankDisplay = rank;
+        let rankClass = "";
+        
+        if (rank === 1) { rankDisplay = "🥇"; rankClass = "rank-1"; }
+        else if (rank === 2) { rankDisplay = "🥈"; rankClass = "rank-2"; }
+        else if (rank === 3) { rankDisplay = "🥉"; rankClass = "rank-3"; }
+
+        tr.className = rankClass;
         tr.innerHTML = `
-          <td class="rank ${rank <= 3 ? "top3" : ""}">${rank}위</td>
-          <td class="class-cell">${item.classLabel}</td>
-          <td>${item.fullName}</td>
-          <td>${item.timeText}</td>
+          <td class="rank-cell">${rankDisplay}</td>
+          <td><span class="class-badge">${item.classLabel}</span></td>
+          <td class="name-cell">${item.fullName}</td>
+          <td class="time-cell">${item.timeText}</td>
         `;
     
         rankingBody.appendChild(tr);
@@ -422,7 +547,6 @@
           fullName: parsed.fullName,
           timeValue: data.time,
           timeText: formatTime(data.time),
-          //orderText: childSnap.key
         });
       });
     
@@ -459,7 +583,7 @@
     }
     
     async function renderRanking() {
-      rankingBody.innerHTML = '<tr><td class="empty" colspan="5">데이터를 불러오는 중.</td></tr>';
+      rankingBody.innerHTML = '<tr><td class="empty" colspan="4">데이터를 불러오는 중...</td></tr>';
     
       try {
         const selected = classSelect.value;
@@ -471,7 +595,7 @@
         }
       } catch (error) {
         console.error("순위표 로드 실패:", error);
-        rankingBody.innerHTML = '<tr><td class="empty" colspan="5" style="color:#dc2626;">데이터를 불러오는데 실패했습니다.</td></tr>';
+        rankingBody.innerHTML = '<tr><td class="empty" colspan="4" style="color:#ef4444;">데이터를 불러오는데 실패했습니다.</td></tr>';
         footText.textContent = "네트워크 또는 Firebase 설정을 확인하십시오.";
       }
     }
