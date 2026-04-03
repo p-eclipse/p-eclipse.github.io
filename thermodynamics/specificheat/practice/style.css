@@ -304,27 +304,33 @@ body {
 /* 가열 버튼 */
 .heat-btn {
   width: 100%;
-  border: 1px solid #c49a51;
-  background: rgba(196, 154, 81, 0.1);
-  color: #c49a51;
-  font-size: 16px;
+  border: 1px solid rgba(230, 57, 70, 0.6); /* 붉은빛 테두리 */
+  background: rgba(230, 57, 70, 0.1);      /* 은은한 붉은 바탕 */
+  color: #ff6b6b;                          /* 텍스트는 선명한 레드오렌지 */
+  font-size: 15px;
   font-weight: 900;
-  padding: 14px 0;
+  padding: 12px 0;
   cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  touch-action: manipulation;
+  user-select: none;
+  /* 듄 테마 특유의 각진 모서리 유지 */
   clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
 }
 
+/* 마우스 호버 시: 철이 뜨겁게 달아오르듯 강하게 빛남 */
 .heat-btn:hover {
-  background: #c49a51;
-  color: #0c0906;
-  box-shadow: 0 0 15px rgba(196, 154, 81, 0.5);
+  background: #e63946; 
+  color: #0c0906; /* 글씨는 검게 태운 느낌 */
+  border-color: #ff4d4d;
+  box-shadow: 0 0 20px rgba(230, 57, 70, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
+/* 클릭 시: 살짝 눌리며 열기가 응축되는 느낌 */
 .heat-btn:active {
   transform: scale(0.98);
+  background: #c92a36;
+  box-shadow: 0 0 10px rgba(230, 57, 70, 0.4);
 }
 
 /* 터미널 (SYS.LOG) */
