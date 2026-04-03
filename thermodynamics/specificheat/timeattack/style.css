@@ -84,6 +84,7 @@ select {
 }
 
 /* 뱃지 및 상태 정보 */
+/* 기존에 묶여있던 뱃지 스타일 */
 .player-badge,
 .top-time {
   font-size: 13px;
@@ -93,6 +94,13 @@ select {
   border: 1px solid rgba(196, 154, 81, 0.3);
   padding: 8px 12px;
   border-radius: 4px;
+}
+
+/* ⏱️ 스톱워치 폭 고정용 추가 코드 */
+.top-time {
+  font-variant-numeric: tabular-nums; /* 어떤 숫자든 동일한 가로폭을 가지게 함 */
+  min-width: 90px; /* 시간 표기에 필요한 넉넉한 최소 너비 확보 */
+  text-align: center; /* 중앙 정렬로 안정감 추가 */
 }
 
 .rank-btn {
