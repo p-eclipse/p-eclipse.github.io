@@ -268,8 +268,8 @@ body {
   box-shadow: 0 0 15px #00f0ff;
   transition: height 0.08s linear;
   
-  /* 핵심: 내부 게이지도 바깥 프레임을 따라 둥글게 처리 */
-  border-radius: 20px;
+  /* 수정됨: 윗부분을 플랫하게 만들기 위해 border-radius 제거 (0으로 설정) */
+  border-radius: 0;
 
   /* 스캔라인 효과 */
   background-image: repeating-linear-gradient(
