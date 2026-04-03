@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>비열의 제왕</title>
   <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
     * {
       box-sizing: border-box;
     }
@@ -15,9 +17,15 @@
       width: 100%;
       min-height: 100%;
       font-family: "Pretendard", "Noto Sans KR", sans-serif;
-      background:
-        radial-gradient(circle at top, #2b3f73 0%, #15213d 45%, #0a1020 100%);
+      /* 게임 공간 느낌의 그리드 배경 */
+      background-color: #0b0f19;
+      background-image: 
+        radial-gradient(circle at center, rgba(16, 27, 54, 0.8) 0%, rgba(11, 15, 25, 1) 100%),
+        linear-gradient(rgba(0, 195, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 195, 255, 0.03) 1px, transparent 1px);
+      background-size: 100% 100%, 30px 30px, 30px 30px;
       color: #ffffff;
+      overflow-x: hidden;
     }
 
     body {
@@ -30,86 +38,182 @@
 
     .container {
       width: 100%;
-      max-width: 720px;
+      max-width: 600px;
       text-align: center;
+      position: relative;
+      z-index: 10;
     }
 
     .title-box {
-      margin-bottom: 36px;
+      margin-bottom: 48px;
+      position: relative;
     }
 
+    /* 사이버펑크 느낌의 타이틀 */
     .title {
       margin: 0;
-      font-size: clamp(2.2rem, 6vw, 4.4rem);
+      font-size: clamp(2.8rem, 8vw, 5rem);
       font-weight: 900;
-      letter-spacing: -0.04em;
+      letter-spacing: -0.05em;
       line-height: 1.1;
-      text-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #00f0ff 0%, #0057ff 100%);
+      -webkit-background-clip: text;
+      color: transparent;
+      text-shadow: 0px 0px 20px rgba(0, 240, 255, 0.4);
+    }
+
+    /* 타이틀 장식선 */
+    .title::after {
+      content: '';
+      display: block;
+      width: 80px;
+      height: 4px;
+      background: #00f0ff;
+      margin: 16px auto 0;
+      box-shadow: 0 0 10px #00f0ff;
+      border-radius: 2px;
     }
 
     .subtitle {
-      margin-top: 12px;
-      font-size: clamp(0.95rem, 2.3vw, 1.15rem);
-      color: rgba(255, 255, 255, 0.82);
+      margin-top: 16px;
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
+      color: #8ab4f8;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
     }
 
     .menu {
       display: grid;
-      gap: 18px;
+      gap: 20px;
     }
 
+    /* 게임 버튼 베이스 스타일 */
     .menu-button {
-      display: block;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
       width: 100%;
-      padding: 22px 20px;
-      border-radius: 22px;
+      padding: 20px 24px;
       text-decoration: none;
       color: #ffffff;
-      font-size: clamp(1.2rem, 3vw, 1.6rem);
-      font-weight: 800;
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.25),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
-      transition:
-        transform 0.18s ease,
-        box-shadow 0.18s ease,
-        background 0.18s ease;
+      background: rgba(16, 27, 54, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      /* SF 게임 특유의 잘린 모서리 디자인 */
+      clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      overflow: hidden;
+    }
+
+    .menu-button::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px;
+      height: 100%;
+      background: #fff; /* 기본 흰색 선, 모드마다 다름 */
+      transition: width 0.3s ease;
+    }
+
+    /* 호버 시 배경 스캔 효과 */
+    .menu-button::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transform: skewX(-20deg);
+      transition: none;
+    }
+
+    .menu-button:hover::after {
+      left: 200%;
+      transition: left 0.6s ease-in-out;
     }
 
     .menu-button:hover {
-      transform: translateY(-4px);
-      background: rgba(255, 255, 255, 0.18);
-      box-shadow:
-        0 16px 36px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.16);
+      transform: translateX(8px);
+      background: rgba(22, 38, 76, 0.9);
     }
 
     .menu-button:active {
-      transform: translateY(-1px) scale(0.99);
+      transform: translateX(4px) scale(0.98);
+    }
+
+    /* 버튼 텍스트 영역 */
+    .btn-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-left: 12px; /* 왼쪽 장식선 공간 확보 */
+    }
+
+    .menu-title {
+      font-size: clamp(1.4rem, 4vw, 1.8rem);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .menu-label {
-      display: block;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 500;
-      opacity: 0.82;
-      margin-top: 6px;
+      color: #94a3b8;
     }
 
+    /* 개별 모드 테마 컬러 (연습, 타임어택, 랭킹) */
+    
+    /* 1. 연습게임 (시안) */
+    .btn-practice { border-color: rgba(0, 240, 255, 0.2); }
+    .btn-practice::before { background: #00f0ff; box-shadow: 0 0 10px #00f0ff; }
+    .btn-practice:hover { box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.2); border-color: rgba(0, 240, 255, 0.6); }
+    .btn-practice:hover .menu-title { color: #00f0ff; text-shadow: 0 0 8px rgba(0, 240, 255, 0.6); }
+
+    /* 2. 타임어택 (네온 핑크) */
+    .btn-timeattack { border-color: rgba(255, 0, 85, 0.2); }
+    .btn-timeattack::before { background: #ff0055; box-shadow: 0 0 10px #ff0055; }
+    .btn-timeattack:hover { box-shadow: inset 0 0 20px rgba(255, 0, 85, 0.2); border-color: rgba(255, 0, 85, 0.6); }
+    .btn-timeattack:hover .menu-title { color: #ff0055; text-shadow: 0 0 8px rgba(255, 0, 85, 0.6); }
+
+    /* 3. 명예의 전당 (골드) */
+    .btn-leaderboard { border-color: rgba(255, 187, 0, 0.2); }
+    .btn-leaderboard::before { background: #ffbb00; box-shadow: 0 0 10px #ffbb00; }
+    .btn-leaderboard:hover { box-shadow: inset 0 0 20px rgba(255, 187, 0, 0.2); border-color: rgba(255, 187, 0, 0.6); }
+    .btn-leaderboard:hover .menu-title { color: #ffbb00; text-shadow: 0 0 8px rgba(255, 187, 0, 0.6); }
+
+    /* 하단 푸터 */
     .footer {
-      margin-top: 28px;
-      font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.6);
+      margin-top: 40px;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.4);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .footer::before, .footer::after {
+      content: '';
+      display: block;
+      width: 30px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.2);
     }
 
     @media (max-width: 480px) {
       .menu-button {
-        padding: 18px 16px;
-        border-radius: 18px;
+        padding: 16px 20px;
+      }
+      .btn-content {
+        padding-left: 8px;
       }
     }
   </style>
@@ -118,23 +222,29 @@
   <main class="container">
     <div class="title-box">
       <h1 class="title">비열의 제왕</h1>
-      <div class="subtitle">모드를 선택하세요</div>
+      <div class="subtitle">Select Your Mode</div>
     </div>
 
     <section class="menu">
-      <a class="menu-button" href="./practice/">
-        🎯 연습게임
-        <span class="menu-label">자유롭게 연습하기</span>
+      <a class="menu-button btn-practice" href="./practice/">
+        <div class="btn-content">
+          <span class="menu-title">🎯 연습 게임</span>
+          <span class="menu-label">제한 없이 자유롭게 시스템 파악하기</span>
+        </div>
       </a>
 
-      <a class="menu-button" href="./timeattack/">
-        ⏱ 타임어택
-        <span class="menu-label">빠르게 클리어에 도전</span>
+      <a class="menu-button btn-timeattack" href="./timeattack/">
+        <div class="btn-content">
+          <span class="menu-title">⏱ 타임 어택</span>
+          <span class="menu-label">한계에 도전하여 가장 빠른 클리어 기록 세우기</span>
+        </div>
       </a>
 
-      <a class="menu-button" href="./timeattack/leaderboard.html">
-        🏆 명예의전당
-        <span class="menu-label">기록 확인하기</span>
+      <a class="menu-button btn-leaderboard" href="./timeattack/leaderboard.html">
+        <div class="btn-content">
+          <span class="menu-title">🏆 명예의 전당</span>
+          <span class="menu-label">최고의 플레이어 랭킹 확인하기</span>
+        </div>
       </a>
     </section>
 
