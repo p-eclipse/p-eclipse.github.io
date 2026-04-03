@@ -17,14 +17,12 @@
       width: 100%;
       min-height: 100%;
       font-family: "Pretendard", "Noto Sans KR", sans-serif;
-      /* 게임 공간 느낌의 그리드 배경 */
-      background-color: #0b0f19;
+      /* 아라키스의 깊은 사막 밤과 모래폭풍 느낌의 배경 */
+      background-color: #0c0906;
       background-image: 
-        radial-gradient(circle at center, rgba(16, 27, 54, 0.8) 0%, rgba(11, 15, 25, 1) 100%),
-        linear-gradient(rgba(0, 195, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 195, 255, 0.03) 1px, transparent 1px);
-      background-size: 100% 100%, 30px 30px, 30px 30px;
-      color: #ffffff;
+        radial-gradient(circle at top center, rgba(168, 102, 50, 0.15) 0%, rgba(12, 9, 6, 1) 70%),
+        radial-gradient(circle at bottom, rgba(0, 168, 255, 0.05) 0%, transparent 50%);
+      color: #e8dcc4; /* 모래빛이 도는 흰색 */
       overflow-x: hidden;
     }
 
@@ -45,175 +43,178 @@
     }
 
     .title-box {
-      margin-bottom: 48px;
+      margin-bottom: 56px;
       position: relative;
     }
 
-    /* 사이버펑크 느낌의 타이틀 */
+    /* 듄 특유의 웅장하고 넓은 자간의 타이틀 */
     .title {
       margin: 0;
-      font-size: clamp(2.8rem, 8vw, 5rem);
-      font-weight: 900;
-      letter-spacing: -0.05em;
-      line-height: 1.1;
+      font-size: clamp(2.8rem, 8vw, 4.5rem);
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      line-height: 1.2;
       text-transform: uppercase;
-      background: linear-gradient(135deg, #00f0ff 0%, #0057ff 100%);
+      /* 빛나는 모래와 향신료의 색상 */
+      background: linear-gradient(135deg, #f7e6c4 0%, #c49a51 50%, #8a5a2b 100%);
       -webkit-background-clip: text;
       color: transparent;
-      text-shadow: 0px 0px 20px rgba(0, 240, 255, 0.4);
+      text-shadow: 0px 4px 15px rgba(196, 154, 81, 0.3);
     }
 
-    /* 타이틀 장식선 */
+    /* 타이틀 장식선 (스파이스 블루) */
     .title::after {
       content: '';
       display: block;
-      width: 80px;
-      height: 4px;
-      background: #00f0ff;
-      margin: 16px auto 0;
-      box-shadow: 0 0 10px #00f0ff;
-      border-radius: 2px;
+      width: 60px;
+      height: 2px;
+      background: #00a8ff;
+      margin: 24px auto 0;
+      box-shadow: 0 0 12px rgba(0, 168, 255, 0.8);
+      border-radius: 1px;
     }
 
     .subtitle {
-      margin-top: 16px;
-      font-size: clamp(1rem, 2.5vw, 1.2rem);
-      color: #8ab4f8;
-      font-weight: 600;
-      letter-spacing: 0.1em;
+      margin-top: 20px;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+      color: #00a8ff; /* 이바드의 눈(Eyes of Ibad) 색상 */
+      font-weight: 400;
+      letter-spacing: 0.3em;
       text-transform: uppercase;
+      text-shadow: 0 0 8px rgba(0, 168, 255, 0.4);
     }
 
     .menu {
       display: grid;
-      gap: 20px;
+      gap: 24px;
     }
 
-    /* 게임 버튼 베이스 스타일 */
+    /* 모놀리스(거석) 느낌의 묵직한 버튼 */
     .menu-button {
       position: relative;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       width: 100%;
-      padding: 20px 24px;
+      padding: 24px 28px;
       text-decoration: none;
-      color: #ffffff;
-      background: rgba(16, 27, 54, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      /* SF 게임 특유의 잘린 모서리 디자인 */
-      clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
-      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      color: #e8dcc4;
+      background: rgba(20, 15, 10, 0.6);
+      border: 1px solid rgba(196, 154, 81, 0.15);
+      /* 가혹한 환경을 나타내는 날카로운 컷팅 */
+      clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
       overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
     }
 
     .menu-button::before {
       content: '';
       position: absolute;
       top: 0; left: 0;
-      width: 4px;
+      width: 3px;
       height: 100%;
-      background: #fff; /* 기본 흰색 선, 모드마다 다름 */
-      transition: width 0.3s ease;
+      background: #c49a51;
+      transition: width 0.3s ease, background 0.3s ease;
     }
 
-    /* 호버 시 배경 스캔 효과 */
+    /* 모래바람이 스쳐지나가는 듯한 호버 이펙트 */
     .menu-button::after {
       content: '';
       position: absolute;
       top: 0; left: -100%;
       width: 50%;
       height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-      transform: skewX(-20deg);
+      background: linear-gradient(90deg, transparent, rgba(196, 154, 81, 0.08), transparent);
+      transform: skewX(-25deg);
       transition: none;
     }
 
     .menu-button:hover::after {
       left: 200%;
-      transition: left 0.6s ease-in-out;
+      transition: left 0.7s ease-in-out;
     }
 
     .menu-button:hover {
-      transform: translateX(8px);
-      background: rgba(22, 38, 76, 0.9);
+      transform: translateY(-2px);
+      background: rgba(30, 22, 15, 0.9);
+      border-color: rgba(196, 154, 81, 0.4);
     }
 
     .menu-button:active {
-      transform: translateX(4px) scale(0.98);
+      transform: translateY(1px) scale(0.99);
     }
 
-    /* 버튼 텍스트 영역 */
     .btn-content {
       position: relative;
       z-index: 2;
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      padding-left: 12px; /* 왼쪽 장식선 공간 확보 */
+      gap: 8px;
+      padding-left: 16px;
     }
 
     .menu-title {
-      font-size: clamp(1.4rem, 4vw, 1.8rem);
-      font-weight: 800;
+      font-size: clamp(1.3rem, 4vw, 1.6rem);
+      font-weight: 700;
+      letter-spacing: 0.05em;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      transition: color 0.3s ease;
     }
 
     .menu-label {
       font-size: 0.9rem;
-      font-weight: 500;
-      color: #94a3b8;
+      font-weight: 300;
+      color: #9a8c78;
+      letter-spacing: -0.02em;
     }
 
-    /* 개별 모드 테마 컬러 (연습, 타임어택, 랭킹) */
-    
-    /* 1. 연습게임 (시안) */
-    .btn-practice { border-color: rgba(0, 240, 255, 0.2); }
-    .btn-practice::before { background: #00f0ff; box-shadow: 0 0 10px #00f0ff; }
-    .btn-practice:hover { box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.2); border-color: rgba(0, 240, 255, 0.6); }
-    .btn-practice:hover .menu-title { color: #00f0ff; text-shadow: 0 0 8px rgba(0, 240, 255, 0.6); }
+    /* 1. 연습게임 (프레멘의 모래) */
+    .btn-practice:hover::before { background: #e5c07b; box-shadow: 0 0 15px #e5c07b; width: 6px; }
+    .btn-practice:hover .menu-title { color: #e5c07b; text-shadow: 0 0 10px rgba(229, 192, 123, 0.3); }
 
-    /* 2. 타임어택 (네온 핑크) */
-    .btn-timeattack { border-color: rgba(255, 0, 85, 0.2); }
-    .btn-timeattack::before { background: #ff0055; box-shadow: 0 0 10px #ff0055; }
-    .btn-timeattack:hover { box-shadow: inset 0 0 20px rgba(255, 0, 85, 0.2); border-color: rgba(255, 0, 85, 0.6); }
-    .btn-timeattack:hover .menu-title { color: #ff0055; text-shadow: 0 0 8px rgba(255, 0, 85, 0.6); }
+    /* 2. 타임어택 (스파이스의 각성) */
+    .btn-timeattack:hover::before { background: #00a8ff; box-shadow: 0 0 15px #00a8ff; width: 6px; }
+    .btn-timeattack:hover .menu-title { color: #00a8ff; text-shadow: 0 0 10px rgba(0, 168, 255, 0.4); }
+    .btn-timeattack:hover { border-color: rgba(0, 168, 255, 0.3); }
 
-    /* 3. 명예의 전당 (골드) */
-    .btn-leaderboard { border-color: rgba(255, 187, 0, 0.2); }
-    .btn-leaderboard::before { background: #ffbb00; box-shadow: 0 0 10px #ffbb00; }
-    .btn-leaderboard:hover { box-shadow: inset 0 0 20px rgba(255, 187, 0, 0.2); border-color: rgba(255, 187, 0, 0.6); }
-    .btn-leaderboard:hover .menu-title { color: #ffbb00; text-shadow: 0 0 8px rgba(255, 187, 0, 0.6); }
+    /* 3. 명예의 전당 (황제의 권좌) */
+    .btn-leaderboard:hover::before { background: #c94c4c; box-shadow: 0 0 15px #c94c4c; width: 6px; }
+    .btn-leaderboard:hover .menu-title { color: #e8a7a7; text-shadow: 0 0 10px rgba(201, 76, 76, 0.4); }
+    .btn-leaderboard:hover { border-color: rgba(201, 76, 76, 0.3); }
 
     /* 하단 푸터 */
     .footer {
-      margin-top: 40px;
-      font-size: 0.85rem;
-      color: rgba(255, 255, 255, 0.4);
-      letter-spacing: 0.1em;
+      margin-top: 56px;
+      font-size: 0.75rem;
+      color: rgba(154, 140, 120, 0.5);
+      letter-spacing: 0.2em;
       text-transform: uppercase;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 12px;
     }
 
     .footer::before, .footer::after {
       content: '';
       display: block;
-      width: 30px;
+      width: 40px;
       height: 1px;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(196, 154, 81, 0.2);
     }
 
     @media (max-width: 480px) {
       .menu-button {
-        padding: 16px 20px;
+        padding: 20px;
       }
       .btn-content {
         padding-left: 8px;
+      }
+      .title {
+        letter-spacing: 0.1em;
       }
     }
   </style>
@@ -222,28 +223,28 @@
   <main class="container">
     <div class="title-box">
       <h1 class="title">비열의 제왕</h1>
-      <div class="subtitle">Select Your Mode</div>
+      <div class="subtitle">Select Your Path</div>
     </div>
 
     <section class="menu">
       <a class="menu-button btn-practice" href="./practice/">
         <div class="btn-content">
-          <span class="menu-title">🎯 연습 게임</span>
-          <span class="menu-label">제한 없이 자유롭게 시스템 파악하기</span>
+          <span class="menu-title">듄의 법칙 (연습)</span>
+          <span class="menu-label">모래의 흐름을 읽고 생존의 기초를 다지십시오.</span>
         </div>
       </a>
 
       <a class="menu-button btn-timeattack" href="./timeattack/">
         <div class="btn-content">
-          <span class="menu-title">⏱ 타임 어택</span>
-          <span class="menu-label">한계에 도전하여 가장 빠른 클리어 기록 세우기</span>
+          <span class="menu-title">스파이스 러시 (타임어택)</span>
+          <span class="menu-label">시간은 스파이스와 같습니다. 가장 빠른 자가 지배합니다.</span>
         </div>
       </a>
 
       <a class="menu-button btn-leaderboard" href="./timeattack/leaderboard.html">
         <div class="btn-content">
-          <span class="menu-title">🏆 명예의 전당</span>
-          <span class="menu-label">최고의 플레이어 랭킹 확인하기</span>
+          <span class="menu-title">코리노의 기록 (명예의 전당)</span>
+          <span class="menu-label">우주에 이름을 새긴 전설적인 퀴사츠 해더락들.</span>
         </div>
       </a>
     </section>
