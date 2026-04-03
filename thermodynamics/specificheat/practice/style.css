@@ -10,8 +10,8 @@ body {
   background-color: #0b0f19;
   background-image: 
     radial-gradient(circle at center, rgba(16, 27, 54, 0.8) 0%, rgba(11, 15, 25, 1) 100%),
-    linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(0, 195, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 195, 255, 0.03) 1px, transparent 1px);
   background-size: 100% 100%, 30px 30px, 30px 30px;
   font-family: "Pretendard", "Noto Sans KR", sans-serif;
   color: #e2e8f0;
@@ -114,13 +114,12 @@ body {
   width: 260px;
   background: rgba(11, 15, 25, 0.85);
   border: 1px solid rgba(0, 240, 255, 0.3);
-  /* 사이버펑크 특유의 잘린 모서리 */
+  /* 카드는 기존의 SF 느낌을 위해 잘린 모서리 유지 */
   clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
   padding: 20px;
   position: relative;
 }
 
-/* 카드 내부 라이팅 이펙트 */
 .card::before {
   content: '';
   position: absolute;
@@ -191,7 +190,7 @@ body {
 }
 
 .divider {
-  display: none; /* 사이버 테마에서는 불필요하여 숨김 */
+  display: none;
 }
 
 .heat-capacity {
@@ -202,7 +201,7 @@ body {
   margin-top: 8px;
 }
 
-/* 온도계 -> 에너지 게이지로 변경 */
+/* --- [수정 완료] 둥근 온도계 레이아웃 --- */
 .thermo-wrap {
   display: flex;
   justify-content: center;
@@ -210,38 +209,44 @@ body {
 }
 
 .thermometer {
-  --thermo-width: 40px;
+  /* 조금 더 도톰하게 width 증가 */
+  --thermo-width: 48px;
   position: relative;
   width: var(--thermo-width);
-  height: 200px;
+  height: 220px;
   background: rgba(0, 0, 0, 0.6);
-  border: 2px solid rgba(0, 240, 255, 0.3);
-  border-radius: 4px;
+  /* 테두리를 밝게 하고, 그림자를 주어 유리 튜브 질감 표현 */
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  /* 핵심: 온도계 전체를 아주 둥글게 (pill shape) */
+  border-radius: 30px;
   overflow: hidden;
-  box-shadow: inset 0 0 10px #000;
+  box-shadow: 
+    0 0 15px rgba(0, 240, 255, 0.1), /* 은은한 네온 광 */
+    inset 0 0 10px rgba(0, 0, 0, 0.7); /* 내부 입체감 */
 }
 
-/* 게이지 눈금 */
+/* 게이지 눈금선 */
 .thermometer::before, .thermometer::after {
   content: "";
   position: absolute;
   left: 0;
   width: 100%;
   height: 1px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
   z-index: 2;
 }
 
 .thermometer::before { top: 20%; }
 .thermometer::after { bottom: 20%; }
 
+/* 목표 지점 영역 */
 .target-zone {
   position: absolute;
   left: 0;
   width: 100%;
-  background: rgba(0, 255, 136, 0.15);
-  border-top: 1px dashed #00ff88;
-  border-bottom: 1px dashed #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+  border-top: 1px dashed rgba(0, 255, 136, 0.6);
+  border-bottom: 1px dashed rgba(0, 255, 136, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -251,15 +256,21 @@ body {
   z-index: 3;
 }
 
+/* 내부 액체 게이지 */
 .liquid {
   position: absolute;
   left: 0;
   bottom: 0;
   width: 100%;
   height: 0%;
+  /* 에너지 코어 같은 그라데이션 */
   background: linear-gradient(to top, #0057ff, #00f0ff);
   box-shadow: 0 0 15px #00f0ff;
   transition: height 0.08s linear;
+  
+  /* 핵심: 내부 게이지도 바깥 프레임을 따라 둥글게 처리 */
+  border-radius: 20px;
+
   /* 스캔라인 효과 */
   background-image: repeating-linear-gradient(
     0deg,
@@ -270,18 +281,21 @@ body {
   );
 }
 
+/* 현재 온도 숫자 */
 .current-temp {
   position: absolute;
   left: 50%;
-  bottom: -25px; /* 게이지 바깥 아래로 이동 */
+  /* 둥근 바닥 안쪽에 위치하도록 조정 */
+  bottom: 10px; 
   transform: translateX(-50%);
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 16px;
   font-weight: 900;
   color: #00f0ff;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 5px #00f0ff, 0 1px 2px #000;
   z-index: 4;
 }
+/* --- [수정 완료] --- */
 
 .status-text {
   text-align: center;
