@@ -86,7 +86,7 @@ function configMomentum() {
         Py[i] = waterMass * MBSample(waterMass, beta);
     }
 }
-
+/*
 function configPosition() {
     const gridSize = Math.sqrt(cafeN);
     const dx = 2 * RADIUS;
@@ -111,6 +111,53 @@ function configPosition() {
         } while (
             positionX > -offsetX && positionX < offsetX &&
             positionY > -offsetY && positionY < offsetY
+        );
+
+        X[i] = positionX;
+        Y[i] = positionY;
+    }
+}*/
+
+function configPosition() {
+    const dx = 2 * RADIUS;
+    const dy = Math.sqrt(3) * RADIUS; // 육각 격자 세로 간격
+    const maxRadius = Math.ceil(Math.sqrt(cafeN / Math.PI)) * dx;
+
+    let index = 0;
+
+    // ---- 커피 입자를 원형(원판)으로 배치 ----
+    for (let y = -maxRadius; y <= maxRadius && index < cafeN; y += dy) {
+        const rowOffset = (Math.round((y + maxRadius) / dy) % 2) * RADIUS;
+
+        for (let x = -maxRadius; x <= maxRadius && index < cafeN; x += dx) {
+            const px = x + rowOffset;
+            const py = y;
+
+            if (px * px + py * py <= maxRadius * maxRadius) {
+                X[index] = px;
+                Y[index] = py;
+                index++;
+            }
+        }
+    }
+
+    // 혹시 원 내부 점 개수가 cafeN보다 부족하면, 남는 입자는 안쪽부터 랜덤 보충
+    while (index < cafeN) {
+        const r = maxRadius * Math.sqrt(Math.random());
+        const theta = Math.random() * 2 * Math.PI;
+        X[index] = r * Math.cos(theta);
+        Y[index] = r * Math.sin(theta);
+        index++;
+    }
+
+    // ---- 물 입자는 커피 원판 바깥에 랜덤 배치 ----
+    for (let i = cafeN; i < N; i++) {
+        let positionX, positionY;
+        do {
+            positionX = Math.random() * canvasWidth - canvasWidth / 2;
+            positionY = Math.random() * canvasHeight - canvasHeight / 2;
+        } while (
+            positionX * positionX + positionY * positionY <= (maxRadius + 2 * RADIUS) * (maxRadius + 2 * RADIUS)
         );
 
         X[i] = positionX;
