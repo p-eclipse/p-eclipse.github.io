@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>방귀 확산 입자 모형 시뮬레이션</title>
+  <title>기체 확산 입자 모형 시뮬레이션</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -86,14 +86,14 @@
   </style>
 </head>
 <body>
-  <h1>방귀 확산 입자 모형 시뮬레이션</h1>
+  <h1>기체 확산 입자 모형 시뮬레이션</h1>
   
 
   <div class="panel">
     <div class="group">
       <button id="toggleBtn">일시정지</button>
       <button id="resetBtn">초기화</button>
-      <button id="burstBtn">방귀 분출</button>
+      <button id="burstBtn">가스 분출</button>
       <span id="cooldownText" style="font-size:13px; color:#666; margin-left:6px;">준비됨</span>
     </div>
 
@@ -113,7 +113,7 @@
   
 
   <div style="width:min(1100px, 95vw); margin:0 0 14px;">
-    <div style="font-size:13px; color:#555; margin-bottom:6px;">방귀 게이지</div>
+    <div style="font-size:13px; color:#555; margin-bottom:6px;">가스 게이지</div>
     <div style="width:100%; height:18px; background:#e2ddd7; border:1px solid #c8b9a7; border-radius:999px; overflow:hidden;">
       <div id="gasGaugeFill" style="width:100%; height:100%; background:linear-gradient(90deg, #a96a2d 0%, #7b4a1d 100%);"></div>
     </div>
@@ -214,14 +214,14 @@
       gasGaugeFill.style.width = `${ratio * 100}%`;
 
       if (gasRemaining <= 0) {
-        burstBtn.textContent = '방귀 소진';
+        burstBtn.textContent = '가스 소진';
         burstBtn.disabled = true;
         cooldownText.textContent = '남은 가스 없음';
         return;
       }
 
       burstBtn.disabled = false;
-      burstBtn.textContent = isBursting ? '방귀 분출 중' : '방귀 분출';
+      burstBtn.textContent = isBursting ? '가스 분출 중' : '가스 분출';
       cooldownText.textContent = isBursting
         ? `분출 중 · 남은 시간 ${gasRemaining.toFixed(1)}초`
         : `남은 시간 ${gasRemaining.toFixed(1)}초`;
