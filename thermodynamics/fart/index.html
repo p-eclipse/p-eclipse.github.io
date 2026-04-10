@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>방귀 확산 입자 모형 시뮬레이션</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 {
+      margin: 16px 0 8px;
+      font-size: 24px;
+    }
+    .desc {
+      width: min(1100px, 95vw);
+      margin-bottom: 10px;
+      color: #444;
+      line-height: 1.5;
+    }
+    .panel {
+      width: min(1100px, 95vw);
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    button, input[type="range"] {
+      cursor: pointer;
+    }
+    button {
+      background: #222;
+      color: #eee;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #2c2c2c;
+    }
+    button:disabled {
+      background: #999;
+      border-color: #999;
+      color: #eee;
+      cursor: not-allowed;
+    }
+    label {
+      font-size: 14px;
+      color: #333;
+    }
+    canvas {
+      width: min(1100px, 95vw);
+      aspect-ratio: 11 / 6;
+      background: #ffffff;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      display: block;
+    }
+    .hint {
+      width: min(1100px, 95vw);
+      margin: 0 0 16px;
+      font-size: 13px;
+      color: #666;
+    }
+    @media (max-width: 900px) {
+      .panel {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>방귀 확산 입자 모형 시뮬레이션</h1>
+  
+
+  <div class="panel">
+    <div class="group">
+      <button id="toggleBtn">일시정지</button>
+      <button id="resetBtn">초기화</button>
+      <button id="burstBtn">방귀 분출</button>
+      <span id="cooldownText" style="font-size:13px; color:#666; margin-left:6px;">준비됨</span>
+    </div>
+
+    <div class="group">
+      <label>
+        <input id="trailCheckbox" type="checkbox" /> 잔상
+      </label>
+    </div>
+
+    <div class="group">
+      <label>
+        <input id="gridCheckbox" type="checkbox" checked /> 농도 격자
+      </label>
+    </div>
+  </div>
+
+  
+
+  <div style="width:min(1100px, 95vw); margin:0 0 14px;">
+    <div style="font-size:13px; color:#555; margin-bottom:6px;">방귀 게이지</div>
+    <div style="width:100%; height:18px; background:#e2ddd7; border:1px solid #c8b9a7; border-radius:999px; overflow:hidden;">
+      <div id="gasGaugeFill" style="width:100%; height:100%; background:linear-gradient(90deg, #a96a2d 0%, #7b4a1d 100%);"></div>
+    </div>
+  </div>
+
+  <canvas id="canvas" width="1100" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    const toggleBtn = document.getElementById('toggleBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const burstBtn = document.getElementById('burstBtn');
+    const cooldownText = document.getElementById('cooldownText');
+    const trailCheckbox = document.getElementById('trailCheckbox');
+    const gridCheckbox = document.getElementById('gridCheckbox');
+
+    const W = canvas.width;
+    const H = canvas.height;
+    const MID = W / 2;
+
+    const speedScale = 1.2;
+    const particleRadius = 2;
+    const targetParticleCount = 680;
+    const substeps = 4;
+    const roomTemp = 22;
+    const fartTemp = 36;
+    const maxGasTime = 5.0;
+    const emissionRatePerSecond = 22;
+
+    let particles = [];
+    let running = true;
+    let lastTime = performance.now();
+    let accumulatedCollisions = 0;
+    let displayCollisionRate = 0;
+    let collisionTimer = 0;
+    let gasRemaining = maxGasTime;
+    let isBursting = false;
+
+    function rand(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function tempSpeedFactor(tempC) {
+      return Math.sqrt((tempC + 273.15) / 295.15);
+    }
+
+    function createParticle(x, y, speed, angle, type = 'air') {
+      return {
+        x,
+        y,
+        vx: speed * Math.cos(angle),
+        vy: speed * Math.sin(angle),
+        r: particleRadius,
+        m: particleRadius * particleRadius,
+        type,
+      };
+    }
+
+    function overlapsAny(x, y, r) {
+      for (const p of particles) {
+        const dx = x - p.x;
+        const dy = y - p.y;
+        const minDist = r + p.r;
+        if (dx * dx + dy * dy < minDist * minDist) return true;
+      }
+      return false;
+    }
+
+    function initializeParticles() {
+      particles = [];
+      const triesLimit = 50000;
+      let tries = 0;
+
+      while (particles.length < targetParticleCount && tries < triesLimit) {
+        tries++;
+        const x = rand(particleRadius + 6, W - particleRadius - 6);
+        const y = rand(particleRadius + 6, H - particleRadius - 6);
+        if (overlapsAny(x, y, particleRadius)) continue;
+
+        const speed = rand(65, 120) * speedScale * tempSpeedFactor(roomTemp);
+        const angle = rand(0, Math.PI * 2);
+        particles.push(createParticle(x, y, speed, angle, 'air'));
+      }
+    }
+
+    function updateBurstButton() {
+      const gasGaugeFill = document.getElementById('gasGaugeFill');
+      const ratio = Math.max(0, Math.min(1, gasRemaining / maxGasTime));
+      gasGaugeFill.style.width = `${ratio * 100}%`;
+
+      if (gasRemaining <= 0) {
+        burstBtn.textContent = '방귀 소진';
+        burstBtn.disabled = true;
+        cooldownText.textContent = '남은 가스 없음';
+        return;
+      }
+
+      burstBtn.disabled = false;
+      burstBtn.textContent = isBursting ? '방귀 분출 중' : '방귀 분출';
+      cooldownText.textContent = isBursting
+        ? `분출 중 · 남은 시간 ${gasRemaining.toFixed(1)}초`
+        : `남은 시간 ${gasRemaining.toFixed(1)}초`;
+    }
+
+    function emitBurst(dt) {
+      const targetCount = Math.max(1, Math.round(emissionRatePerSecond * dt));
+      let added = 0;
+      let tries = 0;
+      const maxTries = 6000;
+
+      while (added < targetCount && tries < maxTries) {
+        tries++;
+        const x = rand(25, 90);
+        const y = rand(H * 0.35, H * 0.65);
+        if (overlapsAny(x, y, particleRadius)) continue;
+
+        const angle = rand(-0.45, 0.45);
+        const speed = rand(150, 240) * speedScale * tempSpeedFactor(fartTemp);
+        particles.push(createParticle(x, y, speed, angle, 'fart'));
+        added++;
+      }
+    }
+
+    function updatePositions(dt) {
+      for (const p of particles) {
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+
+        if (p.x - p.r < 0) {
+          p.x = p.r;
+          p.vx *= -1;
+          accumulatedCollisions++;
+        } else if (p.x + p.r > W) {
+          p.x = W - p.r;
+          p.vx *= -1;
+          accumulatedCollisions++;
+        }
+
+        if (p.y - p.r < 0) {
+          p.y = p.r;
+          p.vy *= -1;
+          accumulatedCollisions++;
+        } else if (p.y + p.r > H) {
+          p.y = H - p.r;
+          p.vy *= -1;
+          accumulatedCollisions++;
+        }
+      }
+    }
+
+    function resolveParticleCollisions() {
+      const indices = Array.from({ length: particles.length }, (_, i) => i);
+      shuffle(indices);
+
+      for (let aIndex = 0; aIndex < indices.length; aIndex++) {
+        const i = indices[aIndex];
+        for (let bIndex = aIndex + 1; bIndex < indices.length; bIndex++) {
+          const j = indices[bIndex];
+          const a = particles[i];
+          const b = particles[j];
+
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const distSq = dx * dx + dy * dy;
+          const minDist = a.r + b.r;
+          if (distSq >= minDist * minDist) continue;
+
+          let dist = Math.sqrt(distSq);
+          let nx;
+          let ny;
+
+          if (dist < 1e-8) {
+            const angle = rand(0, Math.PI * 2);
+            nx = Math.cos(angle);
+            ny = Math.sin(angle);
+            dist = 1e-8;
+          } else {
+            nx = dx / dist;
+            ny = dy / dist;
+          }
+
+          const rvx = b.vx - a.vx;
+          const rvy = b.vy - a.vy;
+          const relVelAlongNormal = rvx * nx + rvy * ny;
+
+          if (relVelAlongNormal < 0) {
+            const impulse = (2 * relVelAlongNormal) / (a.m + b.m);
+            a.vx += impulse * b.m * nx;
+            a.vy += impulse * b.m * ny;
+            b.vx -= impulse * a.m * nx;
+            b.vy -= impulse * a.m * ny;
+            accumulatedCollisions++;
+          }
+
+          const overlap = minDist - dist;
+          if (overlap > 0) {
+            const correction = Math.min(overlap * 0.35, 0.6);
+            const totalMass = a.m + b.m;
+            const moveA = correction * (b.m / totalMass);
+            const moveB = correction * (a.m / totalMass);
+            a.x -= nx * moveA;
+            a.y -= ny * moveA;
+            b.x += nx * moveB;
+            b.y += ny * moveB;
+          }
+        }
+      }
+    }
+
+    function stepSimulation(dt) {
+      const cappedDt = Math.min(dt, 0.016);
+      const subDt = cappedDt / substeps;
+      for (let s = 0; s < substeps; s++) {
+        updatePositions(subDt);
+        resolveParticleCollisions();
+      }
+    }
+
+    function drawDensityGrid() {
+      const cols = 22;
+      const rows = 12;
+      const cellW = W / cols;
+      const cellH = H / rows;
+      const density = Array.from({ length: rows }, () => Array(cols).fill(0));
+      const fartDensity = Array.from({ length: rows }, () => Array(cols).fill(0));
+
+      for (const p of particles) {
+        const cx = Math.min(cols - 1, Math.max(0, Math.floor(p.x / cellW)));
+        const cy = Math.min(rows - 1, Math.max(0, Math.floor(p.y / cellH)));
+        density[cy][cx]++;
+        if (p.type === 'fart') fartDensity[cy][cx]++;
+      }
+
+      let maxDensity = 1;
+      let maxFartDensity = 1;
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          if (density[y][x] > maxDensity) maxDensity = density[y][x];
+          if (fartDensity[y][x] > maxFartDensity) maxFartDensity = fartDensity[y][x];
+        }
+      }
+
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const totalNorm = density[y][x] / maxDensity;
+          const fartNorm = fartDensity[y][x] / maxFartDensity;
+
+          if (totalNorm > 0) {
+            ctx.fillStyle = `rgba(120, 180, 255, ${0.03 + 0.08 * totalNorm})`;
+            ctx.fillRect(x * cellW, y * cellH, cellW, cellH);
+          }
+          if (fartNorm > 0) {
+            ctx.fillStyle = `rgba(140, 90, 40, ${0.08 + 0.28 * fartNorm})`;
+            ctx.fillRect(x * cellW, y * cellH, cellW, cellH);
+          }
+        }
+      }
+    }
+
+    function drawParticles() {
+      for (const p of particles) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.type === 'fart' ? '#8b5a2b' : 'rgba(100, 160, 255, 0.55)';
+        ctx.fill();
+      }
+    }
+
+    function drawBoundaryAndLabels() {
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, W - 2, H - 2);
+
+      
+    }
+
+    function draw() {
+      ctx.fillStyle = trailCheckbox.checked ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 1)';
+      ctx.fillRect(0, 0, W, H);
+
+      if (gridCheckbox.checked) drawDensityGrid();
+      drawBoundaryAndLabels();
+      drawParticles();
+    }
+
+    function animate(now) {
+      const dtRaw = (now - lastTime) / 1000;
+      lastTime = now;
+
+      if (running) {
+        const cappedDt = Math.min(dtRaw, 0.05);
+
+        if (isBursting && gasRemaining > 0) {
+          const used = Math.min(gasRemaining, cappedDt);
+          emitBurst(used);
+          gasRemaining -= used;
+          if (gasRemaining <= 0) {
+            gasRemaining = 0;
+            isBursting = false;
+          }
+          updateBurstButton();
+        }
+
+        stepSimulation(dtRaw);
+        collisionTimer += Math.min(dtRaw, 0.016);
+        if (collisionTimer >= 0.5) {
+          displayCollisionRate = accumulatedCollisions / collisionTimer;
+          accumulatedCollisions = 0;
+          collisionTimer = 0;
+        }
+      }
+
+      draw();
+      requestAnimationFrame(animate);
+    }
+
+    function rebuild() {
+      initializeParticles();
+      accumulatedCollisions = 0;
+      displayCollisionRate = 0;
+      collisionTimer = 0;
+      gasRemaining = maxGasTime;
+      isBursting = false;
+      updateBurstButton();
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      running = !running;
+      toggleBtn.textContent = running ? '일시정지' : '재생';
+    });
+
+    resetBtn.addEventListener('click', rebuild);
+    function startBursting() {
+      if (gasRemaining <= 0) return;
+      isBursting = true;
+      updateBurstButton();
+    }
+
+    function stopBursting() {
+      if (!isBursting) return;
+      isBursting = false;
+      updateBurstButton();
+    }
+
+    burstBtn.addEventListener('mousedown', startBursting);
+    burstBtn.addEventListener('mouseup', stopBursting);
+    burstBtn.addEventListener('mouseleave', stopBursting);
+    burstBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      startBursting();
+    }, { passive: false });
+    burstBtn.addEventListener('touchend', stopBursting);
+    burstBtn.addEventListener('touchcancel', stopBursting);
+
+    rebuild();
+    requestAnimationFrame((t) => {
+      lastTime = t;
+      requestAnimationFrame(animate);
+    });
+  </script>
+</body>
+</html>
