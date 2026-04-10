@@ -86,7 +86,7 @@ function configMomentum() {
         Py[i] = waterMass * MBSample(waterMass, beta);
     }
 }
-/*
+
 function configPosition() {
     const gridSize = Math.sqrt(cafeN);
     const dx = 2 * RADIUS;
@@ -116,8 +116,8 @@ function configPosition() {
         X[i] = positionX;
         Y[i] = positionY;
     }
-}*/
-
+}
+/*
 function configPosition() {
     const dx = 2 * RADIUS;
     const dy = Math.sqrt(3) * RADIUS; // 육각 격자 세로 간격
@@ -163,7 +163,7 @@ function configPosition() {
         X[i] = positionX;
         Y[i] = positionY;
     }
-}
+}*/
 
 /******** grid 유틸 ********/
 function gridIndex(cx, cy) {
