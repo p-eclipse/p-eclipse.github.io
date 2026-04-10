@@ -25,6 +25,11 @@
       "name": "Specific Heat",
       "path": "./specificheat/",
       "description": "비열의 언덕"
+    },
+    {
+      "name": "Gas simulator",
+      "path": "./fart/",
+      "description": "가스 분출 시뮬레이션"
     }
   ]
 }
