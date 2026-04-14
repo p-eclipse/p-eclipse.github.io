@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>고체 액체 기체 입자 모형 시뮬레이션</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Noto Sans KR", sans-serif;
+      background: linear-gradient(180deg, #eef4ff 0%, #f8fbff 100%);
+      color: #1f2937;
+    }
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 32px;
+    }
+    .subtitle {
+      text-align: center;
+      margin-bottom: 18px;
+      font-size: 16px;
+      color: #475569;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    .card {
+      background: rgba(255,255,255,0.9);
+      border: 1px solid #dbe7ff;
+      border-radius: 18px;
+      box-shadow: 0 10px 24px rgba(30, 41, 59, 0.08);
+      padding: 14px;
+      min-width: 0;
+    }
+    .card h2 {
+      margin: 0 0 8px;
+      text-align: center;
+      font-size: 24px;
+    }
+    .desc {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 14px;
+      color: #475569;
+      line-height: 1.5;
+      min-height: 64px;
+    }
+    canvas {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      display: block;
+      background: #ffffff;
+      border-radius: 14px;
+      border: 1px solid #d6e2ff;
+    }
+    .legend {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #f8fbff;
+      border: 1px solid #e3ecff;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #334155;
+    }
+    .controls {
+      margin-top: 18px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: rgba(255,255,255,0.88);
+      border: 1px solid #dbe7ff;
+      border-radius: 16px;
+      box-shadow: 0 10px 24px rgba(30, 41, 59, 0.06);
+      padding: 14px 16px;
+    }
+    label {
+      font-size: 14px;
+      color: #334155;
+      font-weight: 600;
+    }
+    input[type="range"] {
+      width: 260px;
+    }
+    .tempValue {
+      min-width: 78px;
+      text-align: center;
+      font-weight: 700;
+      color: #0f172a;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+    }
+    button {
+      border: none;
+      background: #2563eb;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:hover {
+      filter: brightness(1.05);
+    }
+    .note {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+      h1 { font-size: 28px; }
+      .desc { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>고체 · 액체 · 기체 입자 모형</h1>
+    <div class="subtitle">세 상태의 입자 배열과 운동을 한 화면에서 동시에 비교하는 시뮬레이션</div>
+
+    <div class="grid">
+      <section class="card">
+        <h2>고체</h2>
+        <p class="desc">입자들이 매우 가깝게 규칙적으로 배열되어 있고, 제자리 근처에서만 작게 진동합니다.</p>
+        <canvas id="solidCanvas" width="380" height="380"></canvas>
+        <div class="legend">
+          <strong>핵심 특징</strong><br>
+          배열: 규칙적<br>
+          거리: 매우 가까움<br>
+          운동: 제자리 진동
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>액체</h2>
+        <p class="desc">입자들이 서로 가깝지만 규칙성은 약하며, 서로 부딪치며 천천히 자리를 바꿉니다.</p>
+        <canvas id="liquidCanvas" width="380" height="380"></canvas>
+        <div class="legend">
+          <strong>핵심 특징</strong><br>
+          배열: 불규칙<br>
+          거리: 가까움<br>
+          운동: 서로 스치며 이동
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>기체</h2>
+        <p class="desc">입자들이 서로 멀리 떨어져 있고, 넓은 공간을 빠르게 자유롭게 움직입니다.</p>
+        <canvas id="gasCanvas" width="380" height="380"></canvas>
+        <div class="legend">
+          <strong>핵심 특징</strong><br>
+          배열: 매우 불규칙<br>
+          거리: 멀음<br>
+          운동: 빠르고 자유로움
+        </div>
+      </section>
+    </div>
+
+    <div class="controls">
+      <label for="tempSlider">운동 강도</label>
+      <input type="range" id="tempSlider" min="0.4" max="2.2" step="0.01" value="1.0" />
+      <div class="tempValue" id="tempValue">1.00배</div>
+      <button id="resetBtn">초기화</button>
+    </div>
+
+    <div class="note">
+      이 시뮬레이션은 실제 물질의 모든 성질을 완벽히 재현하는 것이 아니라,<br>
+      <strong>입자 배열과 운동의 차이</strong>를 직관적으로 비교하기 위한 수업용 모형입니다.
+    </div>
+  </div>
+
+  <script>
+    const tempSlider = document.getElementById('tempSlider');
+    const tempValue = document.getElementById('tempValue');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let temperatureFactor = parseFloat(tempSlider.value);
+
+    class SolidSim {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.w = canvas.width;
+        this.h = canvas.height;
+        this.particles = [];
+        this.time = 0;
+        this.init();
+      }
+
+      init() {
+        this.particles = [];
+        const cols = 8;
+        const rows = 8;
+        const spacing = 34;
+        const startX = this.w / 2 - ((cols - 1) * spacing) / 2;
+        const startY = this.h / 2 - ((rows - 1) * spacing) / 2;
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const x0 = startX + c * spacing;
+            const y0 = startY + r * spacing;
+            this.particles.push({
+              x0, y0,
+              phaseX: Math.random() * Math.PI * 2,
+              phaseY: Math.random() * Math.PI * 2,
+              amp: 3 + Math.random() * 2,
+              radius: 10
+            });
+          }
+        }
+      }
+
+      update(dt) {
+        // 진동 속도 증가
+        this.time += dt * 0.008 * (0.9 + 1.2 * temperatureFactor);
+      }
+
+      draw() {
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.w, this.h);
+
+        ctx.fillStyle = '#f8fbff';
+        ctx.fillRect(0, 0, this.w, this.h);
+
+        for (const p of this.particles) {
+          const amp = p.amp * (0.7 + 0.9 * temperatureFactor);
+          const x = p.x0 + Math.sin(this.time * 1.6 + p.phaseX) * amp;
+          const y = p.y0 + Math.cos(this.time * 1.8 + p.phaseY) * amp;
+
+          ctx.beginPath();
+          ctx.fillStyle = '#93c5fd';
+          ctx.arc(x, y, p.radius, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.fillStyle = '#1d4ed8';
+          ctx.arc(x, y, p.radius * 0.38, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    class LiquidSim {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.w = canvas.width;
+        this.h = canvas.height;
+        this.particles = [];
+        this.init();
+      }
+
+      init() {
+        this.particles = [];
+        const count = 36;
+        const cx = this.w / 2;
+        const cy = this.h / 2 + 28;
+        const rx = 115;
+        const ry = 88;
+
+        while (this.particles.length < count) {
+          const x = cx + (Math.random() * 2 - 1) * rx;
+          const y = cy + (Math.random() * 2 - 1) * ry;
+          const norm = ((x - cx) ** 2) / (rx * rx) + ((y - cy) ** 2) / (ry * ry);
+          if (norm <= 1) {
+            this.particles.push({
+              x, y,
+              vx: (Math.random() * 2 - 1) * 0.45,
+              vy: (Math.random() * 2 - 1) * 0.45,
+              radius: 10
+            });
+          }
+        }
+      }
+
+      update() {
+        const cx = this.w / 2;
+        const cy = this.h / 2 + 28;
+        const rx = 120;
+        const ry = 92;
+        const speedScale = 0.55 + 0.85 * temperatureFactor;
+
+        for (const p of this.particles) {
+          p.x += p.vx * speedScale;
+          p.y += p.vy * speedScale;
+
+          p.vx += (Math.random() * 2 - 1) * 0.035;
+          p.vy += (Math.random() * 2 - 1) * 0.035;
+
+          const speed = Math.hypot(p.vx, p.vy);
+          const maxSpeed = 0.8 + 0.9 * temperatureFactor;
+          if (speed > maxSpeed) {
+            p.vx = (p.vx / speed) * maxSpeed;
+            p.vy = (p.vy / speed) * maxSpeed;
+          }
+
+          const dx = p.x - cx;
+          const dy = p.y - cy;
+          const norm = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
+          if (norm > 1) {
+            const nx = dx / (rx * rx);
+            const ny = dy / (ry * ry);
+            const mag = Math.hypot(nx, ny) || 1;
+            const ux = nx / mag;
+            const uy = ny / mag;
+            const dot = p.vx * ux + p.vy * uy;
+            p.vx -= 2 * dot * ux;
+            p.vy -= 2 * dot * uy;
+            p.x -= ux * 3;
+            p.y -= uy * 3;
+          }
+        }
+
+        for (let i = 0; i < this.particles.length; i++) {
+          for (let j = i + 1; j < this.particles.length; j++) {
+            const a = this.particles[i];
+            const b = this.particles[j];
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const dist = Math.hypot(dx, dy);
+            const minDist = a.radius + b.radius - 2;
+            if (dist > 0 && dist < minDist) {
+              const overlap = (minDist - dist) * 0.5;
+              const ux = dx / dist;
+              const uy = dy / dist;
+              a.x -= ux * overlap;
+              a.y -= uy * overlap;
+              b.x += ux * overlap;
+              b.y += uy * overlap;
+
+              const avx = a.vx;
+              const avy = a.vy;
+              a.vx = b.vx * 0.98;
+              a.vy = b.vy * 0.98;
+              b.vx = avx * 0.98;
+              b.vy = avy * 0.98;
+            }
+          }
+        }
+      }
+
+      draw() {
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.w, this.h);
+        ctx.fillStyle = '#f8fbff';
+        ctx.fillRect(0, 0, this.w, this.h);
+
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(191, 219, 254, 0.35)';
+        ctx.ellipse(this.w / 2, this.h / 2 + 28, 122, 94, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        for (const p of this.particles) {
+          ctx.beginPath();
+          ctx.fillStyle = '#60a5fa';
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.fillStyle = '#1d4ed8';
+          ctx.arc(p.x, p.y, p.radius * 0.35, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    class GasSim {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.w = canvas.width;
+        this.h = canvas.height;
+        this.particles = [];
+        this.init();
+      }
+
+      init() {
+        this.particles = [];
+        const count = 14;
+        for (let i = 0; i < count; i++) {
+          this.particles.push({
+            x: 30 + Math.random() * (this.w - 60),
+            y: 30 + Math.random() * (this.h - 60),
+            vx: (Math.random() * 2 - 1) * 1.6,
+            vy: (Math.random() * 2 - 1) * 1.6,
+            radius: 9
+          });
+        }
+      }
+
+      update() {
+        const speedScale = 0.8 + 1.25 * temperatureFactor;
+
+        for (const p of this.particles) {
+          p.x += p.vx * speedScale;
+          p.y += p.vy * speedScale;
+
+          if (p.x < p.radius) {
+            p.x = p.radius;
+            p.vx *= -1;
+          }
+          if (p.x > this.w - p.radius) {
+            p.x = this.w - p.radius;
+            p.vx *= -1;
+          }
+          if (p.y < p.radius) {
+            p.y = p.radius;
+            p.vy *= -1;
+          }
+          if (p.y > this.h - p.radius) {
+            p.y = this.h - p.radius;
+            p.vy *= -1;
+          }
+        }
+      }
+
+      draw() {
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.w, this.h);
+        ctx.fillStyle = '#f8fbff';
+        ctx.fillRect(0, 0, this.w, this.h);
+
+        for (const p of this.particles) {
+          ctx.beginPath();
+          ctx.fillStyle = '#93c5fd';
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.fillStyle = '#1e40af';
+          ctx.arc(p.x, p.y, p.radius * 0.32, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    const solidSim = new SolidSim(document.getElementById('solidCanvas'));
+    const liquidSim = new LiquidSim(document.getElementById('liquidCanvas'));
+    const gasSim = new GasSim(document.getElementById('gasCanvas'));
+
+    function resetAll() {
+      solidSim.init();
+      liquidSim.init();
+      gasSim.init();
+    }
+
+    tempSlider.addEventListener('input', () => {
+      temperatureFactor = parseFloat(tempSlider.value);
+      tempValue.textContent = `${temperatureFactor.toFixed(2)}배`;
+    });
+
+    resetBtn.addEventListener('click', resetAll);
+
+    let lastTime = performance.now();
+    function animate(now) {
+      const dt = now - lastTime;
+      lastTime = now;
+
+      solidSim.update(dt);
+      liquidSim.update(dt);
+      gasSim.update(dt);
+
+      solidSim.draw();
+      liquidSim.draw();
+      gasSim.draw();
+
+      requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
