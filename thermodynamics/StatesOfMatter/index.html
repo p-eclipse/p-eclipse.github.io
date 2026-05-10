@@ -768,8 +768,8 @@
     const COOL_RATE = 8.5;
     const MELT_LATENT = 42;
     const BOIL_LATENT = 60;
-    const GRAVITY_BELOW_BOILING = 260;
-    const COOLING_GRAVITY_BOOST = 260;
+    const GRAVITY_BELOW_BOILING = 130;
+    const COOLING_GRAVITY_BOOST = 130;
     const THERMAL_ENERGY_SAMPLE_RATIO = 0.80;
     const GAS_RESTITUTION_MIN = 0.52;
     const GAS_RESTITUTION_BASE = 1.00;
@@ -1261,11 +1261,13 @@ function updateMolecules(dt) {
         // 기화/액화 중에도 위로 쉽게 튀어나가지 않도록, 온도 보간으로 약화시키지 않고 같은 중력값을 준다.
         const inBoilingTransition = boilProgress > 0 && boilProgress < 1;
         const isPureGas = phase === 'gas' && boilProgress >= 1;
-        const hasGravity = !isPureGas && phase !== 'solid' && (temp <= BOIL_T || inBoilingTransition);
+        const hasGravity = !isPureGas && (temp <= BOIL_T || inBoilingTransition || phase === 'solid');
         if (hasGravity) {
           const coolingBoost = direction < 0 ? COOLING_GRAVITY_BOOST : 0;
           const gravity = GRAVITY_BELOW_BOILING + coolingBoost;
-          m.vy += gravity * dt * fluidWeight;
+          // 고체도 중력의 영향을 받도록 fluidWeight 곱을 제거한다.
+          // 단, 순수 기체 상태는 위 조건에서 제외되어 중력 0을 유지한다.
+          m.vy += gravity * dt;
         }
 
         // ---------- 응고: 인력/반발 + 느린 배향 ----------
