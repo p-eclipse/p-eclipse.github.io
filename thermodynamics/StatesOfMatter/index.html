@@ -1562,6 +1562,123 @@ function updateMolecules(dt) {
       ctx.stroke();
     }
 
+    function phaseHeatDiagramInfo() {
+      const melting = meltProgress > 0.001 && meltProgress < 0.999;
+      const boiling = boilProgress > 0.001 && boilProgress < 0.999;
+      if (direction === 0) return null;
+
+      const absorbing = direction > 0;
+      const process = boiling
+        ? (absorbing ? '기화 중' : '응결 중')
+        : melting
+          ? (absorbing ? '융해 중' : '응고 중')
+          : (absorbing ? '가열 중' : '냉각 중');
+
+      return {
+        absorbing,
+        process,
+        title: absorbing ? '열 흡수' : '열 방출',
+        color: absorbing ? '#f97316' : '#2563eb',
+        softColor: absorbing ? 'rgba(249, 115, 22, 0.13)' : 'rgba(37, 99, 235, 0.13)',
+        lineColor: absorbing ? 'rgba(249, 115, 22, 0.95)' : 'rgba(37, 99, 235, 0.95)'
+      };
+    }
+
+    function drawSchematicArrow(x1, y1, x2, y2, color, width = 4) {
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      const head = Math.max(10, width * 3.2);
+
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - Math.cos(angle - Math.PI / 6) * head, y2 - Math.sin(angle - Math.PI / 6) * head);
+      ctx.lineTo(x2 - Math.cos(angle + Math.PI / 6) * head, y2 - Math.sin(angle + Math.PI / 6) * head);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+
+    function drawRoundedRect(x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + w - radius, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+      ctx.lineTo(x + w, y + h - radius);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+      ctx.lineTo(x + radius, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    function drawPhaseHeatDiagram() {
+      const info = phaseHeatDiagramInfo();
+      if (!info) return;
+
+      const b = containerBounds();
+      const pulse = 0.74 + 0.26 * Math.sin(performance.now() * 0.005);
+      const bottomInside = b.floor + 8;
+      const bottomOutside = Math.min(H - 18, b.floor + Math.max(28, H * 0.085));
+
+      // 열 흡수와 열 방출을 같은 다이어그램 문법으로 표현한다.
+      // 가열 중: 바깥 → 용기 안쪽, 냉각 중: 용기 안쪽 → 바깥.
+      const arrowCount = W < 520 ? 3 : 5;
+      const startX = b.x + b.w * 0.20;
+      const endX = b.x + b.w * 0.80;
+      const arrowWidth = 4.2;
+      const sideArrowWidth = 3.6;
+
+      ctx.save();
+      ctx.globalAlpha = pulse;
+
+      for (let i = 0; i < arrowCount; i++) {
+        const t = arrowCount === 1 ? 0.5 : i / (arrowCount - 1);
+        const x = lerp(startX, endX, t);
+        if (info.absorbing) {
+          drawSchematicArrow(x, bottomOutside, x, bottomInside, info.lineColor, arrowWidth);
+        } else {
+          drawSchematicArrow(x, bottomInside, x, bottomOutside, info.lineColor, arrowWidth);
+        }
+
+        ctx.fillStyle = info.color;
+        ctx.font = '700 13px system-ui';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Q', x + 8, (bottomInside + bottomOutside) / 2);
+      }
+
+      const sideGap = Math.min(42, Math.max(22, W * 0.045));
+      const canDrawSideArrows = b.x > sideGap + 10 && W - (b.x + b.w) > sideGap + 10;
+      if (canDrawSideArrows) {
+        const yMid1 = b.y + (b.floor - b.y) * 0.34;
+        const yMid2 = b.y + (b.floor - b.y) * 0.62;
+        [yMid1, yMid2].forEach(y => {
+          if (info.absorbing) {
+            drawSchematicArrow(b.x - sideGap, y, b.x - 7, y, info.lineColor, sideArrowWidth);
+            drawSchematicArrow(b.x + b.w + sideGap, y, b.x + b.w + 7, y, info.lineColor, sideArrowWidth);
+          } else {
+            drawSchematicArrow(b.x - 7, y, b.x - sideGap, y, info.lineColor, sideArrowWidth);
+            drawSchematicArrow(b.x + b.w + 7, y, b.x + b.w + sideGap, y, info.lineColor, sideArrowWidth);
+          }
+        });
+      }
+
+      ctx.restore();
+    }
+
     function drawHydrogenBondNetwork() {
       const structure = activeStructure();
       if (structure < 0.60) return;
@@ -1707,6 +1824,7 @@ function updateMolecules(dt) {
         }
       }
       drawContainer();
+      drawPhaseHeatDiagram();
       molecules.forEach(drawMolecule);
       drawGraph();
       updateUI();
