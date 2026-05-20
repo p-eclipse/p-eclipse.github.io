@@ -139,9 +139,9 @@ function makeLabelTexture(e, categoryColor) {
   ctx.font = "900 138px system-ui, sans-serif";
   ctx.fillText(e.s, 256, 214);
   ctx.fillStyle = "rgba(0,0,0,0.72)";
-  ctx.font = "700 46px system-ui, sans-serif";
+  ctx.font = "700 64px system-ui, sans-serif";
   ctx.fillText(e.Z, 256, 86);
-  ctx.font = "700 34px system-ui, sans-serif";
+  ctx.font = "700 56px system-ui, sans-serif";
   ctx.fillText(e.n, 256, 334);
   ctx.fillStyle = `#${categoryColor.toString(16).padStart(6, "0")}`;
   ctx.fillRect(104, 404, 304, 12);
@@ -272,7 +272,7 @@ function createSeriesGuide(labelText, row, color) {
   ctx.fillRect(78, 322, 1244, 34);
   ctx.lineWidth = 14;
   ctx.strokeStyle = "rgba(0,0,0,0.62)";
-  ctx.font = "700 40px system-ui, sans-serif";
+  ctx.font = "700 64px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.strokeText(labelText, 700, 190);
@@ -304,7 +304,7 @@ function createCategoryLegendOnTable() {
   const ctx = c.getContext("2d");
   ctx.fillStyle = "#0a1829";
   ctx.fillRect(0, 0, c.width, c.height);
-  ctx.font = "750 42px system-ui, sans-serif";
+  ctx.font = "750 64px system-ui, sans-serif";
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
 
