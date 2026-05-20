@@ -723,6 +723,7 @@
     scene.add(grid);
 
     const tiles = [];
+    const guideObjects = [];
     const rayTargets = [];
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
@@ -860,6 +861,7 @@
       m.rotation.x = -Math.PI / 2;
       m.position.set((2.15 - 9.5) * GAP, 0.035, (row - 5.05) * GAP);
       scene.add(m);
+      guideObjects.push(m);
 
       const dot = new THREE.Mesh(
         new THREE.SphereGeometry(0.12, 24, 16),
@@ -867,6 +869,7 @@
       );
       dot.position.set((3.2 - 9.5) * GAP, 0.16, (row - 5.05) * GAP);
       scene.add(dot);
+      guideObjects.push(dot);
     }
 
     createTiles();
@@ -894,6 +897,7 @@
 
     function updateTileHeights() {
       for (const t of tiles) {
+        if (!t.mesh.visible && t.e !== selectedElement) continue;
         t.currentHeight += (t.targetHeight - t.currentHeight) * 0.12;
         const h = Math.max(BASE_H, t.currentHeight);
         const pos = tilePosition(t.e);
@@ -1114,6 +1118,8 @@
       for (const t of tiles) {
         const selected = t.e === selectedElementForDim;
         const baseColor = t.mesh.userData.baseColor;
+        t.mesh.visible = selected;
+        t.label.visible = selected;
         t.mesh.material.color.setHex(baseColor);
         t.mesh.material.emissive.setHex(baseColor);
         t.mesh.material.emissiveIntensity = selected ? 0.48 : 0.0;
@@ -1123,6 +1129,9 @@
         t.mesh.receiveShadow = selected;
         t.label.material.opacity = selected ? 1.0 : 0.0;
       }
+
+      // 원자 관찰 모드에서는 선택 원소 외 주기율표 오브젝트를 렌더링 대상에서 제외한다.
+      for (const obj of guideObjects) obj.visible = false;
     }
 
     function centerCameraOnAtom(e, tileHeight, animate = true) {
@@ -1334,6 +1343,8 @@
 
     function restoreTileBrightness() {
       for (const t of tiles) {
+        t.mesh.visible = true;
+        t.label.visible = true;
         t.mesh.material.opacity = 1.0;
         t.mesh.material.transparent = true;
         t.mesh.material.emissiveIntensity = 0.06;
@@ -1341,6 +1352,7 @@
         t.mesh.receiveShadow = true;
         t.label.material.opacity = 1.0;
       }
+      for (const obj of guideObjects) obj.visible = true;
     }
 
     function startSmoothReset() {
