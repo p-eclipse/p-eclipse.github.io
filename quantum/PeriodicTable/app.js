@@ -8,7 +8,6 @@ const backToTableButton = document.querySelector("#backToTable");
 const prevElementButton = document.querySelector("#prevElement");
 const nextElementButton = document.querySelector("#nextElement");
 const metricButtons = [...document.querySelectorAll(".metric")];
-const inputModeToggleButton = document.querySelector("#inputModeToggle");
 const WORLD_UP = new THREE.Vector3(0, 1, 0);
 
 const elementSource = `1,H,수소,1,1,0,2.20;2,He,헬륨,18,1,2,;3,Li,리튬,1,2,4,0.98;4,Be,베릴륨,2,2,5,1.57;5,B,붕소,13,2,6,2.04;6,C,탄소,14,2,6,2.55;7,N,질소,15,2,7,3.04;8,O,산소,16,2,8,3.44;9,F,플루오린,17,2,10,3.98;10,Ne,네온,18,2,10,;11,Na,나트륨,1,3,12,0.93;12,Mg,마그네슘,2,3,12,1.31;13,Al,알루미늄,13,3,14,1.61;14,Si,규소,14,3,14,1.90;15,P,인,15,3,16,2.19;16,S,황,16,3,16,2.58;17,Cl,염소,17,3,18,3.16;18,Ar,아르곤,18,3,22,;19,K,칼륨,1,4,20,0.82;20,Ca,칼슘,2,4,20,1.00;21,Sc,스칸듐,3,4,24,1.36;22,Ti,타이타늄,4,4,26,1.54;23,V,바나듐,5,4,28,1.63;24,Cr,크로뮴,6,4,28,1.66;25,Mn,망가니즈,7,4,30,1.55;26,Fe,철,8,4,30,1.83;27,Co,코발트,9,4,32,1.88;28,Ni,니켈,10,4,30,1.91;29,Cu,구리,11,4,34,1.90;30,Zn,아연,12,4,34,1.65;31,Ga,갈륨,13,4,38,1.81;32,Ge,저마늄,14,4,42,2.01;33,As,비소,15,4,42,2.18;34,Se,셀레늄,16,4,46,2.55;35,Br,브로민,17,4,44,2.96;36,Kr,크립톤,18,4,48,3.00;37,Rb,루비듐,1,5,48,0.82;38,Sr,스트론튬,2,5,50,0.95;39,Y,이트륨,3,5,50,1.22;40,Zr,지르코늄,4,5,50,1.33;41,Nb,나이오븀,5,5,52,1.60;42,Mo,몰리브데넘,6,5,56,2.16;43,Tc,테크네튬,7,5,55,1.90;44,Ru,루테늄,8,5,58,2.20;45,Rh,로듐,9,5,58,2.28;46,Pd,팔라듐,10,5,60,2.20;47,Ag,은,11,5,60,1.93;48,Cd,카드뮴,12,5,66,1.69;49,In,인듐,13,5,66,1.78;50,Sn,주석,14,5,70,1.96;51,Sb,안티모니,15,5,70,2.05;52,Te,텔루륨,16,5,78,2.10;53,I,아이오딘,17,5,74,2.66;54,Xe,제논,18,5,78,2.60;55,Cs,세슘,1,6,78,0.79;56,Ba,바륨,2,6,82,0.89;72,Hf,하프늄,4,6,108,1.30;73,Ta,탄탈럼,5,6,108,1.50;74,W,텅스텐,6,6,110,2.36;75,Re,레늄,7,6,112,1.90;76,Os,오스뮴,8,6,116,2.20;77,Ir,이리듐,9,6,116,2.20;78,Pt,백금,10,6,117,2.28;79,Au,금,11,6,118,2.54;80,Hg,수은,12,6,122,2.00;81,Tl,탈륨,13,6,124,1.62;82,Pb,납,14,6,126,2.33;83,Bi,비스무트,15,6,126,2.02;84,Po,폴로늄,16,6,125,2.00;85,At,아스타틴,17,6,125,2.20;86,Rn,라돈,18,6,136,;87,Fr,프랑슘,1,7,136,0.70;88,Ra,라듐,2,7,138,0.90;104,Rf,러더포듐,4,7,163,;105,Db,더브늄,5,7,163,;106,Sg,시보귬,6,7,165,;107,Bh,보륨,7,7,163,;108,Hs,하슘,8,7,169,;109,Mt,마이트너륨,9,7,169,;110,Ds,다름슈타튬,10,7,171,;111,Rg,뢴트게늄,11,7,171,;112,Cn,코페르니슘,12,7,173,;113,Nh,니호늄,13,7,173,;114,Fl,플레로븀,14,7,175,;115,Mc,모스코븀,15,7,175,;116,Lv,리버모륨,16,7,177,;117,Ts,테네신,17,7,177,;118,Og,오가네손,18,7,176,;57,La,란타넘,4,8,82,1.10;58,Ce,세륨,5,8,82,1.12;59,Pr,프라세오디뮴,6,8,82,1.13;60,Nd,네오디뮴,7,8,82,1.14;61,Pm,프로메튬,8,8,84,1.13;62,Sm,사마륨,9,8,90,1.17;63,Eu,유로퓸,10,8,90,1.20;64,Gd,가돌리늄,11,8,94,1.20;65,Tb,터븀,12,8,94,1.20;66,Dy,디스프로슘,13,8,98,1.22;67,Ho,홀뮴,14,8,98,1.23;68,Er,어븀,15,8,98,1.24;69,Tm,툴륨,16,8,100,1.25;70,Yb,이터븀,17,8,104,1.10;71,Lu,루테튬,18,8,104,1.27;89,Ac,악티늄,4,9,138,1.10;90,Th,토륨,5,9,142,1.30;91,Pa,프로트악티늄,6,9,140,1.50;92,U,우라늄,7,9,146,1.38;93,Np,넵투늄,8,9,144,1.36;94,Pu,플루토늄,9,9,150,1.28;95,Am,아메리슘,10,9,148,1.30;96,Cm,퀴륨,11,9,151,1.30;97,Bk,버클륨,12,9,150,1.30;98,Cf,캘리포늄,13,9,153,1.30;99,Es,아인슈타이늄,14,9,153,1.30;100,Fm,페르뮴,15,9,157,1.30;101,Md,멘델레븀,16,9,157,1.30;102,No,노벨륨,17,9,157,1.30;103,Lr,로렌슘,18,9,163,1.30`;
@@ -59,11 +58,10 @@ const ATOM_INERTIA_STOP = 0.00008;
 const ATOM_BAR_GAP = 0.16;
 const MIN_CAMERA_ZOOM = 0.55;
 const MAX_CAMERA_ZOOM = 5.0;
-const MOUSE_WHEEL_ZOOM_SPEED = 0.0017;
-const PINCH_ZOOM_SPEED = 0.0022;
+const WHEEL_ZOOM_SPEED = 0.0017;
+const WHEEL_YAW_SPEED = 0.0021;
 
 let currentMetric = "protons";
-let inputMode = "trackpad";
 let selectedElement = null;
 let atomGroup = null;
 let focusTween = null;
@@ -553,17 +551,6 @@ function changeMetric(metric) {
   }
 }
 
-function setInputMode(mode) {
-  inputMode = mode;
-  inputModeToggleButton.classList.toggle("trackpad", mode === "trackpad");
-  inputModeToggleButton.classList.toggle("mouse", mode === "mouse");
-  inputModeToggleButton.setAttribute("aria-pressed", mode === "mouse" ? "true" : "false");
-  inputModeToggleButton.setAttribute("aria-label", `입력 모드: ${mode === "trackpad" ? "트랙패드" : "마우스"}`);
-}
-
-function toggleInputMode() {
-  setInputMode(inputMode === "trackpad" ? "mouse" : "trackpad");
-}
 
 function setHudCollapsed(collapsed) {
   hud.classList.toggle("collapsed", collapsed);
@@ -674,14 +661,6 @@ function normalizedWheelDelta(event) {
   };
 }
 
-function isLikelyTrackpad(event) {
-  const absX = Math.abs(event.deltaX);
-  const absY = Math.abs(event.deltaY);
-  const hasHorizontal = absX > 0.5;
-  const hasFraction = !Number.isInteger(event.deltaX) || !Number.isInteger(event.deltaY);
-  const smallPixelDelta = event.deltaMode === WheelEvent.DOM_DELTA_PIXEL && absY > 0 && absY < 50;
-  return hasHorizontal || hasFraction || smallPixelDelta;
-}
 
 function applyWheelZoom(deltaY, speed) {
   const zoomFactor = Math.exp(-deltaY * speed);
@@ -689,24 +668,20 @@ function applyWheelZoom(deltaY, speed) {
   camera.updateProjectionMatrix();
 }
 
-function handleTrackpadScroll(x, y) {
-  const dominantHorizontal = Math.abs(x) > Math.abs(y) * 0.72;
+function handleHorizontalWheelRotation(deltaX) {
+  if (Math.abs(deltaX) < 0.01) return;
 
   if (isAtomViewActive()) {
-    if (!dominantHorizontal) return;
-    const deltaYaw = x * ATOM_DRAG_YAW_SPEED * 0.38;
+    const deltaYaw = -deltaX * WHEEL_YAW_SPEED;
     rotateAtomCamera(deltaYaw);
-    atomYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.9, -0.085, 0.085);
+    atomYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.75, -0.085, 0.085);
     return;
   }
 
-  const deltaYaw = x * FULL_VIEW_YAW_SPEED * 0.32;
-  const deltaPitch = y * DRAG_TILT_SPEED * 0.32;
+  const deltaYaw = -deltaX * WHEEL_YAW_SPEED;
   tableYaw += deltaYaw;
-  viewTilt.y += deltaPitch;
   applyViewFromTilt();
-  tableYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.82, -0.08, 0.08);
-  viewTiltVelocity.set(0, THREE.MathUtils.clamp(deltaPitch * 0.82, -0.08, 0.08));
+  tableYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.75, -0.08, 0.08);
 }
 
 function handleWheel(event) {
@@ -717,16 +692,8 @@ function handleWheel(event) {
   const { x, y } = normalizedWheelDelta(event);
   focusTween = null;
 
-  if (inputMode === "trackpad") {
-    if (event.ctrlKey || event.metaKey) {
-      applyWheelZoom(y, PINCH_ZOOM_SPEED);
-      return;
-    }
-    handleTrackpadScroll(x, y);
-    return;
-  }
-
-  applyWheelZoom(y, MOUSE_WHEEL_ZOOM_SPEED);
+  if (Math.abs(y) > 0.01) applyWheelZoom(y, WHEEL_ZOOM_SPEED);
+  if (Math.abs(x) > 0.01) handleHorizontalWheelRotation(x);
 }
 
 function resetInfoPanel() {
@@ -814,12 +781,9 @@ function runSelfTests() {
   console.assert(shellDistribution(10).join(",") === "2,8", "neon shell distribution");
   console.assert(shuffledNucleonKinds(6, 6).filter(v => v === "proton").length === 6, "proton count preserved");
   console.assert(shuffledNucleonKinds(6, 6).filter(v => v === "neutron").length === 6, "neutron count preserved");
-  console.assert(inputModeToggleButton instanceof HTMLButtonElement, "input mode toggle loaded");
-  console.assert(inputMode === "trackpad", "default input mode is trackpad");
 }
 
 metricButtons.forEach(btn => btn.addEventListener("click", () => changeMetric(btn.dataset.metric)));
-inputModeToggleButton.addEventListener("click", toggleInputMode);
 hudToggleButton.addEventListener("click", () => setHudCollapsed(!hud.classList.contains("collapsed")));
 prevElementButton.addEventListener("click", () => focusAdjacentElement(-1));
 nextElementButton.addEventListener("click", () => focusAdjacentElement(1));
