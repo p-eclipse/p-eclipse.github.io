@@ -245,30 +245,43 @@ function createTiles() {
   }
 }
 
+function createPrintedBlock(width, depth, height, x, z, texture, baseColor = 0x0c1a2b) {
+  const sideMat = new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.72, metalness: 0.08 });
+  const topMat = new THREE.MeshBasicMaterial({ map: texture });
+  const printedBlock = new THREE.Mesh(
+    new THREE.BoxGeometry(width, height, depth),
+    [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]
+  );
+  printedBlock.position.set(x, height / 2, z);
+  printedBlock.receiveShadow = true;
+  printedBlock.castShadow = true;
+  scene.add(printedBlock);
+  guideObjects.push(printedBlock);
+  return printedBlock;
+}
+
 function createSeriesGuide(labelText, row, color) {
   const c = document.createElement("canvas");
-  c.width = 1024;
-  c.height = 256;
+  c.width = 1400;
+  c.height = 420;
   const ctx = c.getContext("2d");
-  ctx.clearRect(0, 0, c.width, c.height);
-  ctx.fillStyle = "rgba(255,255,255,0.88)";
-  ctx.font = "900 132px system-ui, sans-serif";
+  ctx.fillStyle = "#0a1829";
+  ctx.fillRect(0, 0, c.width, c.height);
+  const hex = `#${color.toString(16).padStart(6, "0")}`;
+  ctx.fillStyle = hex;
+  ctx.fillRect(78, 322, 1244, 34);
+  ctx.lineWidth = 14;
+  ctx.strokeStyle = "rgba(0,0,0,0.62)";
+  ctx.font = "950 236px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(labelText, 512, 128);
+  ctx.strokeText(labelText, 700, 190);
+  ctx.fillStyle = "rgba(238,245,255,0.98)";
+  ctx.fillText(labelText, 700, 190);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(3.9, 0.98), new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.98, depthWrite: false, depthTest: false }));
-  m.rotation.x = -Math.PI / 2;
-  m.position.set((2.25 - 9.5) * GAP, 0.16, (row - 5.05) * GAP);
-  m.renderOrder = 998;
-  scene.add(m);
-  guideObjects.push(m);
-  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.17, 28, 18), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.55 }));
-  dot.position.set((3.75 - 9.5) * GAP, 0.18, (row - 5.05) * GAP);
-  scene.add(dot);
-  guideObjects.push(dot);
+  createPrintedBlock(4.85, 1.12, 0.16, (2.7 - 9.5) * GAP, (row - 5.05) * GAP, tex, 0x0a1829);
 }
 
 function createCategoryLegendOnTable() {
@@ -286,65 +299,49 @@ function createCategoryLegendOnTable() {
   ];
 
   const c = document.createElement("canvas");
-  c.width = 1536;
-  c.height = 760;
+  c.width = 2600;
+  c.height = 720;
   const ctx = c.getContext("2d");
-  ctx.clearRect(0, 0, c.width, c.height);
-
-  ctx.fillStyle = "rgba(7,12,22,0.78)";
-  roundRect(ctx, 36, 36, 1464, 688, 54);
-  ctx.fill();
-  ctx.strokeStyle = "rgba(255,255,255,0.24)";
-  ctx.lineWidth = 5;
-  ctx.stroke();
-
-  ctx.fillStyle = "rgba(238,245,255,0.92)";
-  ctx.font = "900 58px system-ui, sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("원소 색 범주", 768, 98);
-
-  ctx.font = "800 48px system-ui, sans-serif";
+  ctx.fillStyle = "#0a1829";
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.font = "950 92px system-ui, sans-serif";
   ctx.textAlign = "left";
-  const colW = 690;
-  const rowH = 108;
-  const startX = 150;
-  const startY = 190;
+  ctx.textBaseline = "middle";
+
+  const colW = 510;
+  const rowH = 260;
+  const startX = 120;
+  const startY = 220;
 
   for (let i = 0; i < items.length; i++) {
     const [label, color] = items[i];
-    const col = i % 2;
-    const row = Math.floor(i / 2);
+    const col = i % 5;
+    const row = Math.floor(i / 5);
     const x = startX + col * colW;
     const y = startY + row * rowH;
     const hex = `#${color.toString(16).padStart(6, "0")}`;
 
-    ctx.shadowColor = hex;
-    ctx.shadowBlur = 22;
     ctx.fillStyle = hex;
     ctx.beginPath();
-    ctx.arc(x, y, 24, 0, Math.PI * 2);
+    ctx.arc(x, y, 48, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.lineWidth = 9;
+    ctx.strokeStyle = "rgba(0,0,0,0.52)";
+    ctx.stroke();
 
-    ctx.fillStyle = "rgba(238,245,255,0.94)";
-    ctx.fillText(label, x + 48, y + 1);
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = "rgba(0,0,0,0.62)";
+    ctx.strokeText(label, x + 78, y + 2);
+    ctx.fillStyle = "rgba(238,245,255,0.98)";
+    ctx.fillText(label, x + 78, y + 2);
   }
 
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
-
-  const legend = new THREE.Mesh(
-    new THREE.PlaneGeometry(4.8, 2.38),
-    new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.98, depthWrite: false, depthTest: false })
-  );
-  legend.rotation.x = -Math.PI / 2;
-  legend.position.set((7.5 - 9.5) * GAP, 0.42, (2.5 - 5.05) * GAP);
-  legend.renderOrder = 999;
-  scene.add(legend);
-  guideObjects.push(legend);
+  createPrintedBlock(11.8, 2.7, 0.16, (7.45 - 9.5) * GAP, (2.52 - 5.05) * GAP, tex, 0x0a1829);
 }
+
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -751,22 +748,29 @@ function handleWheel(event) {
   event.stopPropagation();
   if (focusTween?.mode === "reset") return;
   focusTween = null;
+
   const { x, y } = normalizedWheelDelta(event);
   const dominantHorizontal = Math.abs(x) > Math.abs(y) * 0.72;
-  if (isAtomViewActive()) {
-    if (!dominantHorizontal) return;
-    const deltaYaw = -x * ATOM_DRAG_YAW_SPEED * 0.38;
-    rotateAtomCamera(deltaYaw);
-    atomYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.9, -0.085, 0.085);
+
+  if (dominantHorizontal) {
+    if (isAtomViewActive()) {
+      const deltaYaw = -x * ATOM_DRAG_YAW_SPEED * 0.38;
+      rotateAtomCamera(deltaYaw);
+      atomYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.9, -0.085, 0.085);
+      return;
+    }
+
+    const deltaYaw = -x * FULL_VIEW_YAW_SPEED * 0.32;
+    tableYaw += deltaYaw;
+    applyViewFromTilt();
+    tableYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.82, -0.08, 0.08);
+    viewTiltVelocity.set(0, 0);
     return;
   }
-  const deltaYaw = -x * FULL_VIEW_YAW_SPEED * 0.32;
-  const deltaPitch = -y * DRAG_TILT_SPEED * 0.32;
-  tableYaw += deltaYaw;
-  viewTilt.y += deltaPitch;
-  applyViewFromTilt();
-  tableYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.82, -0.08, 0.08);
-  viewTiltVelocity.set(0, THREE.MathUtils.clamp(deltaPitch * 0.82, -0.08, 0.08));
+
+  const zoomFactor = Math.exp(y * 0.0018);
+  camera.zoom = THREE.MathUtils.clamp(camera.zoom * zoomFactor, 0.55, 5.0);
+  camera.updateProjectionMatrix();
 }
 
 function resetInfoPanel() {
@@ -775,6 +779,7 @@ function resetInfoPanel() {
 }
 
 function startSmoothReset() {
+  clearAtom();
   selectedElement = null;
   viewTiltVelocity.set(0, 0);
   tableYawVelocity = 0;
