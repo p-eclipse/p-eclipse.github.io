@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D 인터랙티브 주기율표</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="app"></div>
+
+  <section class="ui" id="hud">
+    <div class="title-row">
+      <h1 class="title">3D 주기율표</h1>
+      <button id="hudToggle" class="hud-toggle" type="button" aria-label="설정 접기" title="설정 접기">
+        <span class="chevron up" aria-hidden="true"></span>
+      </button>
+    </div>
+    <div class="hud-body">
+      <div class="controls">
+        <button class="metric active" data-metric="protons">양성자수</button>
+        <button class="metric" data-metric="neutrons">중성자수</button>
+        <button class="metric" data-metric="massNumber">양성자+중성자</button>
+        <button class="metric" data-metric="electronegativity">전기음성도</button>
+      </div>
+      <div class="legend">
+        <span style="--c:#ff6b6b">알칼리</span><span style="--c:#ffa94d">알칼리 토금속</span>
+        <span style="--c:#4dabf7">전이 금속</span><span style="--c:#adb5bd">전이후 금속</span>
+        <span style="--c:#f2c94c">준금속</span><span style="--c:#69db7c">비금속</span>
+        <span style="--c:#9775fa">할로젠</span><span style="--c:#66d9e8">비활성 기체</span>
+        <span style="--c:#f783ac">란타넘족</span><span style="--c:#b197fc">악티늄족</span>
+      </div>
+    </div>
+  </section>
+
+  <aside id="info" class="panel"></aside>
+  <button id="prevElement" class="atom-nav-button prev" type="button" aria-label="이전 원소 보기"><span class="chevron left" aria-hidden="true"></span></button>
+  <button id="backToTable" class="back-button" type="button" aria-label="주기율표 전체보기로 돌아가기">전체보기</button>
+  <button id="nextElement" class="atom-nav-button next" type="button" aria-label="다음 원소 보기"><span class="chevron right" aria-hidden="true"></span></button>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
