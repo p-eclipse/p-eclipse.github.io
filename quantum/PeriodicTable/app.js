@@ -20,6 +20,7 @@ const elements = elementSource.split(";").map(row => {
 const categoryLabels = { alkali:"알칼리 금속", alkaline:"알칼리 토금속", transition:"전이 금속", post:"전이후 금속", metalloid:"준금속", nonmetal:"비금속", halogen:"할로젠", noble:"비활성 기체", lanthanide:"란타넘족", actinide:"악티늄족" };
 const palette = { alkali:0xff6b6b, alkaline:0xffa94d, transition:0x4dabf7, post:0xadb5bd, metalloid:0xf2c94c, nonmetal:0x69db7c, halogen:0x9775fa, noble:0x66d9e8, lanthanide:0xf783ac, actinide:0xb197fc };
 const elementsByZ = [...elements].sort((a,b) => a.Z - b.Z);
+const ABSOLUTE_NUCLEON_SCALE_MAX = elementsByZ.at(-1).Z + elementsByZ.at(-1).N;
 const curationBySymbol = {
   H:"수소는 과학계의 주연급 단역입니다. 우주에서는 별의 연료로 타오르고, 지구에서는 물 분자 한쪽에 얌전히 붙어 있다가, 화학 시간에는 pH와 산·염기 이야기의 문을 열어젖힙니다.",
   He:"헬륨은 풍선 속에서는 목소리를 장난스럽게 바꾸지만, 우주에서는 빅뱅과 별의 핵융합이 남긴 묵직한 흔적입니다. 물리학 실험실에서는 초저온 냉각과 초전도 자석을 떠받칩니다.",
@@ -115,9 +116,11 @@ function maxMetric(metric) {
 
 function heightFor(e, metric = currentMetric) {
   const value = metricValue(e, metric);
-  const max = maxMetric(metric);
-  if (metric === "electronegativity" && !e.en) return BASE_H + 0.04;
-  return BASE_H + MAX_H * Math.pow(value / max, 0.82);
+  if (metric === "electronegativity") {
+    if (!e.en) return BASE_H + 0.04;
+    return BASE_H + MAX_H * Math.pow(value / maxMetric(metric), 0.82);
+  }
+  return BASE_H + MAX_H * THREE.MathUtils.clamp(value / ABSOLUTE_NUCLEON_SCALE_MAX, 0, 1);
 }
 
 function tilePosition(e) {
@@ -256,9 +259,10 @@ function createSeriesGuide(labelText, row, color) {
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(3.9, 0.98), new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.94, depthWrite: false }));
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(3.9, 0.98), new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.98, depthWrite: false, depthTest: false }));
   m.rotation.x = -Math.PI / 2;
-  m.position.set((2.25 - 9.5) * GAP, 0.04, (row - 5.05) * GAP);
+  m.position.set((2.25 - 9.5) * GAP, 0.16, (row - 5.05) * GAP);
+  m.renderOrder = 998;
   scene.add(m);
   guideObjects.push(m);
   const dot = new THREE.Mesh(new THREE.SphereGeometry(0.17, 28, 18), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.55 }));
@@ -282,48 +286,48 @@ function createCategoryLegendOnTable() {
   ];
 
   const c = document.createElement("canvas");
-  c.width = 2048;
-  c.height = 420;
+  c.width = 1536;
+  c.height = 760;
   const ctx = c.getContext("2d");
   ctx.clearRect(0, 0, c.width, c.height);
 
-  ctx.fillStyle = "rgba(7,12,22,0.58)";
-  roundRect(ctx, 34, 30, 1980, 360, 48);
+  ctx.fillStyle = "rgba(7,12,22,0.78)";
+  roundRect(ctx, 36, 36, 1464, 688, 54);
   ctx.fill();
-  ctx.strokeStyle = "rgba(255,255,255,0.16)";
-  ctx.lineWidth = 4;
+  ctx.strokeStyle = "rgba(255,255,255,0.24)";
+  ctx.lineWidth = 5;
   ctx.stroke();
 
-  ctx.font = "800 48px system-ui, sans-serif";
+  ctx.fillStyle = "rgba(238,245,255,0.92)";
+  ctx.font = "900 58px system-ui, sans-serif";
+  ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.textAlign = "left";
+  ctx.fillText("원소 색 범주", 768, 98);
 
-  const colW = 384;
-  const rowH = 132;
-  const startX = 104;
-  const startY = 145;
+  ctx.font = "800 48px system-ui, sans-serif";
+  ctx.textAlign = "left";
+  const colW = 690;
+  const rowH = 108;
+  const startX = 150;
+  const startY = 190;
 
   for (let i = 0; i < items.length; i++) {
     const [label, color] = items[i];
-    const col = i % 5;
-    const row = Math.floor(i / 5);
+    const col = i % 2;
+    const row = Math.floor(i / 2);
     const x = startX + col * colW;
     const y = startY + row * rowH;
     const hex = `#${color.toString(16).padStart(6, "0")}`;
 
-    ctx.fillStyle = hex;
-    ctx.beginPath();
-    ctx.arc(x, y, 27, 0, Math.PI * 2);
-    ctx.fill();
-
     ctx.shadowColor = hex;
     ctx.shadowBlur = 22;
+    ctx.fillStyle = hex;
     ctx.beginPath();
-    ctx.arc(x, y, 18, 0, Math.PI * 2);
+    ctx.arc(x, y, 24, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    ctx.fillStyle = "rgba(238,245,255,0.90)";
+    ctx.fillStyle = "rgba(238,245,255,0.94)";
     ctx.fillText(label, x + 48, y + 1);
   }
 
@@ -332,16 +336,15 @@ function createCategoryLegendOnTable() {
   tex.anisotropy = 8;
 
   const legend = new THREE.Mesh(
-    new THREE.PlaneGeometry(12.1, 2.15),
-    new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.94, depthWrite: false })
+    new THREE.PlaneGeometry(4.8, 2.38),
+    new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.98, depthWrite: false, depthTest: false })
   );
   legend.rotation.x = -Math.PI / 2;
-  legend.position.set((7.5 - 9.5) * GAP, 0.055, (2.5 - 5.05) * GAP);
-  legend.renderOrder = 4;
+  legend.position.set((7.5 - 9.5) * GAP, 0.42, (2.5 - 5.05) * GAP);
+  legend.renderOrder = 999;
   scene.add(legend);
   guideObjects.push(legend);
 }
-
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -851,6 +854,8 @@ function runSelfTests() {
   console.assert(shellDistribution(10).join(",") === "2,8", "neon shell distribution");
   console.assert(shuffledNucleonKinds(6, 6).filter(v => v === "proton").length === 6, "proton count preserved");
   console.assert(shuffledNucleonKinds(6, 6).filter(v => v === "neutron").length === 6, "neutron count preserved");
+  console.assert(ABSOLUTE_NUCLEON_SCALE_MAX === 294, "absolute nucleon scale uses Og mass number");
+  console.assert(heightFor(elementsByZ.at(-1), "massNumber") === BASE_H + MAX_H, "Og mass number reaches maximum height");
 }
 
 metricButtons.forEach(btn => btn.addEventListener("click", () => changeMetric(btn.dataset.metric)));
