@@ -56,10 +56,6 @@ const ATOM_DRAG_YAW_SPEED = 0.0075;
 const ATOM_INERTIA_DAMPING = 0.935;
 const ATOM_INERTIA_STOP = 0.00008;
 const ATOM_BAR_GAP = 0.16;
-const MIN_CAMERA_ZOOM = 0.55;
-const MAX_CAMERA_ZOOM = 5.0;
-const WHEEL_ZOOM_SPEED = 0.0017;
-const WHEEL_YAW_SPEED = 0.0021;
 
 let currentMetric = "protons";
 let selectedElement = null;
@@ -251,22 +247,109 @@ function createSeriesGuide(labelText, row, color) {
   c.width = 1024;
   c.height = 256;
   const ctx = c.getContext("2d");
-  ctx.fillStyle = "rgba(255,255,255,0.78)";
-  ctx.font = "800 82px system-ui, sans-serif";
+  ctx.clearRect(0, 0, c.width, c.height);
+  ctx.fillStyle = "rgba(255,255,255,0.88)";
+  ctx.font = "900 132px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(labelText, 512, 128);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 0.72), new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.86, depthWrite: false }));
+  tex.anisotropy = 8;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(3.9, 0.98), new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.94, depthWrite: false }));
   m.rotation.x = -Math.PI / 2;
-  m.position.set((2.15 - 9.5) * GAP, 0.035, (row - 5.05) * GAP);
+  m.position.set((2.25 - 9.5) * GAP, 0.04, (row - 5.05) * GAP);
   scene.add(m);
   guideObjects.push(m);
-  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.12, 24, 16), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.45 }));
-  dot.position.set((3.2 - 9.5) * GAP, 0.16, (row - 5.05) * GAP);
+  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.17, 28, 18), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.55 }));
+  dot.position.set((3.75 - 9.5) * GAP, 0.18, (row - 5.05) * GAP);
   scene.add(dot);
   guideObjects.push(dot);
+}
+
+function createCategoryLegendOnTable() {
+  const items = [
+    ["알칼리", palette.alkali],
+    ["알칼리 토금속", palette.alkaline],
+    ["전이 금속", palette.transition],
+    ["전이후 금속", palette.post],
+    ["준금속", palette.metalloid],
+    ["비금속", palette.nonmetal],
+    ["할로젠", palette.halogen],
+    ["비활성 기체", palette.noble],
+    ["란타넘족", palette.lanthanide],
+    ["악티늄족", palette.actinide]
+  ];
+
+  const c = document.createElement("canvas");
+  c.width = 2048;
+  c.height = 420;
+  const ctx = c.getContext("2d");
+  ctx.clearRect(0, 0, c.width, c.height);
+
+  ctx.fillStyle = "rgba(7,12,22,0.58)";
+  roundRect(ctx, 34, 30, 1980, 360, 48);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.16)";
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  ctx.font = "800 48px system-ui, sans-serif";
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "left";
+
+  const colW = 384;
+  const rowH = 132;
+  const startX = 104;
+  const startY = 145;
+
+  for (let i = 0; i < items.length; i++) {
+    const [label, color] = items[i];
+    const col = i % 5;
+    const row = Math.floor(i / 5);
+    const x = startX + col * colW;
+    const y = startY + row * rowH;
+    const hex = `#${color.toString(16).padStart(6, "0")}`;
+
+    ctx.fillStyle = hex;
+    ctx.beginPath();
+    ctx.arc(x, y, 27, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowColor = hex;
+    ctx.shadowBlur = 22;
+    ctx.beginPath();
+    ctx.arc(x, y, 18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = "rgba(238,245,255,0.90)";
+    ctx.fillText(label, x + 48, y + 1);
+  }
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+
+  const legend = new THREE.Mesh(
+    new THREE.PlaneGeometry(12.1, 2.15),
+    new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.94, depthWrite: false })
+  );
+  legend.rotation.x = -Math.PI / 2;
+  legend.position.set((7.5 - 9.5) * GAP, 0.055, (2.5 - 5.05) * GAP);
+  legend.renderOrder = 4;
+  scene.add(legend);
+  guideObjects.push(legend);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
 }
 
 function shellDistribution(Z) {
@@ -551,7 +634,6 @@ function changeMetric(metric) {
   }
 }
 
-
 function setHudCollapsed(collapsed) {
   hud.classList.toggle("collapsed", collapsed);
   const icon = hudToggleButton.querySelector(".chevron");
@@ -661,39 +743,27 @@ function normalizedWheelDelta(event) {
   };
 }
 
-
-function applyWheelZoom(deltaY, speed) {
-  const zoomFactor = Math.exp(deltaY * speed);
-  camera.zoom = THREE.MathUtils.clamp(camera.zoom * zoomFactor, MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM);
-  camera.updateProjectionMatrix();
-}
-
-function handleHorizontalWheelRotation(deltaX) {
-  if (Math.abs(deltaX) < 0.01) return;
-
-  if (isAtomViewActive()) {
-    const deltaYaw = deltaX * WHEEL_YAW_SPEED;
-    rotateAtomCamera(deltaYaw);
-    atomYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.75, -0.085, 0.085);
-    return;
-  }
-
-  const deltaYaw = deltaX * WHEEL_YAW_SPEED;
-  tableYaw += deltaYaw;
-  applyViewFromTilt();
-  tableYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.75, -0.08, 0.08);
-}
-
 function handleWheel(event) {
   event.preventDefault();
   event.stopPropagation();
   if (focusTween?.mode === "reset") return;
-
-  const { x, y } = normalizedWheelDelta(event);
   focusTween = null;
-
-  if (Math.abs(y) > 0.01) applyWheelZoom(y, WHEEL_ZOOM_SPEED);
-  if (Math.abs(x) > 0.01) handleHorizontalWheelRotation(x);
+  const { x, y } = normalizedWheelDelta(event);
+  const dominantHorizontal = Math.abs(x) > Math.abs(y) * 0.72;
+  if (isAtomViewActive()) {
+    if (!dominantHorizontal) return;
+    const deltaYaw = -x * ATOM_DRAG_YAW_SPEED * 0.38;
+    rotateAtomCamera(deltaYaw);
+    atomYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.9, -0.085, 0.085);
+    return;
+  }
+  const deltaYaw = -x * FULL_VIEW_YAW_SPEED * 0.32;
+  const deltaPitch = -y * DRAG_TILT_SPEED * 0.32;
+  tableYaw += deltaYaw;
+  viewTilt.y += deltaPitch;
+  applyViewFromTilt();
+  tableYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.82, -0.08, 0.08);
+  viewTiltVelocity.set(0, THREE.MathUtils.clamp(deltaPitch * 0.82, -0.08, 0.08));
 }
 
 function resetInfoPanel() {
@@ -703,7 +773,6 @@ function resetInfoPanel() {
 
 function startSmoothReset() {
   selectedElement = null;
-  clearAtom();
   viewTiltVelocity.set(0, 0);
   tableYawVelocity = 0;
   atomYawVelocity = 0;
@@ -863,6 +932,7 @@ window.addEventListener("resize", () => {
 applyViewFromTilt(DEFAULT_CAMERA_DISTANCE);
 createLightsAndFloor();
 createTiles();
+createCategoryLegendOnTable();
 createSeriesGuide("란타넘족", 8, palette.lanthanide);
 createSeriesGuide("악티늄족", 9, palette.actinide);
 runSelfTests();
