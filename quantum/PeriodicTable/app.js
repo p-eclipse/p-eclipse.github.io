@@ -272,7 +272,7 @@ function createSeriesGuide(labelText, row, color) {
   ctx.fillRect(78, 322, 1244, 34);
   ctx.lineWidth = 14;
   ctx.strokeStyle = "rgba(0,0,0,0.62)";
-  ctx.font = "950 236px system-ui, sans-serif";
+  ctx.font = "700 40px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.strokeText(labelText, 700, 190);
@@ -304,7 +304,7 @@ function createCategoryLegendOnTable() {
   const ctx = c.getContext("2d");
   ctx.fillStyle = "#0a1829";
   ctx.fillRect(0, 0, c.width, c.height);
-  ctx.font = "950 92px system-ui, sans-serif";
+  ctx.font = "750 42px system-ui, sans-serif";
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
 
