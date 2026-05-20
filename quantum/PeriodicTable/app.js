@@ -262,8 +262,8 @@ function createPrintedBlock(width, depth, height, x, z, texture, baseColor = 0x0
 
 function createSeriesGuide(labelText, row, color) {
   const c = document.createElement("canvas");
-  c.width = 1400;
-  c.height = 420;
+  c.width = 1560;
+  c.height = 360;
   const ctx = c.getContext("2d");
   ctx.fillStyle = "#0a1829";
   ctx.fillRect(0, 0, c.width, c.height);
@@ -299,8 +299,8 @@ function createCategoryLegendOnTable() {
   ];
 
   const c = document.createElement("canvas");
-  c.width = 2600;
-  c.height = 720;
+  c.width = 2620;
+  c.height = 600;
   const ctx = c.getContext("2d");
   ctx.fillStyle = "#0a1829";
   ctx.fillRect(0, 0, c.width, c.height);
@@ -323,7 +323,7 @@ function createCategoryLegendOnTable() {
 
     ctx.fillStyle = hex;
     ctx.beginPath();
-    ctx.arc(x, y, 48, 0, Math.PI * 2);
+    ctx.arc(x, y, 36, 0, Math.PI * 2);
     ctx.fill();
     ctx.lineWidth = 9;
     ctx.strokeStyle = "rgba(0,0,0,0.52)";
