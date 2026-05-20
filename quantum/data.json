@@ -2,9 +2,9 @@
   "title": "Quantum Mechanics",
   "folders": [
     {
-      "name": "Bulding",
-      "path": "./building/",
-      "description": "개발중입니다."
+      "name": "Periodic Table",
+      "path": "./PeriodicTable/",
+      "description": "3D 주기율표"
     }
   ]
 }
