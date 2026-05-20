@@ -20,7 +20,6 @@ const elements = elementSource.split(";").map(row => {
 const categoryLabels = { alkali:"알칼리 금속", alkaline:"알칼리 토금속", transition:"전이 금속", post:"전이후 금속", metalloid:"준금속", nonmetal:"비금속", halogen:"할로젠", noble:"비활성 기체", lanthanide:"란타넘족", actinide:"악티늄족" };
 const palette = { alkali:0xff6b6b, alkaline:0xffa94d, transition:0x4dabf7, post:0xadb5bd, metalloid:0xf2c94c, nonmetal:0x69db7c, halogen:0x9775fa, noble:0x66d9e8, lanthanide:0xf783ac, actinide:0xb197fc };
 const elementsByZ = [...elements].sort((a,b) => a.Z - b.Z);
-const ABSOLUTE_NUCLEON_SCALE_MAX = elementsByZ.at(-1).Z + elementsByZ.at(-1).N;
 const curationBySymbol = {
   H:"수소는 과학계의 주연급 단역입니다. 우주에서는 별의 연료로 타오르고, 지구에서는 물 분자 한쪽에 얌전히 붙어 있다가, 화학 시간에는 pH와 산·염기 이야기의 문을 열어젖힙니다.",
   He:"헬륨은 풍선 속에서는 목소리를 장난스럽게 바꾸지만, 우주에서는 빅뱅과 별의 핵융합이 남긴 묵직한 흔적입니다. 물리학 실험실에서는 초저온 냉각과 초전도 자석을 떠받칩니다.",
@@ -88,6 +87,7 @@ const pointer = new THREE.Vector2();
 let pointerDown = null;
 let activePointers = new Map();
 let multiTouchInProgress = false;
+let touchGesture = null;
 
 function categoryOf(e) {
   if (e.p === 8) return "lanthanide";
@@ -116,11 +116,9 @@ function maxMetric(metric) {
 
 function heightFor(e, metric = currentMetric) {
   const value = metricValue(e, metric);
-  if (metric === "electronegativity") {
-    if (!e.en) return BASE_H + 0.04;
-    return BASE_H + MAX_H * Math.pow(value / maxMetric(metric), 0.82);
-  }
-  return BASE_H + MAX_H * THREE.MathUtils.clamp(value / ABSOLUTE_NUCLEON_SCALE_MAX, 0, 1);
+  const max = maxMetric(metric);
+  if (metric === "electronegativity" && !e.en) return BASE_H + 0.04;
+  return BASE_H + MAX_H * Math.pow(value / max, 0.82);
 }
 
 function tilePosition(e) {
@@ -136,15 +134,15 @@ function makeLabelTexture(e, categoryColor) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = "rgba(0,0,0,0.92)";
-  ctx.font = "900 168px system-ui, sans-serif";
-  ctx.fillText(e.s, 256, 256);
+  ctx.font = "900 138px system-ui, sans-serif";
+  ctx.fillText(e.s, 256, 214);
   ctx.fillStyle = "rgba(0,0,0,0.72)";
-  ctx.font = "700 96px system-ui, sans-serif";
-  ctx.fillText(e.Z, 256, 128);
-  ctx.font = "700 72px system-ui, sans-serif";
-  ctx.fillText(e.n, 256, 376);
-  //ctx.fillStyle = `#${categoryColor.toString(16).padStart(6, "0")}`;
-  //ctx.fillRect(104, 404, 304, 12);
+  ctx.font = "700 46px system-ui, sans-serif";
+  ctx.fillText(e.Z, 256, 86);
+  ctx.font = "700 34px system-ui, sans-serif";
+  ctx.fillText(e.n, 256, 334);
+  ctx.fillStyle = `#${categoryColor.toString(16).padStart(6, "0")}`;
+  ctx.fillRect(104, 404, 304, 12);
   const texture = new THREE.CanvasTexture(c);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 8;
@@ -245,155 +243,27 @@ function createTiles() {
   }
 }
 
-function createSeriesMarkerBlock({ period, color, dots }) {
-  const hHeight = heightFor(elementsByZ[0], "protons");
-  const pos = tilePosition({ g: 3, p: period });
-
-  const mat = new THREE.MeshStandardMaterial({
-    color,
-    roughness: 0.42,
-    metalness: 0.18,
-    emissive: color,
-    emissiveIntensity: 0.08
-  });
-
-  const block = new THREE.Mesh(
-    new THREE.BoxGeometry(TILE_W, hHeight, TILE_D, 2, 2, 2),
-    mat
-  );
-
-  block.position.set(pos.x, hHeight / 2, pos.z);
-  block.castShadow = true;
-  block.receiveShadow = true;
-  scene.add(block);
-  guideObjects.push(block);
-
-  const dotGeo = new THREE.CircleGeometry(0.105, 32);
-  const dotMat = new THREE.MeshBasicMaterial({
-    color: 0x111827,
-    transparent: true,
-    opacity: 0.88,
-    side: THREE.DoubleSide,
-    depthWrite: false
-  });
-
-  const xOffsets = dots === 1 ? [0] : [-0.16, 0.16];
-
-  for (const dx of xOffsets) {
-    const dot = new THREE.Mesh(dotGeo, dotMat.clone());
-    dot.rotation.x = -Math.PI / 2;
-    dot.position.set(pos.x + dx, hHeight + 0.012, pos.z);
-    dot.renderOrder = 6;
-    scene.add(dot);
-    guideObjects.push(dot);
-  }
-}
-
-function createPrintedBlock(width, depth, height, x, z, texture, baseColor = 0x0c1a2b) {
-  const sideMat = new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.72, metalness: 0.08 });
-  const topMat = new THREE.MeshBasicMaterial({ map: texture });
-  const printedBlock = new THREE.Mesh(
-    new THREE.BoxGeometry(width, height, depth),
-    [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]
-  );
-  printedBlock.position.set(x, height / 2, z);
-  printedBlock.receiveShadow = true;
-  printedBlock.castShadow = true;
-  scene.add(printedBlock);
-  guideObjects.push(printedBlock);
-  return printedBlock;
-}
-
 function createSeriesGuide(labelText, row, color) {
   const c = document.createElement("canvas");
-  c.width = 1560;
-  c.height = 360;
+  c.width = 1024;
+  c.height = 256;
   const ctx = c.getContext("2d");
-  ctx.fillStyle = "#0a1829";
-  ctx.fillRect(0, 0, c.width, c.height);
-  const hex = `#${color.toString(16).padStart(6, "0")}`;
-  ctx.fillStyle = hex;
-  ctx.fillRect(78, 322, 1244, 34);
-  ctx.lineWidth = 14;
-  ctx.strokeStyle = "rgba(0,0,0,0.62)";
-  ctx.font = "700 128px system-ui, sans-serif";
+  ctx.fillStyle = "rgba(255,255,255,0.78)";
+  ctx.font = "800 82px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.strokeText(labelText, 700, 190);
-  ctx.fillStyle = "rgba(238,245,255,0.98)";
-  ctx.fillText(labelText, 700, 190);
+  ctx.fillText(labelText, 512, 128);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 8;
-  createPrintedBlock(4.85, 1.12, 0.16, (2.7 - 9.5) * GAP, (row - 5.05) * GAP, tex, 0x0a1829);
-}
-
-function createCategoryLegendOnTable() {
-  const items = [
-    ["알칼리", palette.alkali],
-    ["알칼리 토금속", palette.alkaline],
-    ["전이 금속", palette.transition],
-    ["전이후 금속", palette.post],
-    ["준금속", palette.metalloid],
-    ["비금속", palette.nonmetal],
-    ["할로젠", palette.halogen],
-    ["비활성 기체", palette.noble],
-    ["란타넘족", palette.lanthanide],
-    ["악티늄족", palette.actinide]
-  ];
-
-  const c = document.createElement("canvas");
-  c.width = 2620;
-  c.height = 600;
-  const ctx = c.getContext("2d");
-  ctx.fillStyle = "#0a1829";
-  ctx.fillRect(0, 0, c.width, c.height);
-  ctx.font = "750 64px system-ui, sans-serif";
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-
-  const colW = 510;
-  const rowH = 260;
-  const startX = 120;
-  const startY = 220;
-
-  for (let i = 0; i < items.length; i++) {
-    const [label, color] = items[i];
-    const col = i % 5;
-    const row = Math.floor(i / 5);
-    const x = startX + col * colW;
-    const y = startY + row * rowH;
-    const hex = `#${color.toString(16).padStart(6, "0")}`;
-
-    ctx.fillStyle = hex;
-    ctx.beginPath();
-    ctx.arc(x, y, 24, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.lineWidth = 9;
-    ctx.strokeStyle = "rgba(0,0,0,0.52)";
-    ctx.stroke();
-
-    ctx.lineWidth = 10;
-    ctx.strokeStyle = "rgba(0,0,0,0.62)";
-    ctx.strokeText(label, x + 78, y + 2);
-    ctx.fillStyle = "rgba(238,245,255,0.98)";
-    ctx.fillText(label, x + 78, y + 2);
-  }
-
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 8;
-  createPrintedBlock(11.8, 2.7, 0.16, (7.45 - 9.5) * GAP, (2.52 - 5.05) * GAP, tex, 0x0a1829);
-}
-
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 0.72), new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.86, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2;
+  m.position.set((2.15 - 9.5) * GAP, 0.035, (row - 5.05) * GAP);
+  scene.add(m);
+  guideObjects.push(m);
+  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.12, 24, 16), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.45 }));
+  dot.position.set((3.2 - 9.5) * GAP, 0.16, (row - 5.05) * GAP);
+  scene.add(dot);
+  guideObjects.push(dot);
 }
 
 function shellDistribution(Z) {
@@ -663,6 +533,59 @@ function rotateAtomCamera(deltaYaw) {
   camera.updateProjectionMatrix();
 }
 
+function panCameraByScreenDelta(dx, dy) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  const worldUnitsPerPixel = (frustum / camera.zoom) / Math.max(1, rect.height);
+  const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).normalize();
+  const up = new THREE.Vector3().copy(camera.up).normalize();
+  const pan = new THREE.Vector3()
+    .addScaledVector(right, -dx * worldUnitsPerPixel)
+    .addScaledVector(up, dy * worldUnitsPerPixel);
+  camera.position.add(pan);
+  controlsTarget.add(pan);
+  camera.lookAt(controlsTarget);
+  camera.updateProjectionMatrix();
+}
+
+function zoomCameraByRatio(ratio) {
+  camera.zoom = THREE.MathUtils.clamp(camera.zoom * ratio, 0.55, 5.0);
+  camera.updateProjectionMatrix();
+}
+
+function getTwoPointerGestureState() {
+  const points = [...activePointers.values()];
+  if (points.length < 2) return null;
+  const a = points[0];
+  const b = points[1];
+  const center = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  const distance = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+  return { center, distance };
+}
+
+function beginTwoPointerGesture() {
+  const state = getTwoPointerGestureState();
+  touchGesture = state ? { prevCenter: state.center, prevDistance: state.distance } : null;
+}
+
+function updateTwoPointerGesture() {
+  const state = getTwoPointerGestureState();
+  if (!state) return;
+  if (!touchGesture) {
+    beginTwoPointerGesture();
+    return;
+  }
+  stopInteractionTween();
+  atomYawVelocity = 0;
+  viewTiltVelocity.set(0, 0);
+  tableYawVelocity = 0;
+  const dx = state.center.x - touchGesture.prevCenter.x;
+  const dy = state.center.y - touchGesture.prevCenter.y;
+  panCameraByScreenDelta(dx, dy);
+  zoomCameraByRatio(state.distance / touchGesture.prevDistance);
+  touchGesture.prevCenter = state.center;
+  touchGesture.prevDistance = state.distance;
+}
+
 function changeMetric(metric) {
   currentMetric = metric;
   metricButtons.forEach(b => b.classList.toggle("active", b.dataset.metric === metric));
@@ -761,6 +684,7 @@ function stopInteractionTween() {
 function finishPointer(event) {
   const wasMultiTouch = multiTouchInProgress || activePointers.size > 1;
   activePointers.delete(event.pointerId);
+  if (activePointers.size < 2) touchGesture = null;
   if (activePointers.size === 0) multiTouchInProgress = false;
   if (!pointerDown || pointerDown.id !== event.pointerId || wasMultiTouch) {
     pointerDown = null;
@@ -773,8 +697,10 @@ function finishPointer(event) {
   const tapLimit = pointerDown.pointerType === "touch" ? 14 : 7;
   const timeLimit = pointerDown.pointerType === "touch" ? 750 : 600;
   const wasDragged = !!pointerDown.dragged;
+  const mode = pointerDown.mode;
+  const button = pointerDown.button ?? 0;
   pointerDown = null;
-  if (wasDragged || dist > tapLimit || elapsed > timeLimit) return;
+  if (mode === "pan" || button !== 0 || wasDragged || dist > tapLimit || elapsed > timeLimit) return;
   const hit = getIntersect(event);
   if (hit?.object?.visible && hit.object.userData?.element) focusElement(hit.object.userData.element);
 }
@@ -792,29 +718,22 @@ function handleWheel(event) {
   event.stopPropagation();
   if (focusTween?.mode === "reset") return;
   focusTween = null;
-
   const { x, y } = normalizedWheelDelta(event);
   const dominantHorizontal = Math.abs(x) > Math.abs(y) * 0.72;
-
-  if (dominantHorizontal) {
-    if (isAtomViewActive()) {
-      const deltaYaw = -x * ATOM_DRAG_YAW_SPEED * 0.38;
-      rotateAtomCamera(deltaYaw);
-      atomYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.9, -0.085, 0.085);
-      return;
-    }
-
-    const deltaYaw = -x * FULL_VIEW_YAW_SPEED * 0.32;
-    tableYaw += deltaYaw;
-    applyViewFromTilt();
-    tableYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.82, -0.08, 0.08);
-    viewTiltVelocity.set(0, 0);
+  if (isAtomViewActive()) {
+    if (!dominantHorizontal) return;
+    const deltaYaw = -x * ATOM_DRAG_YAW_SPEED * 0.38;
+    rotateAtomCamera(deltaYaw);
+    atomYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.9, -0.085, 0.085);
     return;
   }
-
-  const zoomFactor = Math.exp(y * 0.0018);
-  camera.zoom = THREE.MathUtils.clamp(camera.zoom * zoomFactor, 0.55, 5.0);
-  camera.updateProjectionMatrix();
+  const deltaYaw = -x * FULL_VIEW_YAW_SPEED * 0.32;
+  const deltaPitch = -y * DRAG_TILT_SPEED * 0.32;
+  tableYaw += deltaYaw;
+  viewTilt.y += deltaPitch;
+  applyViewFromTilt();
+  tableYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.82, -0.08, 0.08);
+  viewTiltVelocity.set(0, THREE.MathUtils.clamp(deltaPitch * 0.82, -0.08, 0.08));
 }
 
 function resetInfoPanel() {
@@ -823,7 +742,6 @@ function resetInfoPanel() {
 }
 
 function startSmoothReset() {
-  clearAtom();
   selectedElement = null;
   viewTiltVelocity.set(0, 0);
   tableYawVelocity = 0;
@@ -832,6 +750,7 @@ function startSmoothReset() {
   setAtomNavVisible(false);
   pointerDown = null;
   activePointers.clear();
+  touchGesture = null;
   multiTouchInProgress = false;
   restoreTileBrightness();
   resetInfoPanel();
@@ -903,8 +822,6 @@ function runSelfTests() {
   console.assert(shellDistribution(10).join(",") === "2,8", "neon shell distribution");
   console.assert(shuffledNucleonKinds(6, 6).filter(v => v === "proton").length === 6, "proton count preserved");
   console.assert(shuffledNucleonKinds(6, 6).filter(v => v === "neutron").length === 6, "neutron count preserved");
-  console.assert(ABSOLUTE_NUCLEON_SCALE_MAX === 294, "absolute nucleon scale uses Og mass number");
-  console.assert(heightFor(elementsByZ.at(-1), "massNumber") === BASE_H + MAX_H, "Og mass number reaches maximum height");
 }
 
 metricButtons.forEach(btn => btn.addEventListener("click", () => changeMetric(btn.dataset.metric)));
@@ -916,16 +833,34 @@ window.addEventListener("keydown", event => {
   if (event.key.toLowerCase() === "r") startSmoothReset();
 });
 
+renderer.domElement.addEventListener("contextmenu", event => event.preventDefault());
+
 renderer.domElement.addEventListener("pointerdown", event => {
   activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
   multiTouchInProgress = activePointers.size > 1;
+
+  if (event.pointerType === "touch" && activePointers.size === 2) {
+    pointerDown = null;
+    beginTwoPointerGesture();
+    return;
+  }
+
   if (activePointers.size === 1) {
     if (isAtomViewActive()) atomYawVelocity = 0;
     else {
       viewTiltVelocity.set(0, 0);
       tableYawVelocity = 0;
     }
-    pointerDown = { id: event.pointerId, x: event.clientX, y: event.clientY, time: performance.now(), pointerType: event.pointerType };
+    const isRightMouse = event.pointerType === "mouse" && event.button === 2;
+    pointerDown = {
+      id: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      time: performance.now(),
+      pointerType: event.pointerType,
+      button: event.button ?? 0,
+      mode: isRightMouse ? "pan" : "orbit"
+    };
   } else {
     pointerDown = null;
   }
@@ -933,26 +868,47 @@ renderer.domElement.addEventListener("pointerdown", event => {
 
 renderer.domElement.addEventListener("pointermove", event => {
   if (activePointers.has(event.pointerId)) activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+  if (event.pointerType === "touch" && activePointers.size >= 2) {
+    multiTouchInProgress = true;
+    updateTwoPointerGesture();
+    return;
+  }
+
   if (!pointerDown || pointerDown.id !== event.pointerId || activePointers.size !== 1 || multiTouchInProgress) return;
+
   const dxTotal = event.clientX - pointerDown.x;
   const dyTotal = event.clientY - pointerDown.y;
   if (Math.hypot(dxTotal, dyTotal) <= 2) return;
+
   const dx = event.clientX - (pointerDown.lastX ?? pointerDown.x);
   const dy = event.clientY - (pointerDown.lastY ?? pointerDown.y);
   const now = performance.now();
   const dt = Math.max(12, now - (pointerDown.lastTime ?? pointerDown.time));
+
   pointerDown.lastX = event.clientX;
   pointerDown.lastY = event.clientY;
   pointerDown.lastTime = now;
   pointerDown.dragged = true;
   stopInteractionTween();
+
+  if (pointerDown.mode === "pan") {
+    atomYawVelocity = 0;
+    viewTiltVelocity.set(0, 0);
+    tableYawVelocity = 0;
+    panCameraByScreenDelta(dx, dy);
+    return;
+  }
+
   const speedBoost = THREE.MathUtils.clamp(16 / dt, 0.45, 1.9);
+
   if (isAtomViewActive()) {
     const deltaYaw = -dx * ATOM_DRAG_YAW_SPEED;
     rotateAtomCamera(deltaYaw);
     atomYawVelocity = THREE.MathUtils.clamp(deltaYaw * speedBoost, -0.13, 0.13);
     return;
   }
+
   const deltaYaw = -dx * FULL_VIEW_YAW_SPEED;
   const deltaPitch = -dy * DRAG_TILT_SPEED;
   tableYaw += deltaYaw;
@@ -966,6 +922,7 @@ renderer.domElement.addEventListener("pointerup", finishPointer, { passive: true
 renderer.domElement.addEventListener("pointercancel", event => {
   activePointers.delete(event.pointerId);
   pointerDown = null;
+  if (activePointers.size < 2) touchGesture = null;
   if (activePointers.size === 0) multiTouchInProgress = false;
 }, { passive: true });
 renderer.domElement.addEventListener("wheel", handleWheel, { passive: false });
@@ -986,26 +943,6 @@ window.addEventListener("resize", () => {
 applyViewFromTilt(DEFAULT_CAMERA_DISTANCE);
 createLightsAndFloor();
 createTiles();
-createSeriesMarkerBlock({
-
-  period: 6,
-
-  color: palette.lanthanide,
-
-  dots: 1
-
-});
-
-createSeriesMarkerBlock({
-
-  period: 7,
-
-  color: palette.actinide,
-
-  dots: 2
-
-});
-createCategoryLegendOnTable();
 createSeriesGuide("란타넘족", 8, palette.lanthanide);
 createSeriesGuide("악티늄족", 9, palette.actinide);
 runSelfTests();
