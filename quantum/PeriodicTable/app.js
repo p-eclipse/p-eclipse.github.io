@@ -245,6 +245,50 @@ function createTiles() {
   }
 }
 
+function createSeriesMarkerBlock({ period, color, dots }) {
+  const hHeight = heightFor(elementsByZ[0], "protons");
+  const pos = tilePosition({ g: 3, p: period });
+
+  const mat = new THREE.MeshStandardMaterial({
+    color,
+    roughness: 0.42,
+    metalness: 0.18,
+    emissive: color,
+    emissiveIntensity: 0.08
+  });
+
+  const block = new THREE.Mesh(
+    new THREE.BoxGeometry(TILE_W, hHeight, TILE_D, 2, 2, 2),
+    mat
+  );
+
+  block.position.set(pos.x, hHeight / 2, pos.z);
+  block.castShadow = true;
+  block.receiveShadow = true;
+  scene.add(block);
+  guideObjects.push(block);
+
+  const dotGeo = new THREE.CircleGeometry(0.105, 32);
+  const dotMat = new THREE.MeshBasicMaterial({
+    color: 0x111827,
+    transparent: true,
+    opacity: 0.88,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  });
+
+  const xOffsets = dots === 1 ? [0] : [-0.16, 0.16];
+
+  for (const dx of xOffsets) {
+    const dot = new THREE.Mesh(dotGeo, dotMat.clone());
+    dot.rotation.x = -Math.PI / 2;
+    dot.position.set(pos.x + dx, hHeight + 0.012, pos.z);
+    dot.renderOrder = 6;
+    scene.add(dot);
+    guideObjects.push(dot);
+  }
+}
+
 function createPrintedBlock(width, depth, height, x, z, texture, baseColor = 0x0c1a2b) {
   const sideMat = new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.72, metalness: 0.08 });
   const topMat = new THREE.MeshBasicMaterial({ map: texture });
@@ -942,6 +986,25 @@ window.addEventListener("resize", () => {
 applyViewFromTilt(DEFAULT_CAMERA_DISTANCE);
 createLightsAndFloor();
 createTiles();
+createSeriesMarkerBlock({
+
+  period: 6,
+
+  color: palette.lanthanide,
+
+  dots: 1
+
+});
+
+createSeriesMarkerBlock({
+
+  period: 7,
+
+  color: palette.actinide,
+
+  dots: 2
+
+});
 createCategoryLegendOnTable();
 createSeriesGuide("란타넘족", 8, palette.lanthanide);
 createSeriesGuide("악티늄족", 9, palette.actinide);
