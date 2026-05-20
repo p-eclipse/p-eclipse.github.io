@@ -15,16 +15,9 @@
       background: radial-gradient(circle at top, #182336 0%, #08101c 55%, #030712 100%);
       color: #eef5ff;
     }
-    #app {
-      position: fixed;
-      inset: 0;
-    }
-    canvas {
-      display: block;
-      touch-action: none;
-      -webkit-user-select: none;
-      user-select: none;
-    }
+    #app { position: fixed; inset: 0; }
+    canvas { display: block; touch-action: none; -webkit-user-select: none; user-select: none; }
+
     .ui {
       position: fixed;
       left: 18px;
@@ -39,412 +32,110 @@
       box-shadow: 0 22px 60px rgba(0,0,0,0.35);
       transition: width 180ms ease, padding 180ms ease;
     }
-    .ui.collapsed {
-      width: auto;
-      min-width: 178px;
-      padding: 12px 13px;
-    }
-    .title-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    .title {
-      margin: 0;
-      font-size: 19px;
-      line-height: 1.25;
-      letter-spacing: -0.02em;
-      white-space: nowrap;
-    }
+    .ui.collapsed { width: auto; min-width: 178px; padding: 12px 13px; }
+    .title-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .title { margin: 0; font-size: 19px; line-height: 1.25; letter-spacing: -0.02em; white-space: nowrap; }
     .hud-toggle {
-      width: 34px;
-      height: 34px;
-      flex: 0 0 auto;
-      display: inline-grid;
-      place-items: center;
-      padding: 0;
-      border-radius: 999px;
-      position: relative;
-      overflow: hidden;
-      isolation: isolate;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(7, 12, 22, 0.76);
-      backdrop-filter: blur(14px);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 12px 30px rgba(0,0,0,0.30);
+      width: 34px; height: 34px; flex: 0 0 auto; display: inline-grid; place-items: center; padding: 0;
+      border-radius: 999px; position: relative; overflow: hidden; isolation: isolate;
+      border: 1px solid rgba(255,255,255,0.15); background: rgba(7, 12, 22, 0.76);
+      backdrop-filter: blur(14px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 12px 30px rgba(0,0,0,0.30);
     }
-    .hud-toggle::before {
-      content: "";
-      position: absolute;
-      inset: 1px;
-      border-radius: inherit;
-      background: linear-gradient(145deg, rgba(255,255,255,0.13), rgba(255,255,255,0.025) 58%, rgba(95,168,255,0.06));
+    .hud-toggle::before, .back-button::before, .atom-nav-button::before {
+      content: ""; position: absolute; inset: 1px; border-radius: inherit;
+      background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.025) 58%, rgba(95,168,255,0.055));
       pointer-events: none;
     }
-    .hud-toggle:hover {
-      border-color: rgba(255,255,255,0.22);
-      background: rgba(10, 18, 32, 0.82);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 14px 34px rgba(0,0,0,0.34);
+    .hud-toggle:hover, .back-button:hover, .atom-nav-button:hover {
+      border-color: rgba(255,255,255,0.22); background: rgba(10, 18, 32, 0.84);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 18px 46px rgba(0,0,0,0.38);
     }
-    .hud-toggle:active {
-      transform: translateY(1px) scale(0.98);
-    }
+    .hud-toggle:active { transform: translateY(1px) scale(0.98); }
     .chevron {
-      position: relative;
-      z-index: 1;
-      display: block;
-      width: 10px;
-      height: 10px;
-      border-right: 2.2px solid rgba(238,245,255,0.88);
-      border-bottom: 2.2px solid rgba(238,245,255,0.88);
+      position: relative; z-index: 1; display: block; width: 10px; height: 10px;
+      border-right: 2.2px solid rgba(238,245,255,0.88); border-bottom: 2.2px solid rgba(238,245,255,0.88);
       filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35));
       transition: transform 180ms ease, opacity 180ms ease, border-color 180ms ease;
     }
-    button:hover .chevron {
-      border-color: rgba(255,255,255,0.98);
-    }
+    button:hover .chevron { border-color: rgba(255,255,255,0.98); }
     .chevron.up { transform: translateY(2px) rotate(225deg); }
     .chevron.down { transform: translateY(-2px) rotate(45deg); }
     .chevron.left { transform: translateX(2px) rotate(135deg); }
     .chevron.right { transform: translateX(-2px) rotate(-45deg); }
-    .hud-body {
-      display: grid;
-      gap: 12px;
-      overflow: hidden;
-      max-height: 520px;
-      opacity: 1;
-      transition: max-height 220ms ease, opacity 160ms ease, margin 180ms ease;
-    }
-    .ui.collapsed .title-row {
-      margin-bottom: 0;
-    }
-    .ui.collapsed .hud-body {
-      max-height: 0;
-      opacity: 0;
-      margin: 0;
-      pointer-events: none;
-    }
-    .subtitle {
-      margin: 0 0 14px;
-      font-size: 13px;
-      line-height: 1.45;
-      color: rgba(238,245,255,0.76);
-    }
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-    }
+    .hud-body { display: grid; gap: 12px; overflow: hidden; max-height: 520px; opacity: 1; transition: max-height 220ms ease, opacity 160ms ease, margin 180ms ease; }
+    .ui.collapsed .title-row { margin-bottom: 0; }
+    .ui.collapsed .hud-body { max-height: 0; opacity: 0; margin: 0; pointer-events: none; }
+
+    .controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     button {
-      border: 1px solid rgba(255,255,255,0.16);
-      border-radius: 14px;
-      padding: 10px 9px;
-      background: rgba(255,255,255,0.08);
-      color: #eef5ff;
-      cursor: pointer;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+      border: 1px solid rgba(255,255,255,0.16); border-radius: 14px; padding: 10px 9px;
+      background: rgba(255,255,255,0.08); color: #eef5ff; cursor: pointer;
+      font-weight: 700; letter-spacing: -0.02em;
       transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
     }
     button:hover { transform: translateY(-1px); background: rgba(255,255,255,0.13); }
-    button.active {
-      background: linear-gradient(135deg, rgba(91,141,255,0.9), rgba(0,217,255,0.62));
-      border-color: rgba(170,220,255,0.65);
-    }
-    .legend {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 7px 12px;
-      font-size: 12px;
-      color: rgba(238,245,255,0.74);
-    }
+    button.active { background: linear-gradient(135deg, rgba(91,141,255,0.9), rgba(0,217,255,0.62)); border-color: rgba(170,220,255,0.65); }
+    .legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 12px; font-size: 12px; color: rgba(238,245,255,0.74); }
     .legend span::before {
-      content: "";
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 7px;
-      vertical-align: -1px;
-      background: var(--c);
-      box-shadow: 0 0 14px var(--c);
+      content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 7px; vertical-align: -1px;
+      background: var(--c); box-shadow: 0 0 14px var(--c);
     }
-    .hint {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(255,255,255,0.12);
-      font-size: 12px;
-      line-height: 1.45;
-      color: rgba(238,245,255,0.68);
-    }
+
     .panel {
-      position: fixed;
-      right: 18px;
-      top: 18px;
-      width: min(370px, calc(100vw - 36px));
-      max-height: calc(100vh - 36px);
-      overflow-y: auto;
-      z-index: 10;
-      padding: 18px;
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 24px;
-      background: rgba(7, 12, 22, 0.78);
-      backdrop-filter: blur(14px);
-      box-shadow: 0 22px 60px rgba(0,0,0,0.35);
-      opacity: 0;
-      pointer-events: none;
-      transform: translateX(calc(100% + 28px));
-      transition: opacity 180ms ease, transform 220ms ease;
+      position: fixed; right: 18px; top: 18px; width: min(370px, calc(100vw - 36px)); max-height: calc(100vh - 36px);
+      overflow-y: auto; z-index: 10; padding: 18px; border: 1px solid rgba(255,255,255,0.15); border-radius: 24px;
+      background: rgba(7, 12, 22, 0.78); backdrop-filter: blur(14px); box-shadow: 0 22px 60px rgba(0,0,0,0.35);
+      opacity: 0; pointer-events: none; transform: translateX(calc(100% + 28px)); transition: opacity 180ms ease, transform 220ms ease;
     }
-    .panel.visible {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateX(0);
-    }
-    .info-toggle {
-      position: fixed;
-      right: 18px;
-      top: 50%;
-      z-index: 21;
-      width: 46px;
-      height: 46px;
-      padding: 0;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.22);
-      background: rgba(7, 12, 22, 0.82);
-      color: #eef5ff;
-      box-shadow: 0 16px 42px rgba(0,0,0,0.34);
-      backdrop-filter: blur(14px);
-      font-size: 22px;
-      font-weight: 900;
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(-50%) translateX(18px);
-      transition: opacity 180ms ease, transform 180ms ease, right 220ms ease, background 180ms ease;
-    }
-    .info-toggle.visible {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateY(-50%) translateX(0);
-    }
-    .info-toggle.open {
-      right: min(406px, calc(100vw - 64px));
-    }
-    .symbol-row {
-      display: flex;
-      align-items: end;
-      gap: 12px;
-      margin-bottom: 6px;
-    }
-    .big-symbol {
-      font-size: 54px;
-      line-height: 0.95;
-      font-weight: 900;
-      letter-spacing: -0.06em;
-    }
-    .name {
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-    }
-    .category {
-      margin-top: 2px;
-      font-size: 13px;
-      color: rgba(238,245,255,0.70);
-    }
-    .facts {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 15px;
-    }
-    .fact {
-      padding: 12px;
-      border-radius: 16px;
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.10);
-    }
-    .fact .k {
-      font-size: 12px;
-      color: rgba(238,245,255,0.62);
-      margin-bottom: 4px;
-    }
-    .fact .v {
-      font-size: 18px;
-      font-weight: 850;
-    }
-    .note {
-      margin-top: 12px;
-      font-size: 12px;
-      line-height: 1.45;
-      color: rgba(238,245,255,0.58);
-    }
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 10px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.11);
-      font-size: 12px;
-      color: rgba(238,245,255,0.72);
-    }
-    .pill::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent, #91f5ff);
-      box-shadow: 0 0 12px var(--accent, #91f5ff);
-    }
-    .curation {
-      margin-top: 14px;
-      padding: 13px;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.11);
-    }
-    .curation-title {
-      font-size: 13px;
-      font-weight: 850;
-      margin-bottom: 9px;
-      color: rgba(238,245,255,0.88);
-    }
-    .curation-list {
-      display: grid;
-      gap: 7px;
-    }
-    .curation-item {
-      font-size: 12px;
-      line-height: 1.45;
-      color: rgba(238,245,255,0.72);
-    }
-    .curation-item b {
-      color: rgba(255,255,255,0.92);
-      font-weight: 850;
+    .panel.visible { opacity: 1; pointer-events: auto; transform: translateX(0); }
+    .symbol-row { display: flex; align-items: end; gap: 12px; margin-bottom: 6px; }
+    .big-symbol { font-size: 54px; line-height: 0.95; font-weight: 900; letter-spacing: -0.06em; }
+    .name { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; }
+    .category { margin-top: 2px; font-size: 13px; color: rgba(238,245,255,0.70); }
+    .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 15px; }
+    .fact { padding: 12px; border-radius: 16px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.10); }
+    .fact .k { font-size: 12px; color: rgba(238,245,255,0.62); margin-bottom: 4px; }
+    .fact .v { font-size: 18px; font-weight: 850; }
+    .curation { margin-top: 14px; padding: 13px; border-radius: 18px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.11); }
+    .curation-title { font-size: 13px; font-weight: 850; margin-bottom: 9px; color: rgba(238,245,255,0.88); }
+    .curation-list { display: grid; gap: 7px; }
+    .curation-item { font-size: 12px; line-height: 1.45; color: rgba(238,245,255,0.72); }
+
+    .back-button, .atom-nav-button {
+      position: fixed; bottom: 22px; z-index: 20; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(7, 12, 22, 0.78); color: #eef5ff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 16px 42px rgba(0,0,0,0.34);
+      backdrop-filter: blur(14px); overflow: hidden; isolation: isolate;
+      opacity: 0; pointer-events: none; transition: opacity 180ms ease, transform 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
     }
     .back-button {
-      position: fixed;
-      left: 50%;
-      bottom: 22px;
-      z-index: 20;
-      transform: translate(-50%, 18px);
-      opacity: 0;
-      pointer-events: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 18px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(7, 12, 22, 0.78);
-      color: #eef5ff;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 16px 42px rgba(0,0,0,0.34);
-      backdrop-filter: blur(14px);
-      font-size: 14px;
-      font-weight: 850;
-      letter-spacing: -0.02em;
-      overflow: hidden;
-      isolation: isolate;
-      transition: opacity 180ms ease, transform 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+      left: 50%; transform: translate(-50%, 18px); display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 18px; font-size: 14px; font-weight: 850; letter-spacing: -0.02em;
     }
-    .back-button::before {
-      content: "";
-      position: absolute;
-      inset: 1px;
-      border-radius: inherit;
-      background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.025) 58%, rgba(95,168,255,0.055));
-      pointer-events: none;
-    }
-    .back-button:hover {
-      border-color: rgba(255,255,255,0.22);
-      background: rgba(10, 18, 32, 0.84);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 18px 46px rgba(0,0,0,0.38);
-    }
-    .back-button.visible {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translate(-50%, 0);
-    }
-    .back-button:active {
-      transform: translate(-50%, 1px) scale(0.98);
-    }
+    .back-button.visible { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+    .back-button:active { transform: translate(-50%, 1px) scale(0.98); }
     .atom-nav-button {
-      position: fixed;
-      bottom: 22px;
-      z-index: 20;
-      width: 48px;
-      height: 48px;
-      padding: 0;
-      display: inline-grid;
-      place-items: center;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(7, 12, 22, 0.78);
-      color: #eef5ff;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 16px 42px rgba(0,0,0,0.34);
-      backdrop-filter: blur(14px);
-      opacity: 0;
-      pointer-events: none;
-      transform: translate(-50%, 18px);
-      overflow: hidden;
-      isolation: isolate;
-      transition: opacity 180ms ease, transform 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-    }
-    .atom-nav-button::before {
-      content: "";
-      position: absolute;
-      inset: 1px;
-      border-radius: inherit;
-      background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.025) 58%, rgba(95,168,255,0.055));
-      pointer-events: none;
-    }
-    .atom-nav-button:hover {
-      border-color: rgba(255,255,255,0.22);
-      background: rgba(10, 18, 32, 0.84);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 18px 46px rgba(0,0,0,0.38);
+      width: 48px; height: 48px; padding: 0; display: inline-grid; place-items: center; transform: translate(-50%, 18px);
     }
     .atom-nav-button.prev { left: calc(50% - 112px); }
     .atom-nav-button.next { left: calc(50% + 112px); }
-    .atom-nav-button.visible {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translate(-50%, 0);
-    }
-    .atom-nav-button:active {
-      transform: translate(-50%, 1px) scale(0.96);
-    }
-    .hud-toggle:focus-visible,
-    .atom-nav-button:focus-visible,
-    .back-button:focus-visible {
-      outline: 2px solid rgba(142,223,255,0.9);
-      outline-offset: 3px;
-    }
+    .atom-nav-button.visible { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+    .atom-nav-button:active { transform: translate(-50%, 1px) scale(0.96); }
+    .hud-toggle:focus-visible, .atom-nav-button:focus-visible, .back-button:focus-visible { outline: 2px solid rgba(142,223,255,0.9); outline-offset: 3px; }
+
     @media (max-width: 860px) {
       .ui { left: 12px; top: 12px; padding: 13px; width: min(360px, calc(100vw - 24px)); }
       .ui.collapsed { width: auto; min-width: 154px; padding: 10px 11px; }
       .panel { right: 12px; left: 12px; top: auto; bottom: 74px; width: auto; max-height: 52vh; padding: 14px; transform: translateY(calc(100% + 96px)); }
       .panel.visible { transform: translateY(0); }
-      .info-toggle { right: 12px; top: auto; bottom: 22px; transform: translateY(18px); }
-      .info-toggle.visible { transform: translateY(0); }
-      .info-toggle.open { right: 12px; }
       .title { font-size: 17px; }
       .title-row { margin-bottom: 8px; }
       .hud-toggle { width: 30px; height: 30px; }
       .chevron { width: 9px; height: 9px; border-right-width: 2px; border-bottom-width: 2px; }
       .atom-nav-button { width: 44px; height: 44px; }
-      .subtitle, .hint, .note { font-size: 11px; }
       .controls { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
       button { font-size: 11px; padding: 8px 5px; border-radius: 11px; }
-      .legend {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 5px 8px;
-        font-size: 10px;
-      }
+      .legend { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 8px; font-size: 10px; }
       .big-symbol { font-size: 40px; }
       .facts { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
       .fact { padding: 8px; border-radius: 12px; }
@@ -478,22 +169,16 @@
         <button class="metric" data-metric="electronegativity">전기음성도</button>
       </div>
       <div class="legend">
-        <span style="--c:#ff6b6b">알칼리</span>
-        <span style="--c:#ffa94d">알칼리 토금속</span>
-        <span style="--c:#4dabf7">전이 금속</span>
-        <span style="--c:#adb5bd">전이후 금속</span>
-        <span style="--c:#f2c94c">준금속</span>
-        <span style="--c:#69db7c">비금속</span>
-        <span style="--c:#9775fa">할로젠</span>
-        <span style="--c:#66d9e8">비활성 기체</span>
-        <span style="--c:#f783ac">란타넘족</span>
-        <span style="--c:#b197fc">악티늄족</span>
+        <span style="--c:#ff6b6b">알칼리</span><span style="--c:#ffa94d">알칼리 토금속</span>
+        <span style="--c:#4dabf7">전이 금속</span><span style="--c:#adb5bd">전이후 금속</span>
+        <span style="--c:#f2c94c">준금속</span><span style="--c:#69db7c">비금속</span>
+        <span style="--c:#9775fa">할로젠</span><span style="--c:#66d9e8">비활성 기체</span>
+        <span style="--c:#f783ac">란타넘족</span><span style="--c:#b197fc">악티늄족</span>
       </div>
     </div>
   </section>
 
   <aside id="info" class="panel"></aside>
-
   <button id="prevElement" class="atom-nav-button prev" type="button" aria-label="이전 원소 보기"><span class="chevron left" aria-hidden="true"></span></button>
   <button id="backToTable" class="back-button" type="button" aria-label="주기율표 전체보기로 돌아가기">전체보기</button>
   <button id="nextElement" class="atom-nav-button next" type="button" aria-label="다음 원소 보기"><span class="chevron right" aria-hidden="true"></span></button>
@@ -511,264 +196,69 @@
     const nextElementButton = document.querySelector("#nextElement");
     const metricButtons = [...document.querySelectorAll(".metric")];
 
+    // IMPORTANT: WORLD_UP is used by camera initialization helpers, so it must be initialized before applyViewFromTilt() is ever called.
+    const WORLD_UP = new THREE.Vector3(0, 1, 0);
+
     const elements = [
-      {Z:1, N:0, s:"H", n:"수소", g:1, p:1, en:2.20},
-      {Z:2, N:2, s:"He", n:"헬륨", g:18, p:1, en:null},
-      {Z:3, N:4, s:"Li", n:"리튬", g:1, p:2, en:0.98},
-      {Z:4, N:5, s:"Be", n:"베릴륨", g:2, p:2, en:1.57},
-      {Z:5, N:6, s:"B", n:"붕소", g:13, p:2, en:2.04},
-      {Z:6, N:6, s:"C", n:"탄소", g:14, p:2, en:2.55},
-      {Z:7, N:7, s:"N", n:"질소", g:15, p:2, en:3.04},
-      {Z:8, N:8, s:"O", n:"산소", g:16, p:2, en:3.44},
-      {Z:9, N:10, s:"F", n:"플루오린", g:17, p:2, en:3.98},
-      {Z:10, N:10, s:"Ne", n:"네온", g:18, p:2, en:null},
-      {Z:11, N:12, s:"Na", n:"나트륨", g:1, p:3, en:0.93},
-      {Z:12, N:12, s:"Mg", n:"마그네슘", g:2, p:3, en:1.31},
-      {Z:13, N:14, s:"Al", n:"알루미늄", g:13, p:3, en:1.61},
-      {Z:14, N:14, s:"Si", n:"규소", g:14, p:3, en:1.90},
-      {Z:15, N:16, s:"P", n:"인", g:15, p:3, en:2.19},
-      {Z:16, N:16, s:"S", n:"황", g:16, p:3, en:2.58},
-      {Z:17, N:18, s:"Cl", n:"염소", g:17, p:3, en:3.16},
-      {Z:18, N:22, s:"Ar", n:"아르곤", g:18, p:3, en:null},
-      {Z:19, N:20, s:"K", n:"칼륨", g:1, p:4, en:0.82},
-      {Z:20, N:20, s:"Ca", n:"칼슘", g:2, p:4, en:1.00},
-      {Z:21, N:24, s:"Sc", n:"스칸듐", g:3, p:4, en:1.36},
-      {Z:22, N:26, s:"Ti", n:"타이타늄", g:4, p:4, en:1.54},
-      {Z:23, N:28, s:"V", n:"바나듐", g:5, p:4, en:1.63},
-      {Z:24, N:28, s:"Cr", n:"크로뮴", g:6, p:4, en:1.66},
-      {Z:25, N:30, s:"Mn", n:"망가니즈", g:7, p:4, en:1.55},
-      {Z:26, N:30, s:"Fe", n:"철", g:8, p:4, en:1.83},
-      {Z:27, N:32, s:"Co", n:"코발트", g:9, p:4, en:1.88},
-      {Z:28, N:30, s:"Ni", n:"니켈", g:10, p:4, en:1.91},
-      {Z:29, N:34, s:"Cu", n:"구리", g:11, p:4, en:1.90},
-      {Z:30, N:34, s:"Zn", n:"아연", g:12, p:4, en:1.65},
-      {Z:31, N:38, s:"Ga", n:"갈륨", g:13, p:4, en:1.81},
-      {Z:32, N:42, s:"Ge", n:"저마늄", g:14, p:4, en:2.01},
-      {Z:33, N:42, s:"As", n:"비소", g:15, p:4, en:2.18},
-      {Z:34, N:46, s:"Se", n:"셀레늄", g:16, p:4, en:2.55},
-      {Z:35, N:44, s:"Br", n:"브로민", g:17, p:4, en:2.96},
-      {Z:36, N:48, s:"Kr", n:"크립톤", g:18, p:4, en:3.00},
-      {Z:37, N:48, s:"Rb", n:"루비듐", g:1, p:5, en:0.82},
-      {Z:38, N:50, s:"Sr", n:"스트론튬", g:2, p:5, en:0.95},
-      {Z:39, N:50, s:"Y", n:"이트륨", g:3, p:5, en:1.22},
-      {Z:40, N:50, s:"Zr", n:"지르코늄", g:4, p:5, en:1.33},
-      {Z:41, N:52, s:"Nb", n:"나이오븀", g:5, p:5, en:1.60},
-      {Z:42, N:56, s:"Mo", n:"몰리브데넘", g:6, p:5, en:2.16},
-      {Z:43, N:55, s:"Tc", n:"테크네튬", g:7, p:5, en:1.90},
-      {Z:44, N:58, s:"Ru", n:"루테늄", g:8, p:5, en:2.20},
-      {Z:45, N:58, s:"Rh", n:"로듐", g:9, p:5, en:2.28},
-      {Z:46, N:60, s:"Pd", n:"팔라듐", g:10, p:5, en:2.20},
-      {Z:47, N:60, s:"Ag", n:"은", g:11, p:5, en:1.93},
-      {Z:48, N:66, s:"Cd", n:"카드뮴", g:12, p:5, en:1.69},
-      {Z:49, N:66, s:"In", n:"인듐", g:13, p:5, en:1.78},
-      {Z:50, N:70, s:"Sn", n:"주석", g:14, p:5, en:1.96},
-      {Z:51, N:70, s:"Sb", n:"안티모니", g:15, p:5, en:2.05},
-      {Z:52, N:78, s:"Te", n:"텔루륨", g:16, p:5, en:2.10},
-      {Z:53, N:74, s:"I", n:"아이오딘", g:17, p:5, en:2.66},
-      {Z:54, N:78, s:"Xe", n:"제논", g:18, p:5, en:2.60},
-      {Z:55, N:78, s:"Cs", n:"세슘", g:1, p:6, en:0.79},
-      {Z:56, N:82, s:"Ba", n:"바륨", g:2, p:6, en:0.89},
-      {Z:72, N:108, s:"Hf", n:"하프늄", g:4, p:6, en:1.30},
-      {Z:73, N:108, s:"Ta", n:"탄탈럼", g:5, p:6, en:1.50},
-      {Z:74, N:110, s:"W", n:"텅스텐", g:6, p:6, en:2.36},
-      {Z:75, N:112, s:"Re", n:"레늄", g:7, p:6, en:1.90},
-      {Z:76, N:116, s:"Os", n:"오스뮴", g:8, p:6, en:2.20},
-      {Z:77, N:116, s:"Ir", n:"이리듐", g:9, p:6, en:2.20},
-      {Z:78, N:117, s:"Pt", n:"백금", g:10, p:6, en:2.28},
-      {Z:79, N:118, s:"Au", n:"금", g:11, p:6, en:2.54},
-      {Z:80, N:122, s:"Hg", n:"수은", g:12, p:6, en:2.00},
-      {Z:81, N:124, s:"Tl", n:"탈륨", g:13, p:6, en:1.62},
-      {Z:82, N:126, s:"Pb", n:"납", g:14, p:6, en:2.33},
-      {Z:83, N:126, s:"Bi", n:"비스무트", g:15, p:6, en:2.02},
-      {Z:84, N:125, s:"Po", n:"폴로늄", g:16, p:6, en:2.00},
-      {Z:85, N:125, s:"At", n:"아스타틴", g:17, p:6, en:2.20},
-      {Z:86, N:136, s:"Rn", n:"라돈", g:18, p:6, en:null},
-      {Z:87, N:136, s:"Fr", n:"프랑슘", g:1, p:7, en:0.70},
-      {Z:88, N:138, s:"Ra", n:"라듐", g:2, p:7, en:0.90},
-      {Z:104, N:163, s:"Rf", n:"러더포듐", g:4, p:7, en:null},
-      {Z:105, N:163, s:"Db", n:"더브늄", g:5, p:7, en:null},
-      {Z:106, N:165, s:"Sg", n:"시보귬", g:6, p:7, en:null},
-      {Z:107, N:163, s:"Bh", n:"보륨", g:7, p:7, en:null},
-      {Z:108, N:169, s:"Hs", n:"하슘", g:8, p:7, en:null},
-      {Z:109, N:169, s:"Mt", n:"마이트너륨", g:9, p:7, en:null},
-      {Z:110, N:171, s:"Ds", n:"다름슈타튬", g:10, p:7, en:null},
-      {Z:111, N:171, s:"Rg", n:"뢴트게늄", g:11, p:7, en:null},
-      {Z:112, N:173, s:"Cn", n:"코페르니슘", g:12, p:7, en:null},
-      {Z:113, N:173, s:"Nh", n:"니호늄", g:13, p:7, en:null},
-      {Z:114, N:175, s:"Fl", n:"플레로븀", g:14, p:7, en:null},
-      {Z:115, N:175, s:"Mc", n:"모스코븀", g:15, p:7, en:null},
-      {Z:116, N:177, s:"Lv", n:"리버모륨", g:16, p:7, en:null},
-      {Z:117, N:177, s:"Ts", n:"테네신", g:17, p:7, en:null},
-      {Z:118, N:176, s:"Og", n:"오가네손", g:18, p:7, en:null},
-      {Z:57, N:82, s:"La", n:"란타넘", g:4, p:8, en:1.10},
-      {Z:58, N:82, s:"Ce", n:"세륨", g:5, p:8, en:1.12},
-      {Z:59, N:82, s:"Pr", n:"프라세오디뮴", g:6, p:8, en:1.13},
-      {Z:60, N:82, s:"Nd", n:"네오디뮴", g:7, p:8, en:1.14},
-      {Z:61, N:84, s:"Pm", n:"프로메튬", g:8, p:8, en:1.13},
-      {Z:62, N:90, s:"Sm", n:"사마륨", g:9, p:8, en:1.17},
-      {Z:63, N:90, s:"Eu", n:"유로퓸", g:10, p:8, en:1.20},
-      {Z:64, N:94, s:"Gd", n:"가돌리늄", g:11, p:8, en:1.20},
-      {Z:65, N:94, s:"Tb", n:"터븀", g:12, p:8, en:1.20},
-      {Z:66, N:98, s:"Dy", n:"디스프로슘", g:13, p:8, en:1.22},
-      {Z:67, N:98, s:"Ho", n:"홀뮴", g:14, p:8, en:1.23},
-      {Z:68, N:98, s:"Er", n:"어븀", g:15, p:8, en:1.24},
-      {Z:69, N:100, s:"Tm", n:"툴륨", g:16, p:8, en:1.25},
-      {Z:70, N:104, s:"Yb", n:"이터븀", g:17, p:8, en:1.10},
-      {Z:71, N:104, s:"Lu", n:"루테튬", g:18, p:8, en:1.27},
-      {Z:89, N:138, s:"Ac", n:"악티늄", g:4, p:9, en:1.10},
-      {Z:90, N:142, s:"Th", n:"토륨", g:5, p:9, en:1.30},
-      {Z:91, N:140, s:"Pa", n:"프로트악티늄", g:6, p:9, en:1.50},
-      {Z:92, N:146, s:"U", n:"우라늄", g:7, p:9, en:1.38},
-      {Z:93, N:144, s:"Np", n:"넵투늄", g:8, p:9, en:1.36},
-      {Z:94, N:150, s:"Pu", n:"플루토늄", g:9, p:9, en:1.28},
-      {Z:95, N:148, s:"Am", n:"아메리슘", g:10, p:9, en:1.30},
-      {Z:96, N:151, s:"Cm", n:"퀴륨", g:11, p:9, en:1.30},
-      {Z:97, N:150, s:"Bk", n:"버클륨", g:12, p:9, en:1.30},
-      {Z:98, N:153, s:"Cf", n:"캘리포늄", g:13, p:9, en:1.30},
-      {Z:99, N:153, s:"Es", n:"아인슈타이늄", g:14, p:9, en:1.30},
-      {Z:100, N:157, s:"Fm", n:"페르뮴", g:15, p:9, en:1.30},
-      {Z:101, N:157, s:"Md", n:"멘델레븀", g:16, p:9, en:1.30},
-      {Z:102, N:157, s:"No", n:"노벨륨", g:17, p:9, en:1.30},
-      {Z:103, N:163, s:"Lr", n:"로렌슘", g:18, p:9, en:1.30}
+      {Z:1,N:0,s:"H",n:"수소",g:1,p:1,en:2.20},{Z:2,N:2,s:"He",n:"헬륨",g:18,p:1,en:null},
+      {Z:3,N:4,s:"Li",n:"리튬",g:1,p:2,en:0.98},{Z:4,N:5,s:"Be",n:"베릴륨",g:2,p:2,en:1.57},{Z:5,N:6,s:"B",n:"붕소",g:13,p:2,en:2.04},{Z:6,N:6,s:"C",n:"탄소",g:14,p:2,en:2.55},{Z:7,N:7,s:"N",n:"질소",g:15,p:2,en:3.04},{Z:8,N:8,s:"O",n:"산소",g:16,p:2,en:3.44},{Z:9,N:10,s:"F",n:"플루오린",g:17,p:2,en:3.98},{Z:10,N:10,s:"Ne",n:"네온",g:18,p:2,en:null},
+      {Z:11,N:12,s:"Na",n:"나트륨",g:1,p:3,en:0.93},{Z:12,N:12,s:"Mg",n:"마그네슘",g:2,p:3,en:1.31},{Z:13,N:14,s:"Al",n:"알루미늄",g:13,p:3,en:1.61},{Z:14,N:14,s:"Si",n:"규소",g:14,p:3,en:1.90},{Z:15,N:16,s:"P",n:"인",g:15,p:3,en:2.19},{Z:16,N:16,s:"S",n:"황",g:16,p:3,en:2.58},{Z:17,N:18,s:"Cl",n:"염소",g:17,p:3,en:3.16},{Z:18,N:22,s:"Ar",n:"아르곤",g:18,p:3,en:null},
+      {Z:19,N:20,s:"K",n:"칼륨",g:1,p:4,en:0.82},{Z:20,N:20,s:"Ca",n:"칼슘",g:2,p:4,en:1.00},{Z:21,N:24,s:"Sc",n:"스칸듐",g:3,p:4,en:1.36},{Z:22,N:26,s:"Ti",n:"타이타늄",g:4,p:4,en:1.54},{Z:23,N:28,s:"V",n:"바나듐",g:5,p:4,en:1.63},{Z:24,N:28,s:"Cr",n:"크로뮴",g:6,p:4,en:1.66},{Z:25,N:30,s:"Mn",n:"망가니즈",g:7,p:4,en:1.55},{Z:26,N:30,s:"Fe",n:"철",g:8,p:4,en:1.83},{Z:27,N:32,s:"Co",n:"코발트",g:9,p:4,en:1.88},{Z:28,N:30,s:"Ni",n:"니켈",g:10,p:4,en:1.91},{Z:29,N:34,s:"Cu",n:"구리",g:11,p:4,en:1.90},{Z:30,N:34,s:"Zn",n:"아연",g:12,p:4,en:1.65},{Z:31,N:38,s:"Ga",n:"갈륨",g:13,p:4,en:1.81},{Z:32,N:42,s:"Ge",n:"저마늄",g:14,p:4,en:2.01},{Z:33,N:42,s:"As",n:"비소",g:15,p:4,en:2.18},{Z:34,N:46,s:"Se",n:"셀레늄",g:16,p:4,en:2.55},{Z:35,N:44,s:"Br",n:"브로민",g:17,p:4,en:2.96},{Z:36,N:48,s:"Kr",n:"크립톤",g:18,p:4,en:3.00},
+      {Z:37,N:48,s:"Rb",n:"루비듐",g:1,p:5,en:0.82},{Z:38,N:50,s:"Sr",n:"스트론튬",g:2,p:5,en:0.95},{Z:39,N:50,s:"Y",n:"이트륨",g:3,p:5,en:1.22},{Z:40,N:50,s:"Zr",n:"지르코늄",g:4,p:5,en:1.33},{Z:41,N:52,s:"Nb",n:"나이오븀",g:5,p:5,en:1.60},{Z:42,N:56,s:"Mo",n:"몰리브데넘",g:6,p:5,en:2.16},{Z:43,N:55,s:"Tc",n:"테크네튬",g:7,p:5,en:1.90},{Z:44,N:58,s:"Ru",n:"루테늄",g:8,p:5,en:2.20},{Z:45,N:58,s:"Rh",n:"로듐",g:9,p:5,en:2.28},{Z:46,N:60,s:"Pd",n:"팔라듐",g:10,p:5,en:2.20},{Z:47,N:60,s:"Ag",n:"은",g:11,p:5,en:1.93},{Z:48,N:66,s:"Cd",n:"카드뮴",g:12,p:5,en:1.69},{Z:49,N:66,s:"In",n:"인듐",g:13,p:5,en:1.78},{Z:50,N:70,s:"Sn",n:"주석",g:14,p:5,en:1.96},{Z:51,N:70,s:"Sb",n:"안티모니",g:15,p:5,en:2.05},{Z:52,N:78,s:"Te",n:"텔루륨",g:16,p:5,en:2.10},{Z:53,N:74,s:"I",n:"아이오딘",g:17,p:5,en:2.66},{Z:54,N:78,s:"Xe",n:"제논",g:18,p:5,en:2.60},
+      {Z:55,N:78,s:"Cs",n:"세슘",g:1,p:6,en:0.79},{Z:56,N:82,s:"Ba",n:"바륨",g:2,p:6,en:0.89},{Z:72,N:108,s:"Hf",n:"하프늄",g:4,p:6,en:1.30},{Z:73,N:108,s:"Ta",n:"탄탈럼",g:5,p:6,en:1.50},{Z:74,N:110,s:"W",n:"텅스텐",g:6,p:6,en:2.36},{Z:75,N:112,s:"Re",n:"레늄",g:7,p:6,en:1.90},{Z:76,N:116,s:"Os",n:"오스뮴",g:8,p:6,en:2.20},{Z:77,N:116,s:"Ir",n:"이리듐",g:9,p:6,en:2.20},{Z:78,N:117,s:"Pt",n:"백금",g:10,p:6,en:2.28},{Z:79,N:118,s:"Au",n:"금",g:11,p:6,en:2.54},{Z:80,N:122,s:"Hg",n:"수은",g:12,p:6,en:2.00},{Z:81,N:124,s:"Tl",n:"탈륨",g:13,p:6,en:1.62},{Z:82,N:126,s:"Pb",n:"납",g:14,p:6,en:2.33},{Z:83,N:126,s:"Bi",n:"비스무트",g:15,p:6,en:2.02},{Z:84,N:125,s:"Po",n:"폴로늄",g:16,p:6,en:2.00},{Z:85,N:125,s:"At",n:"아스타틴",g:17,p:6,en:2.20},{Z:86,N:136,s:"Rn",n:"라돈",g:18,p:6,en:null},
+      {Z:87,N:136,s:"Fr",n:"프랑슘",g:1,p:7,en:0.70},{Z:88,N:138,s:"Ra",n:"라듐",g:2,p:7,en:0.90},{Z:104,N:163,s:"Rf",n:"러더포듐",g:4,p:7,en:null},{Z:105,N:163,s:"Db",n:"더브늄",g:5,p:7,en:null},{Z:106,N:165,s:"Sg",n:"시보귬",g:6,p:7,en:null},{Z:107,N:163,s:"Bh",n:"보륨",g:7,p:7,en:null},{Z:108,N:169,s:"Hs",n:"하슘",g:8,p:7,en:null},{Z:109,N:169,s:"Mt",n:"마이트너륨",g:9,p:7,en:null},{Z:110,N:171,s:"Ds",n:"다름슈타튬",g:10,p:7,en:null},{Z:111,N:171,s:"Rg",n:"뢴트게늄",g:11,p:7,en:null},{Z:112,N:173,s:"Cn",n:"코페르니슘",g:12,p:7,en:null},{Z:113,N:173,s:"Nh",n:"니호늄",g:13,p:7,en:null},{Z:114,N:175,s:"Fl",n:"플레로븀",g:14,p:7,en:null},{Z:115,N:175,s:"Mc",n:"모스코븀",g:15,p:7,en:null},{Z:116,N:177,s:"Lv",n:"리버모륨",g:16,p:7,en:null},{Z:117,N:177,s:"Ts",n:"테네신",g:17,p:7,en:null},{Z:118,N:176,s:"Og",n:"오가네손",g:18,p:7,en:null},
+      {Z:57,N:82,s:"La",n:"란타넘",g:4,p:8,en:1.10},{Z:58,N:82,s:"Ce",n:"세륨",g:5,p:8,en:1.12},{Z:59,N:82,s:"Pr",n:"프라세오디뮴",g:6,p:8,en:1.13},{Z:60,N:82,s:"Nd",n:"네오디뮴",g:7,p:8,en:1.14},{Z:61,N:84,s:"Pm",n:"프로메튬",g:8,p:8,en:1.13},{Z:62,N:90,s:"Sm",n:"사마륨",g:9,p:8,en:1.17},{Z:63,N:90,s:"Eu",n:"유로퓸",g:10,p:8,en:1.20},{Z:64,N:94,s:"Gd",n:"가돌리늄",g:11,p:8,en:1.20},{Z:65,N:94,s:"Tb",n:"터븀",g:12,p:8,en:1.20},{Z:66,N:98,s:"Dy",n:"디스프로슘",g:13,p:8,en:1.22},{Z:67,N:98,s:"Ho",n:"홀뮴",g:14,p:8,en:1.23},{Z:68,N:98,s:"Er",n:"어븀",g:15,p:8,en:1.24},{Z:69,N:100,s:"Tm",n:"툴륨",g:16,p:8,en:1.25},{Z:70,N:104,s:"Yb",n:"이터븀",g:17,p:8,en:1.10},{Z:71,N:104,s:"Lu",n:"루테튬",g:18,p:8,en:1.27},
+      {Z:89,N:138,s:"Ac",n:"악티늄",g:4,p:9,en:1.10},{Z:90,N:142,s:"Th",n:"토륨",g:5,p:9,en:1.30},{Z:91,N:140,s:"Pa",n:"프로트악티늄",g:6,p:9,en:1.50},{Z:92,N:146,s:"U",n:"우라늄",g:7,p:9,en:1.38},{Z:93,N:144,s:"Np",n:"넵투늄",g:8,p:9,en:1.36},{Z:94,N:150,s:"Pu",n:"플루토늄",g:9,p:9,en:1.28},{Z:95,N:148,s:"Am",n:"아메리슘",g:10,p:9,en:1.30},{Z:96,N:151,s:"Cm",n:"퀴륨",g:11,p:9,en:1.30},{Z:97,N:150,s:"Bk",n:"버클륨",g:12,p:9,en:1.30},{Z:98,N:153,s:"Cf",n:"캘리포늄",g:13,p:9,en:1.30},{Z:99,N:153,s:"Es",n:"아인슈타이늄",g:14,p:9,en:1.30},{Z:100,N:157,s:"Fm",n:"페르뮴",g:15,p:9,en:1.30},{Z:101,N:157,s:"Md",n:"멘델레븀",g:16,p:9,en:1.30},{Z:102,N:157,s:"No",n:"노벨륨",g:17,p:9,en:1.30},{Z:103,N:163,s:"Lr",n:"로렌슘",g:18,p:9,en:1.30}
     ];
 
-    const categoryLabels = {
-      alkali: "알칼리 금속",
-      alkaline: "알칼리 토금속",
-      transition: "전이 금속",
-      post: "전이후 금속",
-      metalloid: "준금속",
-      nonmetal: "비금속",
-      halogen: "할로젠",
-      noble: "비활성 기체",
-      lanthanide: "란타넘족",
-      actinide: "악티늄족"
-    };
-
-    const palette = {
-      alkali: 0xff6b6b,
-      alkaline: 0xffa94d,
-      transition: 0x4dabf7,
-      post: 0xadb5bd,
-      metalloid: 0xf2c94c,
-      nonmetal: 0x69db7c,
-      halogen: 0x9775fa,
-      noble: 0x66d9e8,
-      lanthanide: 0xf783ac,
-      actinide: 0xb197fc
-    };
-
-    const curationBySymbol = {
-      H: { items: ["물 H₂O, 암모니아 NH₃, 메테인 CH₄처럼 생명·연료·대기 화학의 기본 골격에 들어갑니다.", "수소 기체 H₂는 연료전지와 우주 초기 원소 이야기를 연결하기 좋습니다."] },
-      He: { items: ["풍선, 저온 냉각, MRI 초전도 자석 냉각에 쓰이는 대표적인 비활성 기체입니다.", "반응성이 매우 낮아 ‘잘 섞이지 않는 기체’의 예로 다루기 좋습니다."] },
-      Li: { items: ["리튬 이온 배터리의 핵심 원소입니다.", "가볍고 반응성이 큰 금속이라는 점에서 알칼리 금속의 특징을 보여줍니다."] },
-      Be: { items: ["베릴, 에메랄드 같은 광물에 들어갑니다.", "가볍고 단단하지만 독성이 있어 실생활 접근 예시는 안전 설명과 함께 다루는 편이 좋습니다."] },
-      B: { items: ["붕사, 붕규산 유리, 세제·유리 소재 이야기와 연결됩니다.", "반도체 도핑 원소로도 자주 등장합니다."] },
-      C: { items: ["흑연, 다이아몬드, 숯, 플라스틱, 탄산칼슘처럼 형태가 매우 다양합니다.", "생명체 유기물의 중심 원소라 ‘원소 하나가 구조를 바꾸면 성질이 달라진다’는 설명에 좋습니다."] },
-      N: { items: ["공기의 대부분을 이루는 질소 기체 N₂가 대표적입니다.", "단백질, DNA, 비료, 암모니아와 연결해 생명·농업·대기 단원을 잇기 좋습니다."] },
-      O: { items: ["산소 기체 O₂, 물 H₂O, 이산화탄소 CO₂, 산화철에 들어갑니다.", "연소, 호흡, 산화 반응을 설명하는 핵심 원소입니다."] },
-      F: { items: ["치약의 플루오린화물, PTFE 코팅 소재와 연결됩니다.", "전기음성도가 가장 큰 원소로 결합의 극성을 설명하기 좋습니다."] },
-      Ne: { items: ["네온사인과 방전관의 대표 기체입니다.", "비활성 기체의 낮은 반응성과 빛 방출을 함께 보여주기 좋습니다."] },
-      Na: { items: ["소금 NaCl, 베이킹소다 NaHCO₃, 수산화나트륨 NaOH에 들어갑니다.", "알칼리 금속의 반응성과 이온 결합을 연결하기 좋습니다."] },
-      Mg: { items: ["마그네슘 합금, 엽록소 중심 원소, 제산제 성분과 연결됩니다.", "밝게 타는 금속 리본 실험의 대표 원소입니다."] },
-      Al: { items: ["알루미늄 캔, 포일, 창틀, 항공기 합금에 쓰입니다.", "가볍고 산화막을 만들어 잘 보호되는 금속의 예입니다."] },
-      Si: { items: ["모래와 석영 SiO₂, 유리, 실리콘 반도체에 들어갑니다.", "광물·유리·반도체를 한 번에 잇는 교육용 핵심 원소입니다."] },
-      P: { items: ["DNA, ATP, 인산염 비료, 성냥 머리 성분과 연결됩니다.", "생명체 에너지 전달과 농업 이야기에 잘 맞습니다."] },
-      S: { items: ["유황, 황산, 단백질의 일부 아미노산에 들어갑니다.", "화산 냄새, 고무 가황, 산성비 설명에 연결됩니다."] },
-      Cl: { items: ["소금 NaCl, 염소계 소독제, PVC 플라스틱에 들어갑니다.", "소독·수돗물·이온 결합 설명에 좋습니다."] },
-      Ar: { items: ["전구 충전 기체, 용접 보호 기체로 쓰입니다.", "공기 속에 적지만 실제 산업에서 쓰이는 비활성 기체입니다."] },
-      K: { items: ["칼륨 비료, 바나나 속 무기질, 세포의 이온 균형과 연결됩니다.", "나트륨과 비교해 생명 활동 속 이온 역할을 설명하기 좋습니다."] },
-      Ca: { items: ["석회석 CaCO₃, 뼈와 치아, 시멘트, 조개껍데기에 들어갑니다.", "생물·지질·건축 재료를 잇는 원소입니다."] },
-      Fe: { items: ["철, 강철, 못, 철근, 혈액 속 헤모글로빈에 들어갑니다.", "자성, 산화, 합금, 생명체 산소 운반을 연결하기 좋습니다."] },
-      Cu: { items: ["전선, 동전, 황동, 청동, 구리 냄비에 쓰입니다.", "전기 전도성과 합금 문화를 동시에 다루기 좋습니다."] },
-      Zn: { items: ["아연도금 철판, 황동, 건전지, 산화아연 자외선 차단제에 들어갑니다.", "부식 방지와 희생 금속 개념을 연결하기 좋습니다."] },
-      Br: { items: ["일부 난연제, 사진 재료의 은 브로마이드 AgBr와 연결됩니다.", "상온에서 액체인 비금속 원소라는 점이 특징적입니다."] },
-      Ag: { items: ["은 장신구, 은도금, 전극, 사진 재료에 쓰입니다.", "전기 전도성이 매우 큰 금속으로 소개하기 좋습니다."] },
-      Sn: { items: ["주석 도금 캔, 땜납, 청동 합금에 들어갑니다.", "금속 표면 보호와 합금의 성질 변화를 설명하기 좋습니다."] },
-      I: { items: ["요오드 소독약, 갑상샘 호르몬, 아이오딘화 소금과 연결됩니다.", "녹말 검출 반응으로 수업에서 직접 만나기 쉽습니다."] },
-      Ba: { items: ["황산바륨 조영제, 초록색 불꽃 반응, 일부 세라믹 소재에 쓰입니다.", "불꽃 반응과 의료 영상 예시를 연결하기 좋습니다."] },
-      W: { items: ["텅스텐 필라멘트, 절삭 공구, 고온 소재에 쓰입니다.", "녹는점이 매우 높은 금속의 대표 예입니다."] },
-      Pt: { items: ["백금 촉매, 장신구, 자동차 배기가스 정화 장치에 쓰입니다.", "촉매와 귀금속의 안정성을 설명하기 좋습니다."] },
-      Au: { items: ["금 장신구, 금박, 전자부품 접점에 쓰입니다.", "반응성이 낮고 전성이 큰 금속의 대표 예입니다."] },
-      Hg: { items: ["수은 온도계, 형광등, 수은 증기와 연결되지만 독성 때문에 취급 주의가 필요합니다.", "상온에서 액체인 금속이라는 점이 강한 특징입니다."] },
-      Pb: { items: ["납축전지, 방사선 차폐재, 납 유리와 연결됩니다.", "독성이 있어 과거 사용과 현재 규제의 변화를 함께 다루기 좋습니다."] },
-      U: { items: ["원자력 연료, 우라늄 광석, 방사성 붕괴 설명에 등장합니다.", "핵분열과 에너지 전환을 다룰 때 대표적인 원소입니다."] }
-    };
-
-    function fieldCuration(e) {
-      const specific = {
-        H: ["수소는 과학계의 주연급 단역입니다. 우주에서는 별의 연료로 타오르고, 지구에서는 물 분자 한쪽에 얌전히 붙어 있다가, 화학 시간에는 pH와 산·염기 이야기의 문을 열어젖힙니다. 보어 모형을 설명할 때도 가장 먼저 무대에 오르는, 작지만 존재감이 지나치게 큰 원소입니다."],
-        He: ["헬륨은 풍선 속에서는 목소리를 장난스럽게 바꾸지만, 우주에서는 빅뱅과 별의 핵융합이 남긴 묵직한 흔적입니다. 물리학 실험실로 들어가면 태도가 확 바뀌어, 초저온 냉각과 초전도 자석을 조용히 떠받치는 냉정한 기술자가 됩니다."],
-        Li: ["리튬은 작은 금속이지만 이야기의 폭이 넓습니다. 오래된 별의 대기에서는 초기 우주의 기억을 살짝 흘리고, 지질학에서는 염호와 광물 자원으로 모습을 드러내며, 교실 밖에서는 배터리 속에서 스마트폰과 전기차를 굴리는 현대 문명의 배후 인물로 일합니다."],
-        C: ["탄소는 거의 과학계의 변신술사입니다. 별 속에서 만들어져 우주 먼지와 유기분자의 재료가 되고, 땅속에서는 석회암·석탄·흑연·다이아몬드로 모습을 바꾸며, 생명과학에서는 단백질과 DNA의 뼈대를 잡습니다. 숯과 다이아몬드가 같은 원소라는 사실만으로도 수업 한 차시는 충분히 먹고 들어갑니다."],
-        N: ["질소는 공기 중에 잔뜩 있으면서도 꽤 무심한 얼굴을 하고 있습니다. 하지만 별 내부에서는 CNO 순환에 끼어들고, 생명체 안에서는 단백질과 DNA의 핵심 재료가 되며, 농업에서는 비료 이야기로 다시 등장합니다. 조용하지만 빠지면 판이 안 돌아가는 원소입니다."],
-        O: ["산소는 너무 익숙해서 오히려 과소평가되기 쉽습니다. 별과 초신성은 산소를 만들어 우주에 뿌리고, 지각에서는 규산염과 산화물 속에 가득 숨어 있으며, 생명체는 산소를 이용해 에너지를 뽑아냅니다. 불이 타고, 쇠가 녹슬고, 우리가 숨 쉬는 장면마다 산소가 슬쩍 서명하고 지나갑니다."],
-        Na: ["나트륨은 소금에서 가장 친숙하게 등장하지만, 무대가 거기서 끝나지 않습니다. 별빛 속 나트륨 D선은 천체의 대기를 읽는 단서가 되고, 몸속에서는 신경 신호와 체액 균형을 조율합니다. 짠맛 뒤에 숨어 있는 물리·생명과학의 연결고리라고 보면 됩니다."],
-        Mg: ["마그네슘은 불꽃 실험에서는 하얗게 번쩍이고, 암석 속에서는 감람석과 휘석의 구성원으로 조용히 버팁니다. 생명과학으로 넘어가면 엽록소 중심에 앉아 광합성의 조명을 켜는 역할을 합니다. 빛나는 금속에서 초록 잎까지, 동선이 꽤 화려합니다."],
-        Al: ["알루미늄은 캔과 포일에서 가볍게 보이지만, 지질학적으로는 장석과 점토 광물 속에 널리 깔려 있는 지각의 단골 원소입니다. 물리학과 공학에서는 가볍고 산화막으로 스스로를 보호하는 덕분에 구조재와 전기 재료로 자주 호출됩니다."],
-        Si: ["규소는 모래알에서 시작해 반도체 칩까지 올라가는 출세 서사가 확실한 원소입니다. 지질학에서는 석영과 규산염 광물로 지각을 떠받치고, 천문학에서는 암석형 행성과 우주 먼지의 재료가 되며, 물리학에서는 태양전지와 센서, 반도체의 중심에 앉아 있습니다."],
-        P: ["인은 성냥 끝에서 반짝이는 이미지가 있지만, 생명과학에서는 훨씬 더 진지합니다. DNA와 RNA의 사다리를 잇고, ATP 속에서는 에너지 화폐 노릇을 하며, 지질학에서는 인회석 같은 광물로 비료 자원 이야기에 연결됩니다."],
-        S: ["황은 화산 냄새로 존재감을 먼저 알리지만, 알고 보면 꽤 다재다능합니다. 지질학에서는 황화 광물과 열수 광상에 등장하고, 생명과학에서는 단백질의 구조를 붙잡는 아미노산 속에서 조용히 힘을 씁니다. 냄새는 강하지만 역할은 더 강합니다."],
-        Cl: ["염소는 소금과 소독제 사이를 오가며 생활 속에 자주 나타납니다. 해수와 암염에서는 지질학의 얼굴을 하고, 몸속에서는 염화 이온으로 체액 균형과 위산 형성에 관여합니다. 무섭게만 볼 원소는 아니고, 농도를 잘 맞춰야 하는 원소입니다."],
-        K: ["칼륨은 바나나 농담으로 끝내기엔 아깝습니다. 칼륨장석과 운모 속에서는 암석의 시간을 읽는 단서가 되고, 생명체 안에서는 세포막 전위와 신경·근육 작용을 조율합니다. 조용히 전압을 관리하는 생체 회로 담당자에 가깝습니다."],
-        Ca: ["칼슘은 뼈와 치아의 이미지가 강하지만, 지질학으로 가면 석회암·방해석·조개껍데기 속에서 지구의 기록을 남깁니다. 생명체 안에서는 근육 수축과 세포 신호에도 관여하니, 단순히 ‘뼈 튼튼’으로만 끝내기엔 너무 바쁜 원소입니다."],
-        Fe: ["철은 우주와 지구와 몸을 한 번에 잇는 원소입니다. 별 내부 핵융합의 말단부에서 묵직하게 등장하고, 지구에서는 핵과 철광석의 중심이 되며, 우리 몸에서는 헤모글로빈 속에서 산소 운반 일을 맡습니다. 우주 스케일의 금속이 혈액 속까지 출근하는 셈입니다."],
-        Cu: ["구리는 전선에서 전자를 잘 흘려보내는 금속으로 익숙하지만, 지질학에서는 황동석 같은 광석으로 나타나고 생명과학에서는 일부 효소의 보조 인자로도 등장합니다. 문명사적으로는 청동기 시대까지 열어젖힌, 은근히 역사 욕심도 많은 원소입니다."],
-        Zn: ["아연은 도금 철판에서 녹을 대신 맞아주는 희생적인 금속으로 보이다가, 몸속에서는 효소와 유전자 발현 조절에 끼어드는 섬세한 조력자가 됩니다. 지질학에서는 섬아연석 같은 광석으로 숨어 있다가 산업 현장으로 불려 나옵니다."],
-        I: ["아이오딘은 녹말 검출 실험에서 색을 바꾸며 학생들의 시선을 훔치고, 생명과학에서는 갑상샘 호르몬의 핵심 성분으로 대사 조절에 관여합니다. 해수와 해조류, 증발암 환경까지 이어지니 바다 냄새가 조금 나는 원소이기도 합니다."],
-        Ba: ["바륨은 불꽃 반응에서는 초록빛으로 존재감을 드러내고, 의료 영상에서는 조영제로 몸속 길을 보여주는 데 쓰입니다. 지질학에서는 중정석으로 산출되니, 실험실·병원·암석 표본장을 꽤 자연스럽게 오가는 원소입니다."],
-        W: ["텅스텐은 녹는점이 높다는 한 문장만으로도 캐릭터가 선명합니다. 고온 장치와 전자빔 장치에서 버티는 물리학적 근성을 보여주고, 지질학에서는 회중석과 철망간중석 같은 광석으로 등장합니다. 쉽게 녹지 않는다는 건 꽤 강한 개성입니다."],
-        Au: ["금은 장신구의 주인공이지만, 과학적으로는 훨씬 우주적인 원소입니다. 중성자별 병합 같은 격렬한 사건에서 무거운 원소가 만들어지는 이야기에 등장하고, 지질학에서는 열수 광맥과 사금으로 모습을 드러냅니다. 반짝임 뒤에 우주적 사건 사고가 숨어 있습니다."],
-        Pb: ["납은 무겁고 조용한 원소처럼 보이지만, 지질학에서는 우라늄과 토륨 붕괴가 도착하는 종착역으로 연대 측정의 단서가 됩니다. 물리학에서는 방사선을 막는 차폐재로 등장하니, 시간의 기록자이자 방패 같은 원소라고 볼 수 있습니다."],
-        U: ["우라늄은 이름만으로도 스케일이 큽니다. 격렬한 천체 현상에서 만들어진 무거운 원소가 지구의 광물 속에 남고, 지질학자는 그 붕괴를 이용해 시간을 읽으며, 물리학자는 핵분열과 에너지 전환을 이야기합니다. 원소 하나가 우주사·지구사·에너지사를 한 번에 물고 들어옵니다."]
-      };
-      if (specific[e.s]) return specific[e.s];
-
-      const fallback = {
-        alkali: ["이 계열 원소들은 혼자 있을 때보다 화합물이나 이온 상태에서 더 자주 만납니다. 별빛 스펙트럼에서는 천체 대기의 단서가 되고, 암석과 염류 광물 속에서는 지질학의 표식이 되며, 생명체 안에서는 세포막 전위와 체액 균형 같은 보이지 않는 전기 질서를 건드립니다."],
-        alkaline: ["이 계열은 광물과 생명체 사이를 자주 오갑니다. 탄산염·황산염·규산염 광물 속에서 지구의 단단한 얼굴을 만들다가도, 생명체 안에서는 뼈·효소·세포 신호처럼 꽤 부드럽고 정교한 역할을 맡습니다."],
-        transition: ["전이 금속은 과학계의 만능 조연단입니다. 광석과 산화물로 땅속에 있다가, 물리학에서는 자성·전도성·합금 성질로 튀어나오고, 생명과학에서는 효소와 전자전달 과정에 끼어듭니다. 색 있는 화합물까지 만들기 때문에 시각적 존재감도 좋습니다."],
-        post: ["이 원소들은 전형적인 철·구리 같은 금속과는 조금 다른 결을 가집니다. 지질학에서는 희소 금속 자원이나 광석으로 등장하고, 물리학과 공학에서는 밀도·연성·차폐·전도성 같은 성질 덕분에 특수한 자리를 차지합니다."],
-        metalloid: ["준금속은 경계에 서 있는 원소들입니다. 광물 결정 속에서는 지질학의 언어로 말하고, 반도체와 센서에서는 물리학의 언어로 말합니다. 금속도 비금속도 아닌 어정쩡함이 오히려 기술 문명에서는 꽤 쓸모 있는 재능이 됩니다."],
-        nonmetal: ["비금속 원소들은 공기, 물, 유기물, 생명체, 행성 대기까지 너무 자연스럽게 스며듭니다. 우주에서는 별과 성간 분자 속에 나타나고, 지구에서는 대기와 물질 순환을 만들며, 생명과학에서는 단백질과 핵산의 골격을 떠받칩니다."],
-        halogen: ["할로젠은 반응성이 강해서 과학 이야기에서 늘 사건을 만듭니다. 해수와 증발암에서는 지질학의 냄새를 풍기고, 소독과 생체 조절에서는 생명과학 쪽으로 넘어오며, 전자를 하나 얻고 싶어 하는 성격 덕분에 결합 설명에도 자주 끌려 나옵니다."],
-        noble: ["비활성 기체는 이름처럼 얌전해 보이지만, 빛을 만나면 꽤 화려합니다. 천체 대기와 우주 기체의 스펙트럼을 읽는 데 등장하고, 물리학 실험실에서는 방전관·레이저·검출기·저온 장치 속에서 조용히 빛나는 일을 맡습니다."],
-        lanthanide: ["란타넘족은 ‘희토류’라는 이름 때문에 희미해 보이지만 기술 문명에서는 존재감이 큽니다. 광물 자원으로 지질학에 등장하고, 자석·형광체·레이저·디스플레이에서는 물리학과 공학의 무대에 올라섭니다. 이름보다 훨씬 바쁜 집단입니다."],
-        actinide: ["악티늄족은 대체로 무겁고 불안정해서 과학 이야기에 긴장감을 넣습니다. 방사성 광물과 지질 연대 측정으로 지구의 시간을 읽게 해주고, 핵분열·방사선·원자력 에너지에서는 물리학의 가장 묵직한 장면을 담당합니다."]
-      };
-      return fallback[e.category] ?? ["이 원소는 안정 동위원소, 산화수, 광물 형태, 화합물 성질에 따라 여러 과학 분야에서 전혀 다른 얼굴로 등장합니다. 원소 하나를 따라가다 보면 물질의 성질이 곧 과학의 지도가 된다는 점이 보입니다."];
-    }
-
-    function elementCuration(e) {
-      const everyday = curationBySymbol[e.s]?.items ?? [];
-      const story = fieldCuration(e);
-      const fallback = {
-        alkali: ["반응성이 큰 알칼리 금속입니다. 주로 화합물이나 이온 상태로 물질 속에 존재합니다."],
-        alkaline: ["알칼리 토금속 계열입니다. 광물, 시멘트, 세라믹, 생체 무기질 이야기와 연결하기 좋습니다."],
-        transition: ["전이 금속 계열입니다. 합금, 촉매, 도금, 전자 재료에서 자주 등장합니다."],
-        post: ["무른 금속 또는 전이후 금속 계열입니다. 합금, 반도체 주변 소재, 특수 금속 재료와 연결됩니다."],
-        metalloid: ["준금속 계열입니다. 유리, 광물, 반도체, 전자 재료와 연결하기 좋습니다."],
-        nonmetal: ["비금속 원소입니다. 공기, 물, 생명체, 연소와 같은 일상적 물질 속에서 자주 등장합니다."],
-        halogen: ["할로젠 원소입니다. 소금, 소독제, 치약 성분, 유기 화합물 속에서 자주 등장합니다."],
-        noble: ["비활성 기체입니다. 방전관, 조명, 보호 기체, 극저온 기술과 연결됩니다."],
-        lanthanide: ["란타넘족 원소입니다. 강한 자석, 형광체, 디스플레이, 배터리 소재와 연결됩니다."],
-        actinide: ["악티늄족 원소입니다. 방사성 원소, 핵에너지, 방사선 측정과 연결됩니다."]
-      };
-      const lead = everyday.length ? everyday.slice(0, 1) : fallback[e.category] ?? [];
-      return { items: [...lead, ...story] };
-    }
-
+    const categoryLabels = { alkali:"알칼리 금속", alkaline:"알칼리 토금속", transition:"전이 금속", post:"전이후 금속", metalloid:"준금속", nonmetal:"비금속", halogen:"할로젠", noble:"비활성 기체", lanthanide:"란타넘족", actinide:"악티늄족" };
+    const palette = { alkali:0xff6b6b, alkaline:0xffa94d, transition:0x4dabf7, post:0xadb5bd, metalloid:0xf2c94c, nonmetal:0x69db7c, halogen:0x9775fa, noble:0x66d9e8, lanthanide:0xf783ac, actinide:0xb197fc };
     const elementsByZ = [...elements].sort((a, b) => a.Z - b.Z);
 
-    const TILE_W = 1.2;
-    const TILE_D = 1.2;
-    const GAP = 1.43;
-    const BASE_H = 0.16;
-    const MAX_H = 5.4;
+    const curationBySymbol = {
+      H: "수소는 과학계의 주연급 단역입니다. 우주에서는 별의 연료로 타오르고, 지구에서는 물 분자 한쪽에 얌전히 붙어 있다가, 화학 시간에는 pH와 산·염기 이야기의 문을 열어젖힙니다.",
+      He: "헬륨은 풍선 속에서는 목소리를 장난스럽게 바꾸지만, 우주에서는 빅뱅과 별의 핵융합이 남긴 묵직한 흔적입니다. 물리학 실험실에서는 초저온 냉각과 초전도 자석을 떠받칩니다.",
+      C: "탄소는 과학계의 변신술사입니다. 별 속에서 만들어져 우주 먼지와 유기분자의 재료가 되고, 땅속에서는 석회암·석탄·흑연·다이아몬드가 되며, 생명과학에서는 단백질과 DNA의 뼈대를 잡습니다.",
+      O: "산소는 너무 익숙해서 과소평가되기 쉽습니다. 별과 초신성은 산소를 만들어 우주에 뿌리고, 지각에서는 산화물과 규산염 속에 숨어 있으며, 생명체는 산소로 에너지를 뽑아냅니다.",
+      Si: "규소는 모래알에서 시작해 반도체 칩까지 올라가는 출세 서사가 확실한 원소입니다. 지질학에서는 석영과 규산염으로 지각을 떠받치고, 물리학에서는 태양전지와 센서의 중심에 앉아 있습니다.",
+      Fe: "철은 우주와 지구와 몸을 한 번에 잇는 원소입니다. 별 내부 핵융합의 말단부에서 묵직하게 등장하고, 지구에서는 핵과 철광석의 중심이 되며, 우리 몸에서는 헤모글로빈 속에서 산소 운반 일을 맡습니다.",
+      Cu: "구리는 전선에서 전자를 잘 흘려보내고, 지질학에서는 황동석 같은 광석으로 나타나며, 생명과학에서는 일부 효소의 보조 인자로도 등장합니다. 청동기 시대까지 열어젖힌 역사 욕심도 많은 원소입니다.",
+      Au: "금은 장신구의 주인공이지만, 과학적으로는 훨씬 우주적입니다. 중성자별 병합 같은 격렬한 사건에서 무거운 원소가 만들어지는 이야기에 등장하고, 지질학에서는 열수 광맥과 사금으로 모습을 드러냅니다.",
+      U: "우라늄은 원소 하나가 우주사·지구사·에너지사를 한 번에 물고 들어옵니다. 격렬한 천체 현상에서 만들어진 뒤 광물 속에 남고, 붕괴로 시간을 읽게 하며, 물리학에서는 핵분열과 에너지 전환을 이야기하게 합니다."
+    };
+    const fallbackCuration = {
+      alkali: "이 계열 원소들은 화합물이나 이온 상태에서 자주 만납니다. 별빛 스펙트럼에서는 천체 대기의 단서가 되고, 암석과 염류 광물 속에서는 지질학의 표식이 되며, 생명체 안에서는 전기 질서를 건드립니다.",
+      alkaline: "이 계열은 광물과 생명체 사이를 자주 오갑니다. 탄산염·황산염·규산염 광물 속에서 지구의 단단한 얼굴을 만들다가도, 생명체 안에서는 뼈·효소·세포 신호 같은 정교한 역할을 맡습니다.",
+      transition: "전이 금속은 과학계의 만능 조연단입니다. 광석과 산화물로 땅속에 있다가, 물리학에서는 자성·전도성·합금 성질로 튀어나오고, 생명과학에서는 효소와 전자전달 과정에 끼어듭니다.",
+      metalloid: "준금속은 경계에 서 있는 원소들입니다. 광물 결정 속에서는 지질학의 언어로 말하고, 반도체와 센서에서는 물리학의 언어로 말합니다.",
+      nonmetal: "비금속 원소들은 공기, 물, 유기물, 생명체, 행성 대기까지 자연스럽게 스며듭니다. 우주에서는 별과 성간 분자 속에 나타나고, 생명과학에서는 단백질과 핵산의 골격을 떠받칩니다.",
+      halogen: "할로젠은 반응성이 강해서 과학 이야기에서 늘 사건을 만듭니다. 해수와 증발암에서는 지질학의 냄새를 풍기고, 소독과 생체 조절에서는 생명과학 쪽으로 넘어옵니다.",
+      noble: "비활성 기체는 얌전해 보이지만 빛을 만나면 화려합니다. 천체 대기와 우주 기체의 스펙트럼을 읽는 데 등장하고, 물리학 실험실에서는 방전관·레이저·검출기·저온 장치 속에서 조용히 빛납니다.",
+      lanthanide: "란타넘족은 이름보다 훨씬 바쁜 집단입니다. 광물 자원으로 지질학에 등장하고, 자석·형광체·레이저·디스플레이에서는 물리학과 공학의 무대에 올라섭니다.",
+      actinide: "악티늄족은 무겁고 불안정해서 과학 이야기에 긴장감을 넣습니다. 방사성 광물과 지질 연대 측정, 핵분열과 방사선, 원자력 에너지의 묵직한 장면을 담당합니다.",
+      post: "이 원소들은 전형적인 철·구리 같은 금속과는 조금 다른 결을 가집니다. 지질학에서는 희소 금속 자원이나 광석으로 등장하고, 물리학과 공학에서는 밀도·연성·차폐·전도성으로 특수한 자리를 차지합니다."
+    };
+
+    const TILE_W = 1.2, TILE_D = 1.2, GAP = 1.43, BASE_H = 0.16, MAX_H = 5.4;
+    const DEFAULT_CAMERA_DISTANCE = 36;
+    const MAX_VIEW_TILT = THREE.MathUtils.degToRad(78);
+    const DRAG_TILT_SPEED = 0.0065;
+    const FULL_VIEW_YAW_SPEED = 0.0065;
+    const FULL_VIEW_INERTIA_DAMPING = 0.925;
+    const FULL_VIEW_INERTIA_STOP = 0.00005;
+    const FULL_VIEW_YAW_STOP = 0.00005;
+    const ATOM_DRAG_YAW_SPEED = 0.0075;
+    const ATOM_INERTIA_DAMPING = 0.935;
+    const ATOM_INERTIA_STOP = 0.00008;
+    const ATOM_BAR_GAP = 0.16;
+
     let currentMetric = "protons";
     let selectedElement = null;
     let atomGroup = null;
     let focusTween = null;
+    const viewTilt = new THREE.Vector2(0, 0);
+    const viewTiltVelocity = new THREE.Vector2(0, 0);
+    let tableYaw = 0, tableYawVelocity = 0, atomYawVelocity = 0;
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x07101f, 0.014);
@@ -782,95 +272,63 @@
 
     const aspect = window.innerWidth / window.innerHeight;
     const frustum = 21;
-    const camera = new THREE.OrthographicCamera(
-      -frustum * aspect / 2,
-      frustum * aspect / 2,
-      frustum / 2,
-      -frustum / 2,
-      0.1,
-      1000
-    );
-    // 바닥판을 위에서 내려다보되, 완전 수직 특이점은 피해서 드래그 틸트가 바로 먹도록 둔다.
-    camera.position.set(0, 36, -2.2);
+    const camera = new THREE.OrthographicCamera(-frustum * aspect / 2, frustum * aspect / 2, frustum / 2, -frustum / 2, 0.1, 1000);
+    camera.position.set(0, DEFAULT_CAMERA_DISTANCE, 0);
     camera.up.set(0, 0, -1);
     camera.lookAt(0, 0, 0);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
-    controls.rotateSpeed = 0.55;
     controls.zoomSpeed = 0.75;
     controls.panSpeed = 0.65;
     controls.enableZoom = true;
-    // 기본 OrbitControls의 극점 제한을 우회하기 위해 회전은 직접 구현한다.
-    // 이렇게 하면 탑뷰에서 위쪽/아래쪽 드래그가 모두 열린다.
     controls.enableRotate = false;
     controls.enablePan = true;
-    controls.touches = {
-      ONE: THREE.TOUCH.ROTATE,
-      TWO: THREE.TOUCH.DOLLY_PAN
-    };
+    controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
     controls.target.set(0, 0, 0);
     controls.minZoom = 0.55;
     controls.maxZoom = 5.0;
-    // OrbitControls 회전은 꺼두고, 아래쪽/위쪽 드래그가 모두 가능한 signed tilt를 별도로 쓴다.
-    controls.minPolarAngle = 0.001;
-    controls.maxPolarAngle = Math.PI - 0.001;
 
-    const DEFAULT_CAMERA_DISTANCE = 36;
-    const MAX_VIEW_TILT = THREE.MathUtils.degToRad(78); // 바닥 아래로 넘어가지 않게 제한해 후면/밑면이 보이지 않도록 함.
-    const DRAG_TILT_SPEED = 0.0065;
-    const FULL_VIEW_INERTIA_DAMPING = 0.925;
-    const FULL_VIEW_INERTIA_STOP = 0.00005;
-    const viewTilt = new THREE.Vector2(0, 0); // x: 동서 방향 기울기, y: 남북 방향 기울기
-    const viewTiltVelocity = new THREE.Vector2(0, 0);
+    function assertRuntimeInvariants() {
+      console.assert(WORLD_UP instanceof THREE.Vector3, "WORLD_UP must be initialized before camera helpers run.");
+      console.assert(elements.length === 118, `Expected 118 elements, got ${elements.length}.`);
+      console.assert(new Set(elements.map(e => e.Z)).size === 118, "Element atomic numbers must be unique.");
+      console.assert(elementsByZ[0].Z === 1 && elementsByZ.at(-1).Z === 118, "elementsByZ must span H through Og.");
+    }
+    assertRuntimeInvariants();
 
     function clampViewTilt() {
-      const len = viewTilt.length();
-      if (len > MAX_VIEW_TILT) viewTilt.multiplyScalar(MAX_VIEW_TILT / len);
+      viewTilt.x = 0;
+      viewTilt.y = THREE.MathUtils.clamp(viewTilt.y, -MAX_VIEW_TILT, MAX_VIEW_TILT);
     }
-
     function applyViewFromTilt(distance = camera.position.distanceTo(controls.target)) {
       clampViewTilt();
-      const theta = viewTilt.length();
+      const pitch = viewTilt.y;
+      const theta = Math.abs(pitch);
       const target = controls.target;
       const y = Math.cos(theta) * distance;
       const horizontal = Math.sin(theta) * distance;
-      let dirX = 0;
-      let dirZ = -1;
-      if (theta > 0.0001) {
-        dirX = viewTilt.x / theta;
-        dirZ = viewTilt.y / theta;
-      }
-      camera.position.set(
-        target.x + horizontal * dirX,
-        target.y + y,
-        target.z + horizontal * dirZ
-      );
-      camera.up.set(0, 0, -1);
+      const pitchSign = Math.sign(pitch) || -1;
+      const horizontalDir = new THREE.Vector3(0, 0, pitchSign).applyAxisAngle(WORLD_UP, tableYaw);
+      const screenUp = new THREE.Vector3(0, 0, -1).applyAxisAngle(WORLD_UP, tableYaw);
+      camera.position.set(target.x + horizontal * horizontalDir.x, target.y + y, target.z + horizontal * horizontalDir.z);
+      camera.up.copy(screenUp);
       camera.lookAt(target);
       camera.updateProjectionMatrix();
     }
-
     function syncViewTiltFromCamera() {
       const offset = camera.position.clone().sub(controls.target);
       const distance = Math.max(0.0001, offset.length());
       const theta = Math.acos(THREE.MathUtils.clamp(offset.y / distance, -1, 1));
       const horizontal = Math.hypot(offset.x, offset.z);
-      if (horizontal < 0.0001 || theta < 0.0001) {
-        viewTilt.set(0, 0);
-      } else {
-        viewTilt.set(offset.x / horizontal * theta, offset.z / horizontal * theta);
-      }
+      if (horizontal < 0.0001 || theta < 0.0001) viewTilt.set(0, 0);
+      else { tableYaw = Math.atan2(offset.x, offset.z); viewTilt.set(0, theta); }
       clampViewTilt();
     }
-
     applyViewFromTilt(DEFAULT_CAMERA_DISTANCE);
 
-    const ambient = new THREE.HemisphereLight(0xcfe4ff, 0x06101f, 0.72);
-    scene.add(ambient);
-
-    // 북북동 광원: 북쪽(-Z)에서 동쪽(+X)으로 약간 치우친 높은 주광.
+    scene.add(new THREE.HemisphereLight(0xcfe4ff, 0x06101f, 0.72));
     const key = new THREE.DirectionalLight(0xfff3d0, 2.45);
     key.position.set(6, 30, -14);
     key.castShadow = true;
@@ -882,49 +340,31 @@
     key.shadow.camera.top = 18;
     key.shadow.camera.bottom = -18;
     key.target.position.set(0, 0, 0);
-    scene.add(key);
-    scene.add(key.target);
-
+    scene.add(key, key.target);
     const fill = new THREE.PointLight(0x5b8dff, 0.35, 42);
     fill.position.set(-8, 8, 10);
     scene.add(fill);
 
-    const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(34, 20),
-      new THREE.MeshStandardMaterial({ color: 0x071221, roughness: 0.94, metalness: 0.04, transparent: true, opacity: 0.96 })
-    );
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(34, 20), new THREE.MeshStandardMaterial({ color: 0x071221, roughness: 0.94, metalness: 0.04, transparent: true, opacity: 0.96 }));
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = -0.035;
     floor.receiveShadow = true;
     scene.add(floor);
-
-    const tableBase = new THREE.Mesh(
-      new THREE.PlaneGeometry(27.2, 14.4),
-      new THREE.MeshStandardMaterial({ color: 0x0a1829, roughness: 0.9, metalness: 0.03, transparent: true, opacity: 0.82 })
-    );
+    const tableBase = new THREE.Mesh(new THREE.PlaneGeometry(27.2, 14.4), new THREE.MeshStandardMaterial({ color: 0x0a1829, roughness: 0.9, metalness: 0.03, transparent: true, opacity: 0.82 }));
     tableBase.rotation.x = -Math.PI / 2;
     tableBase.position.y = -0.018;
     tableBase.receiveShadow = true;
     scene.add(tableBase);
-
     const grid = new THREE.GridHelper(34, 34, 0x243b55, 0x132238);
     grid.position.y = -0.012;
     scene.add(grid);
 
-    const tiles = [];
-    const guideObjects = [];
-    const rayTargets = [];
+    const tiles = [], guideObjects = [], rayTargets = [];
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     let pointerDown = null;
     let activePointers = new Map();
     let multiTouchInProgress = false;
-
-    const WORLD_UP = new THREE.Vector3(0, 1, 0);
-    const ATOM_DRAG_YAW_SPEED = 0.0075;
-    const ATOM_INERTIA_DAMPING = 0.935;
-    const ATOM_INERTIA_STOP = 0.00008;
-    let atomYawVelocity = 0;
 
     function categoryOf(e) {
       if (e.p === 8) return "lanthanide";
@@ -938,7 +378,6 @@
       if ([1,6,7,8,15,16,34].includes(e.Z)) return "nonmetal";
       return "post";
     }
-
     function metricValue(e, metric = currentMetric) {
       if (metric === "protons") return e.Z;
       if (metric === "neutrons") return e.N;
@@ -946,41 +385,25 @@
       if (metric === "electronegativity") return e.en ?? 0;
       return e.Z;
     }
-
-    function maxMetric(metric) {
-      if (metric === "electronegativity") return 4.0;
-      return Math.max(...elements.map(e => metricValue(e, metric)));
-    }
-
+    function maxMetric(metric) { return metric === "electronegativity" ? 4.0 : Math.max(...elements.map(e => metricValue(e, metric))); }
     function heightFor(e, metric = currentMetric) {
       const value = metricValue(e, metric);
       const max = maxMetric(metric);
       if (metric === "electronegativity" && !e.en) return BASE_H + 0.04;
       return BASE_H + MAX_H * Math.pow(value / max, 0.82);
     }
-
-    function tilePosition(e) {
-      return new THREE.Vector3((e.g - 9.5) * GAP, 0, (e.p - 5.05) * GAP);
-    }
+    function tilePosition(e) { return new THREE.Vector3((e.g - 9.5) * GAP, 0, (e.p - 5.05) * GAP); }
 
     function makeLabelTexture(e, categoryColor) {
       const c = document.createElement("canvas");
-      c.width = 512;
-      c.height = 512;
+      c.width = 512; c.height = 512;
       const ctx = c.getContext("2d");
       ctx.clearRect(0, 0, c.width, c.height);
-      ctx.fillStyle = "rgba(0,0,0,0.92)";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.font = "900 138px system-ui, sans-serif";
-      ctx.fillText(e.s, 256, 214);
-      ctx.font = "700 46px system-ui, sans-serif";
-      ctx.fillStyle = "rgba(0,0,0,0.72)";
-      ctx.fillText(e.Z, 256, 86);
-      ctx.font = "700 34px system-ui, sans-serif";
-      ctx.fillText(e.n, 256, 334);
-      ctx.fillStyle = `#${categoryColor.toString(16).padStart(6,"0")}`;
-      ctx.fillRect(104, 404, 304, 12);
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillStyle = "rgba(0,0,0,0.92)"; ctx.font = "900 138px system-ui, sans-serif"; ctx.fillText(e.s, 256, 214);
+      ctx.fillStyle = "rgba(0,0,0,0.72)"; ctx.font = "700 46px system-ui, sans-serif"; ctx.fillText(e.Z, 256, 86);
+      ctx.font = "700 34px system-ui, sans-serif"; ctx.fillText(e.n, 256, 334);
+      ctx.fillStyle = `#${categoryColor.toString(16).padStart(6,"0")}`; ctx.fillRect(104, 404, 304, 12);
       const texture = new THREE.CanvasTexture(c);
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.anisotropy = 8;
@@ -995,129 +418,73 @@
         e.protons = e.Z;
         e.neutrons = e.N;
         e.massNumber = e.Z + e.N;
-
         const h = heightFor(e);
         const pos = tilePosition(e);
-        const geometry = new THREE.BoxGeometry(TILE_W, 1, TILE_D, 2, 2, 2);
-        const material = new THREE.MeshStandardMaterial({
-          color,
-          roughness: 0.42,
-          metalness: 0.18,
-          emissive: color,
-          emissiveIntensity: 0.06,
-          side: THREE.FrontSide
-        });
-        const mesh = new THREE.Mesh(geometry, material);
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(TILE_W, 1, TILE_D, 2, 2, 2), new THREE.MeshStandardMaterial({ color, roughness: 0.42, metalness: 0.18, emissive: color, emissiveIntensity: 0.06, side: THREE.FrontSide }));
         mesh.scale.y = h;
-        mesh.position.set(pos.x, h / 2, pos.z); // 바닥 y=0에서 위쪽(+Y)으로만 솟는다.
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-        mesh.userData.element = e;
-        mesh.userData.baseColor = color;
-        scene.add(mesh);
-        rayTargets.push(mesh);
-
-        const labelMat = new THREE.MeshBasicMaterial({
-          map: makeLabelTexture(e, color),
-          transparent: true,
-          depthWrite: false,
-          opacity: 1.0
-        });
-        const label = new THREE.Mesh(new THREE.PlaneGeometry(TILE_W * 0.96, TILE_D * 0.96), labelMat);
+        mesh.position.set(pos.x, h / 2, pos.z);
+        mesh.castShadow = true; mesh.receiveShadow = true;
+        mesh.userData.element = e; mesh.userData.baseColor = color;
+        scene.add(mesh); rayTargets.push(mesh);
+        const label = new THREE.Mesh(new THREE.PlaneGeometry(TILE_W * 0.96, TILE_D * 0.96), new THREE.MeshBasicMaterial({ map: makeLabelTexture(e, color), transparent: true, depthWrite: false, opacity: 1.0 }));
         label.rotation.x = -Math.PI / 2;
         label.position.set(pos.x, h + 0.012, pos.z);
         label.renderOrder = 3;
         scene.add(label);
-
         tiles.push({ e, mesh, label, currentHeight: h, targetHeight: h });
       }
     }
-
-    function createSeriesGuide(label, row, color) {
-      const c = document.createElement("canvas");
-      c.width = 1024;
-      c.height = 256;
+    function createSeriesGuide(labelText, row, color) {
+      const c = document.createElement("canvas"); c.width = 1024; c.height = 256;
       const ctx = c.getContext("2d");
-      ctx.fillStyle = "rgba(255,255,255,0.78)";
-      ctx.font = "800 82px system-ui, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(label, 512, 128);
-      const tex = new THREE.CanvasTexture(c);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.86, depthWrite: false });
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 0.72), mat);
-      m.rotation.x = -Math.PI / 2;
-      m.position.set((2.15 - 9.5) * GAP, 0.035, (row - 5.05) * GAP);
-      scene.add(m);
-      guideObjects.push(m);
-
-      const dot = new THREE.Mesh(
-        new THREE.SphereGeometry(0.12, 24, 16),
-        new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.45 })
-      );
-      dot.position.set((3.2 - 9.5) * GAP, 0.16, (row - 5.05) * GAP);
-      scene.add(dot);
-      guideObjects.push(dot);
+      ctx.fillStyle = "rgba(255,255,255,0.78)"; ctx.font = "800 82px system-ui, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(labelText, 512, 128);
+      const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 0.72), new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.86, depthWrite: false }));
+      m.rotation.x = -Math.PI / 2; m.position.set((2.15 - 9.5) * GAP, 0.035, (row - 5.05) * GAP); scene.add(m); guideObjects.push(m);
+      const dot = new THREE.Mesh(new THREE.SphereGeometry(0.12, 24, 16), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.45 }));
+      dot.position.set((3.2 - 9.5) * GAP, 0.16, (row - 5.05) * GAP); scene.add(dot); guideObjects.push(dot);
     }
+    createTiles(); createSeriesGuide("란타넘족", 8, palette.lanthanide); createSeriesGuide("악티늄족", 9, palette.actinide);
 
-    createTiles();
-    createSeriesGuide("란타넘족", 8, palette.lanthanide);
-    createSeriesGuide("악티늄족", 9, palette.actinide);
-
-    function changeMetric(metric) {
-      currentMetric = metric;
-      metricButtons.forEach(b => b.classList.toggle("active", b.dataset.metric === metric));
-      for (const t of tiles) {
-        t.targetHeight = heightFor(t.e, metric);
-      }
-      if (selectedElement) {
-        showInfo(selectedElement);
-        const selectedTile = tiles.find(t => t.e === selectedElement);
-        if (selectedTile) {
-          const pos = tilePosition(selectedElement);
-          createAtomModel(selectedElement, pos, selectedTile.currentHeight);
-          centerCameraOnAtom(selectedElement, selectedTile.currentHeight, false);
-        }
-      }
+    function shellDistribution(Z) {
+      const orbitals = [[1,2],[2,2],[2,6],[3,2],[3,6],[4,2],[3,10],[4,6],[5,2],[4,10],[5,6],[6,2],[4,14],[5,10],[6,6],[7,2],[5,14],[6,10],[7,6]];
+      const shells = [0,0,0,0,0,0,0];
+      let left = Z;
+      for (const [n, cap] of orbitals) { if (left <= 0) break; const count = Math.min(cap, left); shells[n - 1] += count; left -= count; }
+      return shells.filter(count => count > 0);
     }
-
-    metricButtons.forEach(btn => btn.addEventListener("click", () => changeMetric(btn.dataset.metric)));
-
-    function setHudCollapsed(collapsed) {
-      hud.classList.toggle("collapsed", collapsed);
-      const icon = hudToggleButton.querySelector(".chevron");
-      if (icon) icon.className = `chevron ${collapsed ? "down" : "up"}`;
-      hudToggleButton.setAttribute("aria-label", collapsed ? "설정 펼치기" : "설정 접기");
-      hudToggleButton.setAttribute("title", collapsed ? "설정 펼치기" : "설정 접기");
+    function atomScaleFor(e) { return THREE.MathUtils.clamp(1.05 + Math.log10(e.Z + 1) * 0.12, 1.08, 1.34); }
+    function atomOuterBoundaryRadiusFor(e) { const shells = shellDistribution(e.Z); return 0.78 + Math.max(0, shells.length - 1) * 0.32 + 0.22; }
+    function atomCenterYFor(e, tileHeight) { return tileHeight + atomOuterBoundaryRadiusFor(e) * atomScaleFor(e) + ATOM_BAR_GAP; }
+    function seededRandom(seed) { let t = seed >>> 0; return () => { t += 0x6D2B79F5; let r = Math.imul(t ^ (t >>> 15), 1 | t); r ^= r + Math.imul(r ^ (r >>> 7), 61 | r); return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; }
+    function shuffledNucleonKinds(Z, N) {
+      const kinds = [...Array.from({ length: Z }, () => "proton"), ...Array.from({ length: N }, () => "neutron")];
+      const random = seededRandom(Z * 1009 + N * 9176 + 41);
+      for (let i = kinds.length - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [kinds[i], kinds[j]] = [kinds[j], kinds[i]]; }
+      return kinds;
     }
-
-    hudToggleButton.addEventListener("click", () => setHudCollapsed(!hud.classList.contains("collapsed")));
-    hudToggleButton.addEventListener("touchend", event => {
-      event.preventDefault();
-      setHudCollapsed(!hud.classList.contains("collapsed"));
-    }, { passive: false });
-
-    function updateTileHeights() {
-      for (const t of tiles) {
-        if (!t.mesh.visible && t.e !== selectedElement) continue;
-        t.currentHeight += (t.targetHeight - t.currentHeight) * 0.12;
-        const h = Math.max(BASE_H, t.currentHeight);
-        const pos = tilePosition(t.e);
-        t.mesh.scale.y = h;
-        t.mesh.position.set(pos.x, h / 2, pos.z);
-        t.label.position.set(pos.x, h + 0.014, pos.z);
+    function nucleonPositions(total, seed = 1) {
+      const positions = [];
+      if (total <= 1) return [new THREE.Vector3(0,0,0)];
+      const random = seededRandom(seed);
+      const maxR = THREE.MathUtils.clamp(0.050 * Math.cbrt(total), 0.12, 0.42);
+      const minDist = 0.105;
+      let attempts = 0;
+      while (positions.length < total && attempts < total * 90) {
+        attempts++;
+        const r = maxR * Math.pow(random(), 0.55);
+        const cosTheta = random() * 2 - 1;
+        const sinTheta = Math.sqrt(Math.max(0, 1 - cosTheta * cosTheta));
+        const phi = random() * Math.PI * 2;
+        const candidate = new THREE.Vector3(r * sinTheta * Math.cos(phi), r * cosTheta, r * sinTheta * Math.sin(phi));
+        let tooClose = false;
+        for (const p of positions) if (candidate.distanceToSquared(p) < minDist * minDist) { tooClose = true; break; }
+        if (!tooClose || positions.length > total * 0.72) positions.push(candidate);
       }
-
-      if (selectedElement && atomGroup && !focusTween) {
-        const selectedTile = tiles.find(t => t.e === selectedElement);
-        if (selectedTile) {
-          const pos = tilePosition(selectedElement);
-          const atomCenterY = atomCenterYFor(selectedElement, selectedTile.currentHeight);
-          atomGroup.position.set(pos.x, atomCenterY, pos.z);
-          controls.target.lerp(new THREE.Vector3(pos.x, atomCenterY, pos.z), 0.16);
-        }
-      }
+      while (positions.length < total) positions.push(new THREE.Vector3((random()-0.5)*maxR, (random()-0.5)*maxR, (random()-0.5)*maxR));
+      const center = positions.reduce((sum, p) => sum.add(p), new THREE.Vector3()).multiplyScalar(1 / positions.length);
+      for (const p of positions) p.sub(center);
+      return positions;
     }
 
     function clearAtom() {
@@ -1125,390 +492,183 @@
       scene.remove(atomGroup);
       atomGroup.traverse(obj => {
         if (obj.geometry) obj.geometry.dispose();
-        if (obj.material) {
-          if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
-          else obj.material.dispose();
-        }
+        if (obj.material) Array.isArray(obj.material) ? obj.material.forEach(m => m.dispose()) : obj.material.dispose();
       });
       atomGroup = null;
     }
-
-    const ATOM_BAR_GAP = 0.16;
-
-    function shellDistribution(Z) {
-      // 입체 보어 모형용 전자껍질 계산. 원소에는 전자 배열을 저장하지 않고,
-      // 양성자수 Z만 넣으면 Aufbau 순서에 따라 각 주껍질의 전자 수를 만든다.
-      const orbitals = [
-        [1, 2], [2, 2], [2, 6], [3, 2], [3, 6], [4, 2], [3, 10], [4, 6],
-        [5, 2], [4, 10], [5, 6], [6, 2], [4, 14], [5, 10], [6, 6],
-        [7, 2], [5, 14], [6, 10], [7, 6]
-      ];
-      const shells = [0, 0, 0, 0, 0, 0, 0];
-      let left = Z;
-      for (const [n, cap] of orbitals) {
-        if (left <= 0) break;
-        const count = Math.min(cap, left);
-        shells[n - 1] += count;
-        left -= count;
-      }
-      return shells.filter(count => count > 0);
-    }
-
-    function atomScaleFor(e) {
-      return THREE.MathUtils.clamp(1.05 + Math.log10(e.Z + 1) * 0.12, 1.08, 1.34);
-    }
-
-    function atomOuterBoundaryRadiusFor(e) {
-      const shells = shellDistribution(e.Z);
-      return 0.78 + Math.max(0, shells.length - 1) * 0.32 + 0.22;
-    }
-
-    function atomCenterYFor(e, tileHeight) {
-      return tileHeight + atomOuterBoundaryRadiusFor(e) * atomScaleFor(e) + ATOM_BAR_GAP;
-    }
-
-    function seededRandom(seed) {
-      let t = seed >>> 0;
-      return function random() {
-        t += 0x6D2B79F5;
-        let r = Math.imul(t ^ (t >>> 15), 1 | t);
-        r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
-        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-      };
-    }
-
-    function shuffledNucleonKinds(Z, N) {
-      const kinds = [
-        ...Array.from({ length: Z }, () => "proton"),
-        ...Array.from({ length: N }, () => "neutron")
-      ];
-      const random = seededRandom(Z * 1009 + N * 9176 + 41);
-      for (let i = kinds.length - 1; i > 0; i--) {
-        const j = Math.floor(random() * (i + 1));
-        [kinds[i], kinds[j]] = [kinds[j], kinds[i]];
-      }
-      return kinds;
-    }
-
-    function nucleonPositions(total, seed = 1) {
-      const positions = [];
-      if (total <= 1) return [new THREE.Vector3(0, 0, 0)];
-      const random = seededRandom(seed);
-      const maxR = THREE.MathUtils.clamp(0.050 * Math.cbrt(total), 0.12, 0.42);
-      const minDist = 0.105;
-      let attempts = 0;
-
-      while (positions.length < total && attempts < total * 90) {
-        attempts++;
-        const r = maxR * Math.pow(random(), 0.55);
-        const cosTheta = random() * 2 - 1;
-        const sinTheta = Math.sqrt(Math.max(0, 1 - cosTheta * cosTheta));
-        const phi = random() * Math.PI * 2;
-        const candidate = new THREE.Vector3(
-          r * sinTheta * Math.cos(phi),
-          r * cosTheta,
-          r * sinTheta * Math.sin(phi)
-        );
-
-        let tooClose = false;
-        for (const p of positions) {
-          if (candidate.distanceToSquared(p) < minDist * minDist) {
-            tooClose = true;
-            break;
-          }
-        }
-        if (!tooClose || positions.length > total * 0.72) positions.push(candidate);
-      }
-
-      while (positions.length < total) {
-        const r = maxR * Math.pow(random(), 0.42);
-        const cosTheta = random() * 2 - 1;
-        const sinTheta = Math.sqrt(Math.max(0, 1 - cosTheta * cosTheta));
-        const phi = random() * Math.PI * 2;
-        positions.push(new THREE.Vector3(
-          r * sinTheta * Math.cos(phi),
-          r * cosTheta,
-          r * sinTheta * Math.sin(phi)
-        ));
-      }
-
-      // 덩어리 전체가 원점에서 크게 치우치지 않도록 중심만 보정한다.
-      const center = positions.reduce((sum, p) => sum.add(p), new THREE.Vector3()).multiplyScalar(1 / positions.length);
-      for (const p of positions) p.sub(center);
-      return positions;
-    }
-
     function createElectronOrbit(shellIndex, radius, count, electronMat, electronGeo, orbitMat) {
       const group = new THREE.Group();
-      const tiltX = Math.PI / 2 + (shellIndex % 2 === 0 ? 0.42 : -0.42);
-      const tiltY = shellIndex * 0.38;
-      const tiltZ = shellIndex * 0.71;
-      group.rotation.set(tiltX, tiltY, tiltZ);
-      group.userData.isOrbitGroup = true;
-      group.userData.speed = 0.0045 + shellIndex * 0.0012;
-
-      const orbit = new THREE.Mesh(
-        new THREE.TorusGeometry(radius, 0.008, 8, 192),
-        orbitMat.clone()
-      );
-      group.add(orbit);
-
+      group.rotation.set(Math.PI / 2 + (shellIndex % 2 === 0 ? 0.42 : -0.42), shellIndex * 0.38, shellIndex * 0.71);
+      group.userData.isOrbitGroup = true; group.userData.speed = 0.0045 + shellIndex * 0.0012;
+      group.add(new THREE.Mesh(new THREE.TorusGeometry(radius, 0.008, 8, 192), orbitMat.clone()));
       const electronHaloGeo = new THREE.SphereGeometry(0.092, 20, 14);
-      const electronHaloMat = new THREE.MeshBasicMaterial({
-        color: 0x8edfff,
-        transparent: true,
-        opacity: 0.28,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-      });
-
+      const electronHaloMat = new THREE.MeshBasicMaterial({ color: 0x8edfff, transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, depthWrite: false });
       for (let i = 0; i < count; i++) {
         const theta = (i / count) * Math.PI * 2;
         const electron = new THREE.Mesh(electronGeo, electronMat);
         electron.position.set(Math.cos(theta) * radius, Math.sin(theta) * radius, 0);
-        electron.userData.isElectron = true;
-        electron.userData.radius = radius;
-        electron.userData.theta = theta;
-        electron.userData.speed = 0.018 + shellIndex * 0.0026;
+        electron.userData = { isElectron: true, radius, theta, speed: 0.018 + shellIndex * 0.0026 };
         electron.castShadow = false;
-
-        // 시리우스처럼 보이는 푸른빛 광륜. 중심은 거의 흰색, 외곽은 푸르게 번지게 한다.
-        const halo = new THREE.Mesh(electronHaloGeo, electronHaloMat);
-        halo.renderOrder = 5;
-        electron.add(halo);
-
+        const halo = new THREE.Mesh(electronHaloGeo, electronHaloMat); halo.renderOrder = 5; electron.add(halo);
         group.add(electron);
       }
       return group;
     }
-
     function createAtomModel(e, basePos, tileHeight) {
       clearAtom();
-      atomGroup = new THREE.Group();
-      atomGroup.position.set(basePos.x, atomCenterYFor(e, tileHeight), basePos.z);
-      scene.add(atomGroup);
-
-      const nucleus = new THREE.Group();
-      atomGroup.add(nucleus);
-
+      atomGroup = new THREE.Group(); atomGroup.position.set(basePos.x, atomCenterYFor(e, tileHeight), basePos.z); scene.add(atomGroup);
+      const nucleus = new THREE.Group(); atomGroup.add(nucleus);
       const protonMat = new THREE.MeshStandardMaterial({ color: 0xff4f66, emissive: 0xff1e38, emissiveIntensity: 0.45, roughness: 0.28, metalness: 0.08 });
       const neutronMat = new THREE.MeshStandardMaterial({ color: 0xdbe7f6, emissive: 0x53677f, emissiveIntensity: 0.22, roughness: 0.48, metalness: 0.03 });
       const nucleonGeo = new THREE.SphereGeometry(0.083, 22, 16);
       const totalNucleons = e.Z + e.N;
       const nucleonKinds = shuffledNucleonKinds(e.Z, e.N);
       const positions = nucleonPositions(totalNucleons, e.Z * 7919 + e.N * 104729);
-
+      const random = seededRandom(e.Z * 57 + e.N * 131);
       for (let i = 0; i < totalNucleons; i++) {
         const isProton = nucleonKinds[i] === "proton";
         const particle = new THREE.Mesh(nucleonGeo, isProton ? protonMat : neutronMat);
-        particle.position.copy(positions[i]);
-        particle.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-        particle.castShadow = true;
-        particle.userData.kind = isProton ? "proton" : "neutron";
+        particle.position.copy(positions[i]); particle.rotation.set(random() * Math.PI, random() * Math.PI, random() * Math.PI); particle.castShadow = true;
         nucleus.add(particle);
       }
-
-
-      const coreGlow = new THREE.PointLight(0xffb0ba, 1.25, 4.5);
-      coreGlow.position.set(0, 0.2, 0);
-      atomGroup.add(coreGlow);
-
-      const electronMat = new THREE.MeshStandardMaterial({
-        color: 0xfbfdff,
-        emissive: 0x86ddff,
-        emissiveIntensity: 2.35,
-        roughness: 0.05,
-        metalness: 0.0
-      });
+      const coreGlow = new THREE.PointLight(0xffb0ba, 1.25, 4.5); coreGlow.position.set(0, 0.2, 0); atomGroup.add(coreGlow);
+      const electronMat = new THREE.MeshStandardMaterial({ color: 0xfbfdff, emissive: 0x86ddff, emissiveIntensity: 2.35, roughness: 0.05, metalness: 0.0 });
       const electronGeo = new THREE.SphereGeometry(0.034, 18, 12);
       const orbitMat = new THREE.MeshBasicMaterial({ color: 0x8ddcff, transparent: true, opacity: 0.32 });
       const shells = shellDistribution(e.Z);
       const outerElectronRadius = 0.78 + Math.max(0, shells.length - 1) * 0.32;
-
-      // 핵을 감싸던 구가 아니라, 전자껍질 전체를 감싸는 원자 외곽 폴리곤 구.
-      const atomBoundary = new THREE.Mesh(
-        new THREE.IcosahedronGeometry(outerElectronRadius + 0.22, 3),
-        new THREE.MeshBasicMaterial({
-          color: 0xbfeeff,
-          transparent: true,
-          opacity: 0.052,
-          wireframe: true,
-          depthWrite: false
-        })
-      );
-      atomBoundary.renderOrder = 1;
-      atomGroup.add(atomBoundary);
-
-      shells.forEach((count, shellIndex) => {
-        const radius = 0.78 + shellIndex * 0.32;
-        atomGroup.add(createElectronOrbit(shellIndex, radius, count, electronMat, electronGeo, orbitMat));
-      });
-
-      const scale = atomScaleFor(e);
-      atomGroup.scale.setScalar(scale);
-    }
-
-    function showAtomInfoControls() {
-      info.classList.add("visible");
-    }
-
-    function hideAtomInfoControls() {
-      info.classList.remove("visible");
-      info.innerHTML = "";
+      const atomBoundary = new THREE.Mesh(new THREE.IcosahedronGeometry(outerElectronRadius + 0.22, 3), new THREE.MeshBasicMaterial({ color: 0xbfeeff, transparent: true, opacity: 0.052, wireframe: true, depthWrite: false }));
+      atomBoundary.renderOrder = 1; atomGroup.add(atomBoundary);
+      shells.forEach((count, shellIndex) => atomGroup.add(createElectronOrbit(shellIndex, 0.78 + shellIndex * 0.32, count, electronMat, electronGeo, orbitMat)));
+      atomGroup.scale.setScalar(atomScaleFor(e));
     }
 
     function showInfo(e) {
       selectedElement = e;
       const color = palette[e.category];
-      const metricText = {
-        protons: "현재 높이: 양성자수",
-        neutrons: "현재 높이: 중성자수",
-        massNumber: "현재 높이: 양성자수+중성자수",
-        electronegativity: "현재 높이: 전기음성도"
-      }[currentMetric];
       info.style.setProperty("--accent", `#${color.toString(16).padStart(6,"0")}`);
+      const story = curationBySymbol[e.s] ?? fallbackCuration[e.category] ?? "이 원소는 안정 동위원소, 산화수, 광물 형태, 화합물 성질에 따라 여러 과학 분야에서 전혀 다른 얼굴로 등장합니다.";
       info.innerHTML = `
-        <div class="symbol-row">
-          <div class="big-symbol">${e.s}</div>
-          <div>
-            <div class="name">${e.n}</div>
-            <div class="category">${categoryLabels[e.category]} · ${e.p <= 7 ? `${e.p}주기 ${e.g}족` : categoryLabels[e.category]}</div>
-          </div>
-        </div>
-        <div class="pill">${metricText}</div>
+        <div class="symbol-row"><div class="big-symbol">${e.s}</div><div><div class="name">${e.n}</div><div class="category">${categoryLabels[e.category]} · ${e.p <= 7 ? `${e.p}주기 ${e.g}족` : categoryLabels[e.category]}</div></div></div>
         <div class="facts">
           <div class="fact"><div class="k">양성자수 Z</div><div class="v">${e.Z}</div></div>
-          <div class="fact"><div class="k">중성자수 N</div><div class="v">${e.neutrons}</div></div>
-          <div class="fact"><div class="k">질량수 A</div><div class="v">${e.massNumber}</div></div>
+          <div class="fact"><div class="k">중성자수 N</div><div class="v">${e.N}</div></div>
+          <div class="fact"><div class="k">질량수 A</div><div class="v">${e.Z + e.N}</div></div>
           <div class="fact"><div class="k">전기음성도</div><div class="v">${e.en ? e.en.toFixed(2) : "미정"}</div></div>
         </div>
-        <div class="curation">
-          <div class="curation-title">이 원소는...</div>
-          <div class="curation-list">
-            ${elementCuration(e).items.map(item => `<div class="curation-item">${item}</div>`).join("")}
-          </div>
-        </div>
-      `;
+        <div class="curation"><div class="curation-title">이 원소는...</div><div class="curation-list"><div class="curation-item">${story}</div></div></div>`;
     }
-
+    function showAtomInfoControls() { info.classList.add("visible"); }
+    function hideAtomInfoControls() { info.classList.remove("visible"); info.innerHTML = ""; }
     function applySelectionDim(selectedElementForDim) {
       for (const t of tiles) {
         const selected = t.e === selectedElementForDim;
         const baseColor = t.mesh.userData.baseColor;
-        t.mesh.visible = selected;
-        t.label.visible = selected;
-        t.mesh.material.color.setHex(baseColor);
-        t.mesh.material.emissive.setHex(baseColor);
-        t.mesh.material.emissiveIntensity = selected ? 0.48 : 0.0;
-        t.mesh.material.opacity = selected ? 1.0 : 0.0;
-        t.mesh.material.transparent = true;
-        t.mesh.castShadow = selected;
-        t.mesh.receiveShadow = selected;
-        t.label.material.opacity = selected ? 1.0 : 0.0;
+        t.mesh.visible = selected; t.label.visible = selected;
+        t.mesh.material.color.setHex(baseColor); t.mesh.material.emissive.setHex(baseColor);
+        t.mesh.material.emissiveIntensity = selected ? 0.48 : 0.0; t.mesh.material.opacity = selected ? 1.0 : 0.0; t.mesh.material.transparent = true;
+        t.mesh.castShadow = selected; t.mesh.receiveShadow = selected; t.label.material.opacity = selected ? 1.0 : 0.0;
       }
-
-      // 원자 관찰 모드에서는 선택 원소 외 주기율표 오브젝트를 렌더링 대상에서 제외한다.
       for (const obj of guideObjects) obj.visible = false;
+    }
+    function restoreTileBrightness() {
+      for (const t of tiles) {
+        t.mesh.visible = true; t.label.visible = true;
+        t.mesh.material.opacity = 1.0; t.mesh.material.transparent = true; t.mesh.material.emissiveIntensity = 0.06;
+        t.mesh.castShadow = true; t.mesh.receiveShadow = true; t.label.material.opacity = 1.0;
+      }
+      for (const obj of guideObjects) obj.visible = true;
     }
 
     function centerCameraOnAtom(e, tileHeight, animate = true) {
       const pos = tilePosition(e);
       const atomCenter = new THREE.Vector3(pos.x, atomCenterYFor(e, tileHeight), pos.z);
-      const startPos = camera.position.clone();
-      const startTarget = controls.target.clone();
-
-      // 원소 선택 시에는 탑뷰를 유지하지 않고 프론트-사이드 뷰로 전환한다.
-      // +X 쪽에서 살짝, -Z 앞쪽에서 바라보며, 높이는 원자핵보다 조금 위에 둔다.
       const frontSideOffset = new THREE.Vector3(5.8, 4.2, -9.2);
       const endTarget = atomCenter;
       const endPos = atomCenter.clone().add(frontSideOffset);
-
       if (!animate) {
-        controls.target.copy(endTarget);
-        camera.position.copy(endPos);
-        camera.up.set(0, 1, 0);
-        camera.lookAt(controls.target);
-        camera.updateProjectionMatrix();
-        syncViewTiltFromCamera();
-        return;
+        controls.target.copy(endTarget); camera.position.copy(endPos); camera.up.copy(WORLD_UP); camera.lookAt(controls.target); camera.updateProjectionMatrix(); syncViewTiltFromCamera(); return;
       }
-
-      focusTween = {
-        t: 0,
-        startPos,
-        startTarget,
-        endPos,
-        endTarget,
-        endZoom: 3.35,
-        startZoom: camera.zoom,
-        upStart: camera.up.clone(),
-        upEnd: new THREE.Vector3(0, 1, 0),
-        mode: "atomFrontSide"
-      };
+      focusTween = { t: 0, startPos: camera.position.clone(), startTarget: controls.target.clone(), endPos, endTarget, endZoom: 3.35, startZoom: camera.zoom, upStart: camera.up.clone(), upEnd: WORLD_UP.clone(), mode: "atomFrontSide" };
     }
-
-    function setAtomNavVisible(visible) {
-      prevElementButton.classList.toggle("visible", visible);
-      nextElementButton.classList.toggle("visible", visible);
-    }
-
+    function setAtomNavVisible(visible) { prevElementButton.classList.toggle("visible", visible); nextElementButton.classList.toggle("visible", visible); }
     function focusElement(e) {
-      viewTiltVelocity.set(0, 0);
-      atomYawVelocity = 0;
-      backToTableButton.classList.add("visible");
-      setAtomNavVisible(true);
-      showAtomInfoControls();
-      const pos = tilePosition(e);
-      const tile = tiles.find(t => t.e === e);
-      const h = tile?.currentHeight ?? heightFor(e);
-      createAtomModel(e, pos, h);
-      showInfo(e);
-      applySelectionDim(e);
-      centerCameraOnAtom(e, h, true);
+      viewTiltVelocity.set(0, 0); tableYawVelocity = 0; atomYawVelocity = 0;
+      backToTableButton.classList.add("visible"); setAtomNavVisible(true); showAtomInfoControls();
+      const pos = tilePosition(e); const tile = tiles.find(t => t.e === e); const h = tile?.currentHeight ?? heightFor(e);
+      createAtomModel(e, pos, h); showInfo(e); applySelectionDim(e); centerCameraOnAtom(e, h, true);
     }
-
     function focusAdjacentElement(delta) {
       if (!selectedElement) return;
       const currentIndex = elementsByZ.findIndex(e => e.Z === selectedElement.Z);
       if (currentIndex < 0) return;
-      const nextIndex = (currentIndex + delta + elementsByZ.length) % elementsByZ.length;
-      focusElement(elementsByZ[nextIndex]);
+      focusElement(elementsByZ[(currentIndex + delta + elementsByZ.length) % elementsByZ.length]);
     }
-
-    function isAtomViewActive() {
-      return !!selectedElement && !!atomGroup;
-    }
-
+    function isAtomViewActive() { return !!selectedElement && !!atomGroup; }
     function rotateAtomCamera(deltaYaw) {
       if (!isAtomViewActive()) return;
       const target = controls.target;
       const offset = camera.position.clone().sub(target);
       offset.applyAxisAngle(WORLD_UP, deltaYaw);
-      camera.position.copy(target).add(offset);
-      camera.up.copy(WORLD_UP);
-      camera.lookAt(target);
-      camera.updateProjectionMatrix();
+      camera.position.copy(target).add(offset); camera.up.copy(WORLD_UP); camera.lookAt(target); camera.updateProjectionMatrix();
     }
 
+    function changeMetric(metric) {
+      currentMetric = metric;
+      metricButtons.forEach(b => b.classList.toggle("active", b.dataset.metric === metric));
+      for (const t of tiles) t.targetHeight = heightFor(t.e, metric);
+      if (selectedElement) {
+        showInfo(selectedElement);
+        const selectedTile = tiles.find(t => t.e === selectedElement);
+        if (selectedTile) { const pos = tilePosition(selectedElement); createAtomModel(selectedElement, pos, selectedTile.currentHeight); centerCameraOnAtom(selectedElement, selectedTile.currentHeight, false); }
+      }
+    }
+    metricButtons.forEach(btn => btn.addEventListener("click", () => changeMetric(btn.dataset.metric)));
+    function setHudCollapsed(collapsed) {
+      hud.classList.toggle("collapsed", collapsed);
+      const icon = hudToggleButton.querySelector(".chevron");
+      if (icon) icon.className = `chevron ${collapsed ? "down" : "up"}`;
+      hudToggleButton.setAttribute("aria-label", collapsed ? "설정 펼치기" : "설정 접기");
+      hudToggleButton.setAttribute("title", collapsed ? "설정 펼치기" : "설정 접기");
+    }
+    hudToggleButton.addEventListener("click", () => setHudCollapsed(!hud.classList.contains("collapsed")));
+    hudToggleButton.addEventListener("touchend", event => { event.preventDefault(); setHudCollapsed(!hud.classList.contains("collapsed")); }, { passive: false });
+
+    function updateTileHeights() {
+      for (const t of tiles) {
+        if (!t.mesh.visible && t.e !== selectedElement) continue;
+        t.currentHeight += (t.targetHeight - t.currentHeight) * 0.12;
+        const h = Math.max(BASE_H, t.currentHeight); const pos = tilePosition(t.e);
+        t.mesh.scale.y = h; t.mesh.position.set(pos.x, h / 2, pos.z); t.label.position.set(pos.x, h + 0.014, pos.z);
+      }
+      if (selectedElement && atomGroup && !focusTween) {
+        const selectedTile = tiles.find(t => t.e === selectedElement);
+        if (selectedTile) {
+          const pos = tilePosition(selectedElement); const atomCenterY = atomCenterYFor(selectedElement, selectedTile.currentHeight);
+          atomGroup.position.set(pos.x, atomCenterY, pos.z); controls.target.lerp(new THREE.Vector3(pos.x, atomCenterY, pos.z), 0.16);
+        }
+      }
+    }
     function updateAtomCameraInertia() {
       if (!isAtomViewActive() || focusTween || pointerDown?.dragged) return;
-      if (Math.abs(atomYawVelocity) < ATOM_INERTIA_STOP) {
-        atomYawVelocity = 0;
-        return;
-      }
-      rotateAtomCamera(atomYawVelocity);
-      atomYawVelocity *= ATOM_INERTIA_DAMPING;
+      if (Math.abs(atomYawVelocity) < ATOM_INERTIA_STOP) { atomYawVelocity = 0; return; }
+      rotateAtomCamera(atomYawVelocity); atomYawVelocity *= ATOM_INERTIA_DAMPING;
     }
-
     function updateFullViewCameraInertia() {
       if (isAtomViewActive() || focusTween || pointerDown?.dragged) return;
-      if (viewTiltVelocity.lengthSq() < FULL_VIEW_INERTIA_STOP * FULL_VIEW_INERTIA_STOP) {
-        viewTiltVelocity.set(0, 0);
-        return;
-      }
-      viewTilt.add(viewTiltVelocity);
-      applyViewFromTilt();
-      viewTiltVelocity.multiplyScalar(FULL_VIEW_INERTIA_DAMPING);
+      const pitchMoving = viewTiltVelocity.lengthSq() >= FULL_VIEW_INERTIA_STOP * FULL_VIEW_INERTIA_STOP;
+      const yawMoving = Math.abs(tableYawVelocity) >= FULL_VIEW_YAW_STOP;
+      if (!pitchMoving && !yawMoving) { viewTiltVelocity.set(0, 0); tableYawVelocity = 0; return; }
+      tableYaw += tableYawVelocity; viewTilt.y += viewTiltVelocity.y; applyViewFromTilt();
+      tableYawVelocity *= FULL_VIEW_INERTIA_DAMPING; viewTiltVelocity.multiplyScalar(FULL_VIEW_INERTIA_DAMPING);
+    }
+    function animateAtom() {
+      if (!atomGroup) return;
+      atomGroup.rotation.y += 0.0025;
+      atomGroup.traverse(obj => {
+        if (obj.userData?.isOrbitGroup) obj.rotation.z += obj.userData.speed;
+        if (obj.userData?.isElectron) { obj.userData.theta += obj.userData.speed; const { radius, theta } = obj.userData; obj.position.set(Math.cos(theta) * radius, Math.sin(theta) * radius, 0); }
+      });
     }
 
     function getIntersect(event) {
@@ -1518,245 +678,96 @@
       raycaster.setFromCamera(pointer, camera);
       return raycaster.intersectObjects(rayTargets, false)[0] ?? null;
     }
-
     renderer.domElement.addEventListener("pointerdown", event => {
       activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       multiTouchInProgress = activePointers.size > 1;
-
       if (activePointers.size === 1) {
-        if (isAtomViewActive()) atomYawVelocity = 0;
-        else viewTiltVelocity.set(0, 0);
-        pointerDown = {
-          id: event.pointerId,
-          x: event.clientX,
-          y: event.clientY,
-          time: performance.now(),
-          pointerType: event.pointerType
-        };
-      } else {
-        pointerDown = null;
-      }
+        if (isAtomViewActive()) atomYawVelocity = 0; else { viewTiltVelocity.set(0, 0); tableYawVelocity = 0; }
+        pointerDown = { id: event.pointerId, x: event.clientX, y: event.clientY, time: performance.now(), pointerType: event.pointerType };
+      } else pointerDown = null;
     }, { passive: true });
-
     renderer.domElement.addEventListener("pointermove", event => {
-      if (activePointers.has(event.pointerId)) {
-        activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-      }
-
+      if (activePointers.has(event.pointerId)) activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       if (!pointerDown || pointerDown.id !== event.pointerId || activePointers.size !== 1 || multiTouchInProgress) return;
-      const dxTotal = event.clientX - pointerDown.x;
-      const dyTotal = event.clientY - pointerDown.y;
-      const distTotal = Math.hypot(dxTotal, dyTotal);
-      if (distTotal <= 2) return;
-
+      const dxTotal = event.clientX - pointerDown.x, dyTotal = event.clientY - pointerDown.y;
+      if (Math.hypot(dxTotal, dyTotal) <= 2) return;
       const dx = event.clientX - (pointerDown.lastX ?? pointerDown.x);
       const dy = event.clientY - (pointerDown.lastY ?? pointerDown.y);
-      const now = performance.now();
-      const dt = Math.max(12, now - (pointerDown.lastTime ?? pointerDown.time));
-      pointerDown.lastX = event.clientX;
-      pointerDown.lastY = event.clientY;
-      pointerDown.lastTime = now;
-      pointerDown.dragged = true;
-      focusTween = null;
-
+      const now = performance.now(); const dt = Math.max(12, now - (pointerDown.lastTime ?? pointerDown.time));
+      pointerDown.lastX = event.clientX; pointerDown.lastY = event.clientY; pointerDown.lastTime = now; pointerDown.dragged = true; focusTween = null;
+      const speedBoost = THREE.MathUtils.clamp(16 / dt, 0.45, 1.9);
       if (isAtomViewActive()) {
-        // 원자 관찰 상태: 현재 카메라 시점에서 좌우 회전만 허용한다. dy는 의도적으로 무시한다.
         const deltaYaw = -dx * ATOM_DRAG_YAW_SPEED;
         rotateAtomCamera(deltaYaw);
-
-        // 빠르게 끌수록 큰 잔류 각속도를 남긴다. dt 보정으로 느린 드래그와 빠른 플릭을 구분한다.
-        const speedBoost = THREE.MathUtils.clamp(16 / dt, 0.45, 1.9);
         atomYawVelocity = THREE.MathUtils.clamp(deltaYaw * speedBoost, -0.13, 0.13);
         return;
       }
-
-      // 주기율표 전체 관찰 상태: 기존처럼 좌우/상하 드래그로 바닥판 시점을 기울인다.
-      const deltaTiltX = -dx * DRAG_TILT_SPEED;
-      const deltaTiltY = -dy * DRAG_TILT_SPEED;
-      viewTilt.x += deltaTiltX;
-      viewTilt.y += deltaTiltY;
-      applyViewFromTilt();
-
-      // 드래그 속도에 비례한 관성. 빠른 플릭일수록 더 긴 잔류 회전이 생긴다.
-      const speedBoost = THREE.MathUtils.clamp(16 / dt, 0.45, 1.9);
-      viewTiltVelocity.set(deltaTiltX * speedBoost, deltaTiltY * speedBoost);
-      if (viewTiltVelocity.length() > 0.12) viewTiltVelocity.setLength(0.12);
+      const deltaYaw = -dx * FULL_VIEW_YAW_SPEED;
+      const deltaPitch = -dy * DRAG_TILT_SPEED;
+      tableYaw += deltaYaw; viewTilt.y += deltaPitch; applyViewFromTilt();
+      tableYawVelocity = THREE.MathUtils.clamp(deltaYaw * speedBoost, -0.12, 0.12);
+      viewTiltVelocity.set(0, THREE.MathUtils.clamp(deltaPitch * speedBoost, -0.12, 0.12));
     }, { passive: true });
-
     function finishPointer(event) {
       const wasMultiTouch = multiTouchInProgress || activePointers.size > 1;
-      activePointers.delete(event.pointerId);
-      if (activePointers.size === 0) multiTouchInProgress = false;
-
-      if (!pointerDown || pointerDown.id !== event.pointerId || wasMultiTouch) {
-        pointerDown = null;
-        return;
-      }
-
-      const dx = event.clientX - pointerDown.x;
-      const dy = event.clientY - pointerDown.y;
-      const dist = Math.hypot(dx, dy);
-      const elapsed = performance.now() - pointerDown.time;
-      const tapLimit = pointerDown.pointerType === "touch" ? 14 : 7;
-      const timeLimit = pointerDown.pointerType === "touch" ? 750 : 600;
-      const wasDragged = !!pointerDown.dragged;
-      pointerDown = null;
-
+      activePointers.delete(event.pointerId); if (activePointers.size === 0) multiTouchInProgress = false;
+      if (!pointerDown || pointerDown.id !== event.pointerId || wasMultiTouch) { pointerDown = null; return; }
+      const dx = event.clientX - pointerDown.x, dy = event.clientY - pointerDown.y;
+      const dist = Math.hypot(dx, dy), elapsed = performance.now() - pointerDown.time;
+      const tapLimit = pointerDown.pointerType === "touch" ? 14 : 7, timeLimit = pointerDown.pointerType === "touch" ? 750 : 600;
+      const wasDragged = !!pointerDown.dragged; pointerDown = null;
       if (wasDragged || dist > tapLimit || elapsed > timeLimit) return;
       const hit = getIntersect(event);
       if (hit?.object?.userData?.element) focusElement(hit.object.userData.element);
     }
-
     renderer.domElement.addEventListener("pointerup", finishPointer, { passive: true });
-    renderer.domElement.addEventListener("pointercancel", event => {
-      activePointers.delete(event.pointerId);
-      pointerDown = null;
-      if (activePointers.size === 0) multiTouchInProgress = false;
-    }, { passive: true });
+    renderer.domElement.addEventListener("pointercancel", event => { activePointers.delete(event.pointerId); pointerDown = null; if (activePointers.size === 0) multiTouchInProgress = false; }, { passive: true });
 
-    function resetInfoPanel() {
-      info.style.removeProperty("--accent");
-      hideAtomInfoControls();
-    }
-
-    function restoreTileBrightness() {
-      for (const t of tiles) {
-        t.mesh.visible = true;
-        t.label.visible = true;
-        t.mesh.material.opacity = 1.0;
-        t.mesh.material.transparent = true;
-        t.mesh.material.emissiveIntensity = 0.06;
-        t.mesh.castShadow = true;
-        t.mesh.receiveShadow = true;
-        t.label.material.opacity = 1.0;
-      }
-      for (const obj of guideObjects) obj.visible = true;
-    }
-
+    function resetInfoPanel() { info.style.removeProperty("--accent"); hideAtomInfoControls(); }
     function startSmoothReset() {
-      selectedElement = null;
-      viewTiltVelocity.set(0, 0);
-      atomYawVelocity = 0;
-      backToTableButton.classList.remove("visible");
-      setAtomNavVisible(false);
-      pointerDown = null;
-      activePointers.clear();
-      multiTouchInProgress = false;
-      restoreTileBrightness();
-      resetInfoPanel();
-
-      const endTarget = new THREE.Vector3(0, 0, 0);
-      const endPos = new THREE.Vector3(0, DEFAULT_CAMERA_DISTANCE, 0);
-      focusTween = {
-        t: 0,
-        speed: 0.026,
-        mode: "reset",
-        startPos: camera.position.clone(),
-        startTarget: controls.target.clone(),
-        endPos,
-        endTarget,
-        endZoom: 1,
-        startZoom: camera.zoom
-      };
+      selectedElement = null; viewTiltVelocity.set(0, 0); tableYawVelocity = 0; atomYawVelocity = 0;
+      backToTableButton.classList.remove("visible"); setAtomNavVisible(false); pointerDown = null; activePointers.clear(); multiTouchInProgress = false;
+      restoreTileBrightness(); resetInfoPanel();
+      focusTween = { t: 0, speed: 0.026, mode: "reset", startPos: camera.position.clone(), startTarget: controls.target.clone(), endPos: new THREE.Vector3(0, DEFAULT_CAMERA_DISTANCE, 0), endTarget: new THREE.Vector3(0, 0, 0), endZoom: 1, startZoom: camera.zoom };
     }
-
     prevElementButton.addEventListener("click", () => focusAdjacentElement(-1));
     nextElementButton.addEventListener("click", () => focusAdjacentElement(1));
-    prevElementButton.addEventListener("touchend", event => {
-      event.preventDefault();
-      focusAdjacentElement(-1);
-    }, { passive: false });
-    nextElementButton.addEventListener("touchend", event => {
-      event.preventDefault();
-      focusAdjacentElement(1);
-    }, { passive: false });
-
+    prevElementButton.addEventListener("touchend", event => { event.preventDefault(); focusAdjacentElement(-1); }, { passive: false });
+    nextElementButton.addEventListener("touchend", event => { event.preventDefault(); focusAdjacentElement(1); }, { passive: false });
     backToTableButton.addEventListener("click", () => startSmoothReset());
-    backToTableButton.addEventListener("touchend", event => {
-      event.preventDefault();
-      startSmoothReset();
-    }, { passive: false });
-
-    window.addEventListener("keydown", event => {
-      if (event.key.toLowerCase() === "r") {
-        startSmoothReset();
-      }
-    });
-
-    function animateAtom() {
-      if (!atomGroup) return;
-      atomGroup.rotation.y += 0.0025;
-      atomGroup.traverse(obj => {
-        if (obj.userData?.isOrbitGroup) {
-          obj.rotation.z += obj.userData.speed;
-        }
-        if (obj.userData?.isElectron) {
-          obj.userData.theta += obj.userData.speed;
-          const { radius, theta } = obj.userData;
-          obj.position.set(Math.cos(theta) * radius, Math.sin(theta) * radius, 0);
-        }
-      });
-    }
+    backToTableButton.addEventListener("touchend", event => { event.preventDefault(); startSmoothReset(); }, { passive: false });
+    window.addEventListener("keydown", event => { if (event.key.toLowerCase() === "r") startSmoothReset(); });
 
     function updateFocusTween() {
       if (!focusTween) return;
       focusTween.t += focusTween.speed ?? 0.035;
-      const t = Math.min(1, focusTween.t);
-      const ease = 1 - Math.pow(1 - t, 3);
+      const t = Math.min(1, focusTween.t), ease = 1 - Math.pow(1 - t, 3);
       camera.position.lerpVectors(focusTween.startPos, focusTween.endPos, ease);
       controls.target.lerpVectors(focusTween.startTarget, focusTween.endTarget, ease);
       camera.zoom = THREE.MathUtils.lerp(focusTween.startZoom, focusTween.endZoom, ease);
-      if (focusTween.upStart && focusTween.upEnd) {
-        camera.up.copy(focusTween.upStart).lerp(focusTween.upEnd, ease).normalize();
-      } else {
-        camera.up.set(0, 0, -1);
-      }
-      camera.lookAt(controls.target);
-      camera.updateProjectionMatrix();
+      if (focusTween.upStart && focusTween.upEnd) camera.up.copy(focusTween.upStart).lerp(focusTween.upEnd, ease).normalize(); else camera.up.set(0, 0, -1);
+      camera.lookAt(controls.target); camera.updateProjectionMatrix();
       if (t >= 1) {
-        const finishedMode = focusTween.mode;
-        focusTween = null;
+        const finishedMode = focusTween.mode; focusTween = null;
         if (finishedMode === "reset") {
-          atomYawVelocity = 0;
-          viewTiltVelocity.set(0, 0);
-          clearAtom();
-          controls.target.set(0, 0, 0);
-          viewTilt.set(0, 0);
-          camera.position.set(0, DEFAULT_CAMERA_DISTANCE, 0);
-          camera.zoom = 1;
-          camera.up.set(0, 0, -1);
-          camera.lookAt(controls.target);
-          camera.updateProjectionMatrix();
-        } else {
-          syncViewTiltFromCamera();
-        }
+          atomYawVelocity = 0; viewTiltVelocity.set(0, 0); tableYawVelocity = 0; tableYaw = 0; clearAtom();
+          controls.target.set(0, 0, 0); viewTilt.set(0, 0); camera.position.set(0, DEFAULT_CAMERA_DISTANCE, 0); camera.zoom = 1; camera.up.set(0, 0, -1); camera.lookAt(controls.target); camera.updateProjectionMatrix();
+        } else syncViewTiltFromCamera();
       }
     }
-
     function animate() {
       requestAnimationFrame(animate);
-      updateTileHeights();
-      updateFocusTween();
-      updateFullViewCameraInertia();
-      updateAtomCameraInertia();
-      animateAtom();
-      controls.update();
-      renderer.render(scene, camera);
+      updateTileHeights(); updateFocusTween(); updateFullViewCameraInertia(); updateAtomCameraInertia(); animateAtom(); controls.update(); renderer.render(scene, camera);
     }
     animate();
 
     window.addEventListener("gesturestart", event => event.preventDefault(), { passive: false });
     window.addEventListener("gesturechange", event => event.preventDefault(), { passive: false });
     window.addEventListener("gestureend", event => event.preventDefault(), { passive: false });
-
     window.addEventListener("resize", () => {
       const aspect = window.innerWidth / window.innerHeight;
-      camera.left = -frustum * aspect / 2;
-      camera.right = frustum * aspect / 2;
-      camera.top = frustum / 2;
-      camera.bottom = -frustum / 2;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      camera.left = -frustum * aspect / 2; camera.right = frustum * aspect / 2; camera.top = frustum / 2; camera.bottom = -frustum / 2;
+      camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight);
     });
   </script>
 </body>
