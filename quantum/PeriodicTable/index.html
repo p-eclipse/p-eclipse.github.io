@@ -37,12 +37,93 @@
       background: rgba(7, 12, 22, 0.76);
       backdrop-filter: blur(14px);
       box-shadow: 0 22px 60px rgba(0,0,0,0.35);
+      transition: width 180ms ease, padding 180ms ease;
+    }
+    .ui.collapsed {
+      width: auto;
+      min-width: 178px;
+      padding: 12px 13px;
+    }
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
     }
     .title {
-      margin: 0 0 8px;
+      margin: 0;
       font-size: 19px;
       line-height: 1.25;
       letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+    .hud-toggle {
+      width: 34px;
+      height: 34px;
+      flex: 0 0 auto;
+      display: inline-grid;
+      place-items: center;
+      padding: 0;
+      border-radius: 999px;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(7, 12, 22, 0.76);
+      backdrop-filter: blur(14px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 12px 30px rgba(0,0,0,0.30);
+    }
+    .hud-toggle::before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border-radius: inherit;
+      background: linear-gradient(145deg, rgba(255,255,255,0.13), rgba(255,255,255,0.025) 58%, rgba(95,168,255,0.06));
+      pointer-events: none;
+    }
+    .hud-toggle:hover {
+      border-color: rgba(255,255,255,0.22);
+      background: rgba(10, 18, 32, 0.82);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 14px 34px rgba(0,0,0,0.34);
+    }
+    .hud-toggle:active {
+      transform: translateY(1px) scale(0.98);
+    }
+    .chevron {
+      position: relative;
+      z-index: 1;
+      display: block;
+      width: 10px;
+      height: 10px;
+      border-right: 2.2px solid rgba(238,245,255,0.88);
+      border-bottom: 2.2px solid rgba(238,245,255,0.88);
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35));
+      transition: transform 180ms ease, opacity 180ms ease, border-color 180ms ease;
+    }
+    button:hover .chevron {
+      border-color: rgba(255,255,255,0.98);
+    }
+    .chevron.up { transform: translateY(2px) rotate(225deg); }
+    .chevron.down { transform: translateY(-2px) rotate(45deg); }
+    .chevron.left { transform: translateX(2px) rotate(135deg); }
+    .chevron.right { transform: translateX(-2px) rotate(-45deg); }
+    .hud-body {
+      display: grid;
+      gap: 12px;
+      overflow: hidden;
+      max-height: 520px;
+      opacity: 1;
+      transition: max-height 220ms ease, opacity 160ms ease, margin 180ms ease;
+    }
+    .ui.collapsed .title-row {
+      margin-bottom: 0;
+    }
+    .ui.collapsed .hud-body {
+      max-height: 0;
+      opacity: 0;
+      margin: 0;
+      pointer-events: none;
     }
     .subtitle {
       margin: 0 0 14px;
@@ -54,7 +135,6 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
-      margin-bottom: 12px;
     }
     button {
       border: 1px solid rgba(255,255,255,0.16);
@@ -103,6 +183,8 @@
       right: 18px;
       top: 18px;
       width: min(370px, calc(100vw - 36px));
+      max-height: calc(100vh - 36px);
+      overflow-y: auto;
       z-index: 10;
       padding: 18px;
       border: 1px solid rgba(255,255,255,0.15);
@@ -110,10 +192,44 @@
       background: rgba(7, 12, 22, 0.78);
       backdrop-filter: blur(14px);
       box-shadow: 0 22px 60px rgba(0,0,0,0.35);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(calc(100% + 28px));
+      transition: opacity 180ms ease, transform 220ms ease;
+    }
+    .panel.visible {
+      opacity: 1;
+      pointer-events: auto;
       transform: translateX(0);
     }
-    .panel.empty {
-      opacity: 0.75;
+    .info-toggle {
+      position: fixed;
+      right: 18px;
+      top: 50%;
+      z-index: 21;
+      width: 46px;
+      height: 46px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.22);
+      background: rgba(7, 12, 22, 0.82);
+      color: #eef5ff;
+      box-shadow: 0 16px 42px rgba(0,0,0,0.34);
+      backdrop-filter: blur(14px);
+      font-size: 22px;
+      font-weight: 900;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-50%) translateX(18px);
+      transition: opacity 180ms ease, transform 180ms ease, right 220ms ease, background 180ms ease;
+    }
+    .info-toggle.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(-50%) translateX(0);
+    }
+    .info-toggle.open {
+      right: min(406px, calc(100vw - 64px));
     }
     .symbol-row {
       display: flex;
@@ -223,15 +339,30 @@
       gap: 8px;
       padding: 12px 18px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.22);
-      background: rgba(7, 12, 22, 0.82);
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(7, 12, 22, 0.78);
       color: #eef5ff;
-      box-shadow: 0 16px 42px rgba(0,0,0,0.34);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 16px 42px rgba(0,0,0,0.34);
       backdrop-filter: blur(14px);
       font-size: 14px;
       font-weight: 850;
       letter-spacing: -0.02em;
-      transition: opacity 180ms ease, transform 180ms ease, background 180ms ease;
+      overflow: hidden;
+      isolation: isolate;
+      transition: opacity 180ms ease, transform 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+    .back-button::before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border-radius: inherit;
+      background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.025) 58%, rgba(95,168,255,0.055));
+      pointer-events: none;
+    }
+    .back-button:hover {
+      border-color: rgba(255,255,255,0.22);
+      background: rgba(10, 18, 32, 0.84);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 18px 46px rgba(0,0,0,0.38);
     }
     .back-button.visible {
       opacity: 1;
@@ -241,10 +372,70 @@
     .back-button:active {
       transform: translate(-50%, 1px) scale(0.98);
     }
+    .atom-nav-button {
+      position: fixed;
+      bottom: 22px;
+      z-index: 20;
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(7, 12, 22, 0.78);
+      color: #eef5ff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 16px 42px rgba(0,0,0,0.34);
+      backdrop-filter: blur(14px);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 18px);
+      overflow: hidden;
+      isolation: isolate;
+      transition: opacity 180ms ease, transform 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+    .atom-nav-button::before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border-radius: inherit;
+      background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.025) 58%, rgba(95,168,255,0.055));
+      pointer-events: none;
+    }
+    .atom-nav-button:hover {
+      border-color: rgba(255,255,255,0.22);
+      background: rgba(10, 18, 32, 0.84);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 18px 46px rgba(0,0,0,0.38);
+    }
+    .atom-nav-button.prev { left: calc(50% - 112px); }
+    .atom-nav-button.next { left: calc(50% + 112px); }
+    .atom-nav-button.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, 0);
+    }
+    .atom-nav-button:active {
+      transform: translate(-50%, 1px) scale(0.96);
+    }
+    .hud-toggle:focus-visible,
+    .atom-nav-button:focus-visible,
+    .back-button:focus-visible {
+      outline: 2px solid rgba(142,223,255,0.9);
+      outline-offset: 3px;
+    }
     @media (max-width: 860px) {
-      .ui { left: 12px; top: 12px; padding: 13px; }
-      .panel { right: 12px; left: 12px; top: auto; bottom: 12px; width: auto; padding: 14px; }
+      .ui { left: 12px; top: 12px; padding: 13px; width: min(360px, calc(100vw - 24px)); }
+      .ui.collapsed { width: auto; min-width: 154px; padding: 10px 11px; }
+      .panel { right: 12px; left: 12px; top: auto; bottom: 74px; width: auto; max-height: 52vh; padding: 14px; transform: translateY(calc(100% + 96px)); }
+      .panel.visible { transform: translateY(0); }
+      .info-toggle { right: 12px; top: auto; bottom: 22px; transform: translateY(18px); }
+      .info-toggle.visible { transform: translateY(0); }
+      .info-toggle.open { right: 12px; }
       .title { font-size: 17px; }
+      .title-row { margin-bottom: 8px; }
+      .hud-toggle { width: 30px; height: 30px; }
+      .chevron { width: 9px; height: 9px; border-right-width: 2px; border-bottom-width: 2px; }
+      .atom-nav-button { width: 44px; height: 44px; }
       .subtitle, .hint, .note { font-size: 11px; }
       .controls { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
       button { font-size: 11px; padding: 8px 5px; border-radius: 11px; }
@@ -274,46 +465,38 @@
 <body>
   <div id="app"></div>
 
-  <section class="ui">
-    <h1 class="title">3D 주기율표</h1>
-    <div class="controls">
-      <button class="metric active" data-metric="protons">양성자수</button>
-      <button class="metric" data-metric="neutrons">중성자수</button>
-      <button class="metric" data-metric="massNumber">양성자+중성자</button>
-      <button class="metric" data-metric="electronegativity">전기음성도</button>
+  <section class="ui" id="hud">
+    <div class="title-row">
+      <h1 class="title">3D 주기율표</h1>
+      <button id="hudToggle" class="hud-toggle" type="button" aria-label="설정 접기" title="설정 접기"><span class="chevron up" aria-hidden="true"></span></button>
     </div>
-    <div class="legend">
-      <span style="--c:#ff6b6b">알칼리</span>
-      <span style="--c:#ffa94d">알칼리 토금속</span>
-      <span style="--c:#4dabf7">전이 금속</span>
-      <span style="--c:#adb5bd">전이후 금속</span>
-      <span style="--c:#f2c94c">준금속</span>
-      <span style="--c:#69db7c">비금속</span>
-      <span style="--c:#9775fa">할로젠</span>
-      <span style="--c:#66d9e8">비활성 기체</span>
-      <span style="--c:#f783ac">란타넘족</span>
-      <span style="--c:#b197fc">악티늄족</span>
+    <div class="hud-body" id="hudBody">
+      <div class="controls">
+        <button class="metric active" data-metric="protons">양성자수</button>
+        <button class="metric" data-metric="neutrons">중성자수</button>
+        <button class="metric" data-metric="massNumber">양성자+중성자</button>
+        <button class="metric" data-metric="electronegativity">전기음성도</button>
+      </div>
+      <div class="legend">
+        <span style="--c:#ff6b6b">알칼리</span>
+        <span style="--c:#ffa94d">알칼리 토금속</span>
+        <span style="--c:#4dabf7">전이 금속</span>
+        <span style="--c:#adb5bd">전이후 금속</span>
+        <span style="--c:#f2c94c">준금속</span>
+        <span style="--c:#69db7c">비금속</span>
+        <span style="--c:#9775fa">할로젠</span>
+        <span style="--c:#66d9e8">비활성 기체</span>
+        <span style="--c:#f783ac">란타넘족</span>
+        <span style="--c:#b197fc">악티늄족</span>
+      </div>
     </div>
   </section>
 
-  <aside id="info" class="panel empty">
-    <div class="symbol-row">
-      <div class="big-symbol">?</div>
-      <div>
-        <div class="name">원소를 선택하세요</div>
-        <div class="category">선택된 원소 정보가 여기에 표시됩니다.</div>
-      </div>
-    </div>
-    <div class="facts">
-      <div class="fact"><div class="k">양성자수</div><div class="v">-</div></div>
-      <div class="fact"><div class="k">중성자수</div><div class="v">-</div></div>
-      <div class="fact"><div class="k">질량수</div><div class="v">-</div></div>
-      <div class="fact"><div class="k">전기음성도</div><div class="v">-</div></div>
-    </div>
+  <aside id="info" class="panel"></aside>
 
-  </aside>
-
-  <button id="backToTable" class="back-button" type="button" aria-label="주기율표 전체보기로 돌아가기">← 전체보기</button>
+  <button id="prevElement" class="atom-nav-button prev" type="button" aria-label="이전 원소 보기"><span class="chevron left" aria-hidden="true"></span></button>
+  <button id="backToTable" class="back-button" type="button" aria-label="주기율표 전체보기로 돌아가기">전체보기</button>
+  <button id="nextElement" class="atom-nav-button next" type="button" aria-label="다음 원소 보기"><span class="chevron right" aria-hidden="true"></span></button>
 
   <script type="module">
     import * as THREE from "three";
@@ -321,7 +504,11 @@
 
     const app = document.querySelector("#app");
     const info = document.querySelector("#info");
+    const hud = document.querySelector("#hud");
+    const hudToggleButton = document.querySelector("#hudToggle");
     const backToTableButton = document.querySelector("#backToTable");
+    const prevElementButton = document.querySelector("#prevElement");
+    const nextElementButton = document.querySelector("#nextElement");
     const metricButtons = [...document.querySelectorAll(".metric")];
 
     const elements = [
@@ -570,6 +757,8 @@
       const lead = everyday.length ? everyday.slice(0, 1) : fallback[e.category] ?? [];
       return { items: [...lead, ...story] };
     }
+
+    const elementsByZ = [...elements].sort((a, b) => a.Z - b.Z);
 
     const TILE_W = 1.2;
     const TILE_D = 1.2;
@@ -895,6 +1084,20 @@
 
     metricButtons.forEach(btn => btn.addEventListener("click", () => changeMetric(btn.dataset.metric)));
 
+    function setHudCollapsed(collapsed) {
+      hud.classList.toggle("collapsed", collapsed);
+      const icon = hudToggleButton.querySelector(".chevron");
+      if (icon) icon.className = `chevron ${collapsed ? "down" : "up"}`;
+      hudToggleButton.setAttribute("aria-label", collapsed ? "설정 펼치기" : "설정 접기");
+      hudToggleButton.setAttribute("title", collapsed ? "설정 펼치기" : "설정 접기");
+    }
+
+    hudToggleButton.addEventListener("click", () => setHudCollapsed(!hud.classList.contains("collapsed")));
+    hudToggleButton.addEventListener("touchend", event => {
+      event.preventDefault();
+      setHudCollapsed(!hud.classList.contains("collapsed"));
+    }, { passive: false });
+
     function updateTileHeights() {
       for (const t of tiles) {
         if (!t.mesh.visible && t.e !== selectedElement) continue;
@@ -910,7 +1113,7 @@
         const selectedTile = tiles.find(t => t.e === selectedElement);
         if (selectedTile) {
           const pos = tilePosition(selectedElement);
-          const atomCenterY = selectedTile.currentHeight + 1.0;
+          const atomCenterY = atomCenterYFor(selectedElement, selectedTile.currentHeight);
           atomGroup.position.set(pos.x, atomCenterY, pos.z);
           controls.target.lerp(new THREE.Vector3(pos.x, atomCenterY, pos.z), 0.16);
         }
@@ -929,6 +1132,8 @@
       });
       atomGroup = null;
     }
+
+    const ATOM_BAR_GAP = 0.16;
 
     function shellDistribution(Z) {
       // 입체 보어 모형용 전자껍질 계산. 원소에는 전자 배열을 저장하지 않고,
@@ -949,35 +1154,88 @@
       return shells.filter(count => count > 0);
     }
 
-    function nucleonPositions(total) {
-      const positions = [];
-      if (total <= 1) return [new THREE.Vector3(0, 0, 0)];
-      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-      // 핵 입자들이 퍼져 보이지 않도록 전체 배치 반경을 작게 잡는다.
-      // 입자 반지름은 아래에서 더 크게 두어, 양성자/중성자가 꽁꽁 뭉친 핵처럼 보이게 한다.
-      const maxR = THREE.MathUtils.clamp(0.058 * Math.cbrt(total), 0.13, 0.46);
-      for (let i = 0; i < total; i++) {
-        const u = (i + 0.5) / total;
-        const r = maxR * Math.cbrt(u);
-        const z = 1 - 2 * u;
-        const planar = Math.sqrt(Math.max(0, 1 - z * z));
-        const theta = i * goldenAngle;
-        positions.push(new THREE.Vector3(
-          r * planar * Math.cos(theta),
-          r * z,
-          r * planar * Math.sin(theta)
-        ));
-      }
-      return positions;
+    function atomScaleFor(e) {
+      return THREE.MathUtils.clamp(1.05 + Math.log10(e.Z + 1) * 0.12, 1.08, 1.34);
     }
 
-    function protonSlotSet(Z, N) {
-      const total = Z + N;
-      const slots = new Set();
-      for (let k = 0; k < Z; k++) {
-        slots.add(Math.floor((k + 0.5) * total / Z));
+    function atomOuterBoundaryRadiusFor(e) {
+      const shells = shellDistribution(e.Z);
+      return 0.78 + Math.max(0, shells.length - 1) * 0.32 + 0.22;
+    }
+
+    function atomCenterYFor(e, tileHeight) {
+      return tileHeight + atomOuterBoundaryRadiusFor(e) * atomScaleFor(e) + ATOM_BAR_GAP;
+    }
+
+    function seededRandom(seed) {
+      let t = seed >>> 0;
+      return function random() {
+        t += 0x6D2B79F5;
+        let r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function shuffledNucleonKinds(Z, N) {
+      const kinds = [
+        ...Array.from({ length: Z }, () => "proton"),
+        ...Array.from({ length: N }, () => "neutron")
+      ];
+      const random = seededRandom(Z * 1009 + N * 9176 + 41);
+      for (let i = kinds.length - 1; i > 0; i--) {
+        const j = Math.floor(random() * (i + 1));
+        [kinds[i], kinds[j]] = [kinds[j], kinds[i]];
       }
-      return slots;
+      return kinds;
+    }
+
+    function nucleonPositions(total, seed = 1) {
+      const positions = [];
+      if (total <= 1) return [new THREE.Vector3(0, 0, 0)];
+      const random = seededRandom(seed);
+      const maxR = THREE.MathUtils.clamp(0.050 * Math.cbrt(total), 0.12, 0.42);
+      const minDist = 0.105;
+      let attempts = 0;
+
+      while (positions.length < total && attempts < total * 90) {
+        attempts++;
+        const r = maxR * Math.pow(random(), 0.55);
+        const cosTheta = random() * 2 - 1;
+        const sinTheta = Math.sqrt(Math.max(0, 1 - cosTheta * cosTheta));
+        const phi = random() * Math.PI * 2;
+        const candidate = new THREE.Vector3(
+          r * sinTheta * Math.cos(phi),
+          r * cosTheta,
+          r * sinTheta * Math.sin(phi)
+        );
+
+        let tooClose = false;
+        for (const p of positions) {
+          if (candidate.distanceToSquared(p) < minDist * minDist) {
+            tooClose = true;
+            break;
+          }
+        }
+        if (!tooClose || positions.length > total * 0.72) positions.push(candidate);
+      }
+
+      while (positions.length < total) {
+        const r = maxR * Math.pow(random(), 0.42);
+        const cosTheta = random() * 2 - 1;
+        const sinTheta = Math.sqrt(Math.max(0, 1 - cosTheta * cosTheta));
+        const phi = random() * Math.PI * 2;
+        positions.push(new THREE.Vector3(
+          r * sinTheta * Math.cos(phi),
+          r * cosTheta,
+          r * sinTheta * Math.sin(phi)
+        ));
+      }
+
+      // 덩어리 전체가 원점에서 크게 치우치지 않도록 중심만 보정한다.
+      const center = positions.reduce((sum, p) => sum.add(p), new THREE.Vector3()).multiplyScalar(1 / positions.length);
+      for (const p of positions) p.sub(center);
+      return positions;
     }
 
     function createElectronOrbit(shellIndex, radius, count, electronMat, electronGeo, orbitMat) {
@@ -1027,7 +1285,7 @@
     function createAtomModel(e, basePos, tileHeight) {
       clearAtom();
       atomGroup = new THREE.Group();
-      atomGroup.position.set(basePos.x, tileHeight + 1.0, basePos.z);
+      atomGroup.position.set(basePos.x, atomCenterYFor(e, tileHeight), basePos.z);
       scene.add(atomGroup);
 
       const nucleus = new THREE.Group();
@@ -1037,23 +1295,19 @@
       const neutronMat = new THREE.MeshStandardMaterial({ color: 0xdbe7f6, emissive: 0x53677f, emissiveIntensity: 0.22, roughness: 0.48, metalness: 0.03 });
       const nucleonGeo = new THREE.SphereGeometry(0.083, 22, 16);
       const totalNucleons = e.Z + e.N;
-      const protonSlots = protonSlotSet(e.Z, e.N);
-      const positions = nucleonPositions(totalNucleons);
+      const nucleonKinds = shuffledNucleonKinds(e.Z, e.N);
+      const positions = nucleonPositions(totalNucleons, e.Z * 7919 + e.N * 104729);
 
       for (let i = 0; i < totalNucleons; i++) {
-        const isProton = protonSlots.has(i);
+        const isProton = nucleonKinds[i] === "proton";
         const particle = new THREE.Mesh(nucleonGeo, isProton ? protonMat : neutronMat);
         particle.position.copy(positions[i]);
+        particle.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
         particle.castShadow = true;
         particle.userData.kind = isProton ? "proton" : "neutron";
         nucleus.add(particle);
       }
 
-      const nucleusShell = new THREE.Mesh(
-        new THREE.SphereGeometry(0.82, 32, 20),
-        new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.035, wireframe: true })
-      );
-      nucleus.add(nucleusShell);
 
       const coreGlow = new THREE.PointLight(0xffb0ba, 1.25, 4.5);
       coreGlow.position.set(0, 0.2, 0);
@@ -1069,14 +1323,38 @@
       const electronGeo = new THREE.SphereGeometry(0.034, 18, 12);
       const orbitMat = new THREE.MeshBasicMaterial({ color: 0x8ddcff, transparent: true, opacity: 0.32 });
       const shells = shellDistribution(e.Z);
+      const outerElectronRadius = 0.78 + Math.max(0, shells.length - 1) * 0.32;
+
+      // 핵을 감싸던 구가 아니라, 전자껍질 전체를 감싸는 원자 외곽 폴리곤 구.
+      const atomBoundary = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(outerElectronRadius + 0.22, 3),
+        new THREE.MeshBasicMaterial({
+          color: 0xbfeeff,
+          transparent: true,
+          opacity: 0.052,
+          wireframe: true,
+          depthWrite: false
+        })
+      );
+      atomBoundary.renderOrder = 1;
+      atomGroup.add(atomBoundary);
 
       shells.forEach((count, shellIndex) => {
         const radius = 0.78 + shellIndex * 0.32;
         atomGroup.add(createElectronOrbit(shellIndex, radius, count, electronMat, electronGeo, orbitMat));
       });
 
-      const scale = THREE.MathUtils.clamp(1.05 + Math.log10(e.Z + 1) * 0.12, 1.08, 1.34);
+      const scale = atomScaleFor(e);
       atomGroup.scale.setScalar(scale);
+    }
+
+    function showAtomInfoControls() {
+      info.classList.add("visible");
+    }
+
+    function hideAtomInfoControls() {
+      info.classList.remove("visible");
+      info.innerHTML = "";
     }
 
     function showInfo(e) {
@@ -1088,7 +1366,6 @@
         massNumber: "현재 높이: 양성자수+중성자수",
         electronegativity: "현재 높이: 전기음성도"
       }[currentMetric];
-      info.classList.remove("empty");
       info.style.setProperty("--accent", `#${color.toString(16).padStart(6,"0")}`);
       info.innerHTML = `
         <div class="symbol-row">
@@ -1136,7 +1413,7 @@
 
     function centerCameraOnAtom(e, tileHeight, animate = true) {
       const pos = tilePosition(e);
-      const atomCenter = new THREE.Vector3(pos.x, tileHeight + 1.0, pos.z);
+      const atomCenter = new THREE.Vector3(pos.x, atomCenterYFor(e, tileHeight), pos.z);
       const startPos = camera.position.clone();
       const startTarget = controls.target.clone();
 
@@ -1170,10 +1447,17 @@
       };
     }
 
+    function setAtomNavVisible(visible) {
+      prevElementButton.classList.toggle("visible", visible);
+      nextElementButton.classList.toggle("visible", visible);
+    }
+
     function focusElement(e) {
       viewTiltVelocity.set(0, 0);
       atomYawVelocity = 0;
       backToTableButton.classList.add("visible");
+      setAtomNavVisible(true);
+      showAtomInfoControls();
       const pos = tilePosition(e);
       const tile = tiles.find(t => t.e === e);
       const h = tile?.currentHeight ?? heightFor(e);
@@ -1181,6 +1465,14 @@
       showInfo(e);
       applySelectionDim(e);
       centerCameraOnAtom(e, h, true);
+    }
+
+    function focusAdjacentElement(delta) {
+      if (!selectedElement) return;
+      const currentIndex = elementsByZ.findIndex(e => e.Z === selectedElement.Z);
+      if (currentIndex < 0) return;
+      const nextIndex = (currentIndex + delta + elementsByZ.length) % elementsByZ.length;
+      focusElement(elementsByZ[nextIndex]);
     }
 
     function isAtomViewActive() {
@@ -1323,22 +1615,8 @@
     }, { passive: true });
 
     function resetInfoPanel() {
-      info.classList.add("empty");
       info.style.removeProperty("--accent");
-      info.innerHTML = `
-        <div class="symbol-row">
-          <div class="big-symbol">?</div>
-          <div>
-            <div class="name">원소 선택</div>
-          </div>
-        </div>
-        <div class="facts">
-          <div class="fact"><div class="k">양성자수</div><div class="v">-</div></div>
-          <div class="fact"><div class="k">중성자수</div><div class="v">-</div></div>
-          <div class="fact"><div class="k">질량수</div><div class="v">-</div></div>
-          <div class="fact"><div class="k">전기음성도</div><div class="v">-</div></div>
-        </div>
-      `;
+      hideAtomInfoControls();
     }
 
     function restoreTileBrightness() {
@@ -1360,6 +1638,7 @@
       viewTiltVelocity.set(0, 0);
       atomYawVelocity = 0;
       backToTableButton.classList.remove("visible");
+      setAtomNavVisible(false);
       pointerDown = null;
       activePointers.clear();
       multiTouchInProgress = false;
@@ -1380,6 +1659,17 @@
         startZoom: camera.zoom
       };
     }
+
+    prevElementButton.addEventListener("click", () => focusAdjacentElement(-1));
+    nextElementButton.addEventListener("click", () => focusAdjacentElement(1));
+    prevElementButton.addEventListener("touchend", event => {
+      event.preventDefault();
+      focusAdjacentElement(-1);
+    }, { passive: false });
+    nextElementButton.addEventListener("touchend", event => {
+      event.preventDefault();
+      focusAdjacentElement(1);
+    }, { passive: false });
 
     backToTableButton.addEventListener("click", () => startSmoothReset());
     backToTableButton.addEventListener("touchend", event => {
