@@ -663,7 +663,7 @@ function normalizedWheelDelta(event) {
 
 
 function applyWheelZoom(deltaY, speed) {
-  const zoomFactor = Math.exp(-deltaY * speed);
+  const zoomFactor = Math.exp(deltaY * speed);
   camera.zoom = THREE.MathUtils.clamp(camera.zoom * zoomFactor, MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM);
   camera.updateProjectionMatrix();
 }
@@ -672,13 +672,13 @@ function handleHorizontalWheelRotation(deltaX) {
   if (Math.abs(deltaX) < 0.01) return;
 
   if (isAtomViewActive()) {
-    const deltaYaw = -deltaX * WHEEL_YAW_SPEED;
+    const deltaYaw = deltaX * WHEEL_YAW_SPEED;
     rotateAtomCamera(deltaYaw);
     atomYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.75, -0.085, 0.085);
     return;
   }
 
-  const deltaYaw = -deltaX * WHEEL_YAW_SPEED;
+  const deltaYaw = deltaX * WHEEL_YAW_SPEED;
   tableYaw += deltaYaw;
   applyViewFromTilt();
   tableYawVelocity = THREE.MathUtils.clamp(deltaYaw * 0.75, -0.08, 0.08);
@@ -703,6 +703,7 @@ function resetInfoPanel() {
 
 function startSmoothReset() {
   selectedElement = null;
+  clearAtom();
   viewTiltVelocity.set(0, 0);
   tableYawVelocity = 0;
   atomYawVelocity = 0;
