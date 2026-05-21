@@ -329,14 +329,14 @@ function createSeriesPlaceholder(group, period, dotCount) {
 
 function createCategoryLegendOnTable() {
   const items = [
-    ["알칼리", palette.alkali],
-    ["알칼리 토금속", palette.alkaline],
-    ["전이 금속", palette.transition],
-    ["전이후 금속", palette.post],
+    ["알칼리금속", palette.alkali],
+    ["알칼리토금속", palette.alkaline],
+    ["전이금속", palette.transition],
+    ["전이후금속", palette.post],
     ["준금속", palette.metalloid],
     ["비금속", palette.nonmetal],
     ["할로젠", palette.halogen],
-    ["비활성 기체", palette.noble],
+    ["비활성기체", palette.noble],
     ["란타넘족", palette.lanthanide],
     ["악티늄족", palette.actinide]
   ];
