@@ -524,14 +524,24 @@ function clearAtom() {
 function createElectronOrbit(shellIndex, radius, count, electronMat, electronGeo, orbitMat) {
   const group = new THREE.Group();
 
-  group.rotation.set(
+  /*group.rotation.set(
     Math.PI / 2 + (shellIndex % 2 === 0 ? 0.42 : -0.42),
     shellIndex * 0.38,
     shellIndex * 0.71
   );
 
   group.userData.isOrbitGroup = true;
+  group.userData.speed = 0.0045 + shellIndex * 0.0012;*/
+  const baseX = Math.PI / 2 + (shellIndex % 2 === 0 ? 0.42 : -0.42);
+  const baseY = shellIndex * 0.38;
+  const baseZ = shellIndex * 0.71;
+  
+  group.rotation.set(baseX, baseY, baseZ);
+  
+  group.userData.isOrbitGroup = true;
   group.userData.speed = 0.0045 + shellIndex * 0.0012;
+  group.userData.baseX = baseX;
+  group.userData.baseY = baseY;
 
   const orbit = new THREE.Mesh(
     new THREE.TorusGeometry(radius, 0.008, 6, 96),
@@ -943,6 +953,47 @@ function updateFullViewCameraInertia() {
   viewTiltVelocity.multiplyScalar(FULL_VIEW_INERTIA_DAMPING);
 }
 
+function smoothstep(edge0, edge1, x) {
+  const t = THREE.MathUtils.clamp(
+    (x - edge0) / (edge1 - edge0),
+    0,
+    1
+  );
+
+  return t * t * (3 - 2 * t);
+}
+
+function updateOrbitTiltByAtomTheta() {
+  if (!isAtomViewActive()) return;
+
+  const { theta } = getAtomCameraSpherical();
+
+  const thetaRatio = THREE.MathUtils.clamp(
+    theta / ATOM_THETA_MAX,
+    0,
+    1
+  );
+
+  const northBlend = 1 - smoothstep(0, 1, thetaRatio);
+
+  for (const orbit of orbitGroups) {
+    const baseX = orbit.userData.baseX ?? orbit.rotation.x;
+    const baseY = orbit.userData.baseY ?? orbit.rotation.y;
+
+    orbit.rotation.x = THREE.MathUtils.lerp(
+      baseX,
+      Math.PI / 2,
+      northBlend
+    );
+
+    orbit.rotation.y = THREE.MathUtils.lerp(
+      baseY,
+      0,
+      northBlend
+    );
+  }
+}
+
 /*function animateAtom() {
   if (!atomGroup) return;
   atomGroup.rotation.y += 0.0025;
@@ -959,6 +1010,8 @@ function animateAtom() {
   if (!atomGroup) return;
 
   atomGroup.rotation.y += 0.0025;
+
+  updateOrbitTiltByAtomTheta();
 
   for (const orbit of orbitGroups) {
     orbit.rotation.z += orbit.userData.speed;
@@ -1396,7 +1449,7 @@ renderer.domElement.addEventListener("pointermove", event => {
     atomYawVelocity = THREE.MathUtils.clamp(deltaYaw * speedBoost, -0.13, 0.13);
     return;*/
     const deltaYaw = -dx * ATOM_DRAG_YAW_SPEED;
-    const deltaTheta = dy * ATOM_DRAG_THETA_SPEED;
+    const deltaTheta = -dy * ATOM_DRAG_THETA_SPEED;
   
     rotateAtomCamera(deltaYaw, deltaTheta);
   
