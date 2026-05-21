@@ -532,6 +532,10 @@ function createElectronOrbit(shellIndex, radius, count, electronMat, electronGeo
 
   group.userData.isOrbitGroup = true;
   group.userData.speed = 0.0045 + shellIndex * 0.0012;*/
+
+  const orbitDirection = -1;
+  const orbitSpeedScale = 0.4;
+  
   const baseX = Math.PI / 2 + (shellIndex % 2 === 0 ? 0.42 : -0.42);
   const baseY = shellIndex * 0.38;
   const baseZ = shellIndex * 0.71;
@@ -539,7 +543,7 @@ function createElectronOrbit(shellIndex, radius, count, electronMat, electronGeo
   group.rotation.set(baseX, baseY, baseZ);
   
   group.userData.isOrbitGroup = true;
-  group.userData.speed = 0.0045 + shellIndex * 0.0012;
+  group.userData.speed = orbitDirection * orbitSpeedScale * (0.0045 + shellIndex * 0.0012);
   group.userData.baseX = baseX;
   group.userData.baseY = baseY;
 
@@ -564,7 +568,7 @@ function createElectronOrbit(shellIndex, radius, count, electronMat, electronGeo
       isElectron: true,
       radius,
       theta,
-      speed: 0.018 + shellIndex * 0.0026
+      speed: orbitDirection * orbitSpeedScale * (0.018 + shellIndex * 0.0026)
     };
 
     electron.castShadow = false;
