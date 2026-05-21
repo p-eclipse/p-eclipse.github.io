@@ -88,6 +88,7 @@ const pointer = new THREE.Vector2();
 let pointerDown = null;
 let activePointers = new Map();
 let multiTouchInProgress = false;
+let touchGesture = null;
 
 function categoryOf(e) {
   if (e.p === 8) return "lanthanide";
@@ -272,7 +273,7 @@ function createSeriesGuide(labelText, row, color) {
   ctx.fillRect(78, 322, 1244, 34);
   ctx.lineWidth = 14;
   ctx.strokeStyle = "rgba(0,0,0,0.62)";
-  ctx.font = "950 128px system-ui, sans-serif";
+  ctx.font = "950 96px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.strokeText(labelText, 700, 190);
@@ -744,14 +745,117 @@ function getIntersect(event) {
   return raycaster.intersectObjects(rayTargets, false)[0] ?? null;
 }
 
+function panCameraByScreenDelta(dx, dy) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  const worldUnitsPerPixel = (frustum / camera.zoom) / Math.max(1, rect.height);
+
+  const right = new THREE.Vector3()
+    .setFromMatrixColumn(camera.matrixWorld, 0)
+    .normalize();
+
+  const up = new THREE.Vector3()
+    .copy(camera.up)
+    .normalize();
+
+  const pan = new THREE.Vector3()
+    .addScaledVector(right, -dx * worldUnitsPerPixel)
+    .addScaledVector(up, dy * worldUnitsPerPixel);
+
+  camera.position.add(pan);
+  controlsTarget.add(pan);
+  camera.lookAt(controlsTarget);
+  camera.updateProjectionMatrix();
+}
+
+function zoomCameraByRatio(ratio) {
+  if (!Number.isFinite(ratio) || ratio <= 0) return;
+
+  camera.zoom = THREE.MathUtils.clamp(
+    camera.zoom * ratio,
+    0.55,
+    5.0
+  );
+
+  camera.updateProjectionMatrix();
+}
+
+function getTwoPointerGestureState() {
+  const points = [...activePointers.values()];
+  if (points.length < 2) return null;
+
+  const a = points[0];
+  const b = points[1];
+
+  const center = {
+    x: (a.x + b.x) / 2,
+    y: (a.y + b.y) / 2
+  };
+
+  const distance = Math.max(
+    1,
+    Math.hypot(a.x - b.x, a.y - b.y)
+  );
+
+  return { center, distance };
+}
+
+function beginTwoPointerGesture() {
+  const state = getTwoPointerGestureState();
+
+  touchGesture = state
+    ? {
+        prevCenter: state.center,
+        prevDistance: state.distance
+      }
+    : null;
+}
+
+function updateTwoPointerGesture() {
+  const state = getTwoPointerGestureState();
+  if (!state) return;
+
+  if (!touchGesture) {
+    beginTwoPointerGesture();
+    return;
+  }
+
+  stopInteractionTween();
+
+  atomYawVelocity = 0;
+  viewTiltVelocity.set(0, 0);
+  tableYawVelocity = 0;
+
+  const dx = state.center.x - touchGesture.prevCenter.x;
+  const dy = state.center.y - touchGesture.prevCenter.y;
+
+  panCameraByScreenDelta(dx, dy);
+  zoomCameraByRatio(state.distance / touchGesture.prevDistance);
+
+  touchGesture.prevCenter = state.center;
+  touchGesture.prevDistance = state.distance;
+}
+
 function stopInteractionTween() {
   if (focusTween?.mode !== "reset") focusTween = null;
 }
 
 function finishPointer(event) {
-  const wasMultiTouch = multiTouchInProgress || activePointers.size > 1;
+ /* const wasMultiTouch = multiTouchInProgress || activePointers.size > 1;
   activePointers.delete(event.pointerId);
-  if (activePointers.size === 0) multiTouchInProgress = false;
+  if (activePointers.size === 0) multiTouchInProgress = false;*/
+
+    const wasMultiTouch = multiTouchInProgress || activePointers.size > 1;
+
+  activePointers.delete(event.pointerId);
+
+  if (activePointers.size < 2) {
+    touchGesture = null;
+  }
+
+  if (activePointers.size === 0) {
+    multiTouchInProgress = false;
+  }
+  
   if (!pointerDown || pointerDown.id !== event.pointerId || wasMultiTouch) {
     pointerDown = null;
     return;
@@ -906,7 +1010,11 @@ window.addEventListener("keydown", event => {
   if (event.key.toLowerCase() === "r") startSmoothReset();
 });
 
-renderer.domElement.addEventListener("pointerdown", event => {
+renderer.domElement.addEventListener("contextmenu", event => {
+  event.preventDefault();
+});
+
+/*renderer.domElement.addEventListener("pointerdown", event => {
   activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
   multiTouchInProgress = activePointers.size > 1;
   if (activePointers.size === 1) {
@@ -919,9 +1027,47 @@ renderer.domElement.addEventListener("pointerdown", event => {
   } else {
     pointerDown = null;
   }
+}, { passive: true });*/
+
+renderer.domElement.addEventListener("pointerdown", event => {
+  activePointers.set(event.pointerId, {
+    x: event.clientX,
+    y: event.clientY
+  });
+
+  if (event.pointerType === "touch" && activePointers.size === 2) {
+    multiTouchInProgress = true;
+    pointerDown = null;
+    beginTwoPointerGesture();
+    return;
+  }
+
+  multiTouchInProgress = activePointers.size > 1;
+
+  if (activePointers.size === 1) {
+    if (isAtomViewActive()) atomYawVelocity = 0;
+    else {
+      viewTiltVelocity.set(0, 0);
+      tableYawVelocity = 0;
+    }
+
+    const isRightMouse = event.pointerType === "mouse" && event.button === 2;
+
+    pointerDown = {
+      id: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      time: performance.now(),
+      pointerType: event.pointerType,
+      button: event.button ?? 0,
+      mode: isRightMouse ? "pan" : "orbit"
+    };
+  } else {
+    pointerDown = null;
+  }
 }, { passive: true });
 
-renderer.domElement.addEventListener("pointermove", event => {
+/*renderer.domElement.addEventListener("pointermove", event => {
   if (activePointers.has(event.pointerId)) activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
   if (!pointerDown || pointerDown.id !== event.pointerId || activePointers.size !== 1 || multiTouchInProgress) return;
   const dxTotal = event.clientX - pointerDown.x;
@@ -950,14 +1096,97 @@ renderer.domElement.addEventListener("pointermove", event => {
   applyViewFromTilt();
   tableYawVelocity = THREE.MathUtils.clamp(deltaYaw * speedBoost, -0.12, 0.12);
   viewTiltVelocity.set(0, THREE.MathUtils.clamp(deltaPitch * speedBoost, -0.12, 0.12));
+}, { passive: true });*/
+
+renderer.domElement.addEventListener("pointermove", event => {
+  if (activePointers.has(event.pointerId)) {
+    activePointers.set(event.pointerId, {
+      x: event.clientX,
+      y: event.clientY
+    });
+  }
+
+  if (event.pointerType === "touch" && activePointers.size >= 2) {
+    multiTouchInProgress = true;
+    updateTwoPointerGesture();
+    return;
+  }
+
+  if (
+    !pointerDown ||
+    pointerDown.id !== event.pointerId ||
+    activePointers.size !== 1 ||
+    multiTouchInProgress
+  ) {
+    return;
+  }
+
+  const dxTotal = event.clientX - pointerDown.x;
+  const dyTotal = event.clientY - pointerDown.y;
+
+  if (Math.hypot(dxTotal, dyTotal) <= 2) return;
+
+  const dx = event.clientX - (pointerDown.lastX ?? pointerDown.x);
+  const dy = event.clientY - (pointerDown.lastY ?? pointerDown.y);
+
+  const now = performance.now();
+  const dt = Math.max(12, now - (pointerDown.lastTime ?? pointerDown.time));
+
+  pointerDown.lastX = event.clientX;
+  pointerDown.lastY = event.clientY;
+  pointerDown.lastTime = now;
+  pointerDown.dragged = true;
+
+  stopInteractionTween();
+
+  if (pointerDown.mode === "pan") {
+    atomYawVelocity = 0;
+    viewTiltVelocity.set(0, 0);
+    tableYawVelocity = 0;
+    panCameraByScreenDelta(dx, dy);
+    return;
+  }
+
+  const speedBoost = THREE.MathUtils.clamp(16 / dt, 0.45, 1.9);
+
+  if (isAtomViewActive()) {
+    const deltaYaw = -dx * ATOM_DRAG_YAW_SPEED;
+    rotateAtomCamera(deltaYaw);
+    atomYawVelocity = THREE.MathUtils.clamp(deltaYaw * speedBoost, -0.13, 0.13);
+    return;
+  }
+
+  const deltaYaw = -dx * FULL_VIEW_YAW_SPEED;
+  const deltaPitch = -dy * DRAG_TILT_SPEED;
+
+  tableYaw += deltaYaw;
+  viewTilt.y += deltaPitch;
+  applyViewFromTilt();
+
+  tableYawVelocity = THREE.MathUtils.clamp(deltaYaw * speedBoost, -0.12, 0.12);
+  viewTiltVelocity.set(0, THREE.MathUtils.clamp(deltaPitch * speedBoost, -0.12, 0.12));
 }, { passive: true });
 
 renderer.domElement.addEventListener("pointerup", finishPointer, { passive: true });
-renderer.domElement.addEventListener("pointercancel", event => {
+/*renderer.domElement.addEventListener("pointercancel", event => {
   activePointers.delete(event.pointerId);
   pointerDown = null;
   if (activePointers.size === 0) multiTouchInProgress = false;
+}, { passive: true });*/
+
+renderer.domElement.addEventListener("pointercancel", event => {
+  activePointers.delete(event.pointerId);
+  pointerDown = null;
+
+  if (activePointers.size < 2) {
+    touchGesture = null;
+  }
+
+  if (activePointers.size === 0) {
+    multiTouchInProgress = false;
+  }
 }, { passive: true });
+
 renderer.domElement.addEventListener("wheel", handleWheel, { passive: false });
 
 window.addEventListener("gesturestart", event => event.preventDefault(), { passive: false });
