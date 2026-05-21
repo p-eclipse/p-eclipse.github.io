@@ -65,6 +65,8 @@ let focusTween = null;
 let tableYaw = 0, tableYawVelocity = 0, atomYawVelocity = 0;
 const viewTilt = new THREE.Vector2(0, 0);
 const viewTiltVelocity = new THREE.Vector2(0, 0);
+let orbitGroups = [];
+let electronMeshes = [];
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x07101f, 0.014);
 
@@ -462,7 +464,7 @@ function nucleonPositions(total, seed = 1) {
   return positions;
 }
 
-function clearAtom() {
+/*function clearAtom() {
   if (!atomGroup) return;
   scene.remove(atomGroup);
   atomGroup.traverse(obj => {
@@ -470,9 +472,30 @@ function clearAtom() {
     if (obj.material) Array.isArray(obj.material) ? obj.material.forEach(m => m.dispose()) : obj.material.dispose();
   });
   atomGroup = null;
+}*/
+function clearAtom() {
+  if (!atomGroup) return;
+
+  scene.remove(atomGroup);
+
+  atomGroup.traverse(obj => {
+    if (obj.geometry) obj.geometry.dispose();
+
+    if (obj.material) {
+      if (Array.isArray(obj.material)) {
+        obj.material.forEach(m => m.dispose());
+      } else {
+        obj.material.dispose();
+      }
+    }
+  });
+
+  atomGroup = null;
+  orbitGroups = [];
+  electronMeshes = [];
 }
 
-function createElectronOrbit(shellIndex, radius, count, electronMat, electronGeo, orbitMat) {
+/*function createElectronOrbit(shellIndex, radius, count, electronMat, electronGeo, orbitMat) {
   const group = new THREE.Group();
   group.rotation.set(Math.PI / 2 + (shellIndex % 2 === 0 ? 0.42 : -0.42), shellIndex * 0.38, shellIndex * 0.71);
   group.userData.isOrbitGroup = true;
@@ -492,6 +515,50 @@ function createElectronOrbit(shellIndex, radius, count, electronMat, electronGeo
     group.add(electron);
   }
   return group;
+}*/
+function createElectronOrbit(shellIndex, radius, count, electronMat, electronGeo, orbitMat) {
+  const group = new THREE.Group();
+
+  group.rotation.set(
+    Math.PI / 2 + (shellIndex % 2 === 0 ? 0.42 : -0.42),
+    shellIndex * 0.38,
+    shellIndex * 0.71
+  );
+
+  group.userData.isOrbitGroup = true;
+  group.userData.speed = 0.0045 + shellIndex * 0.0012;
+
+  const orbit = new THREE.Mesh(
+    new THREE.TorusGeometry(radius, 0.008, 6, 96),
+    orbitMat.clone()
+  );
+
+  group.add(orbit);
+
+  for (let i = 0; i < count; i++) {
+    const theta = (i / count) * Math.PI * 2;
+    const electron = new THREE.Mesh(electronGeo, electronMat);
+
+    electron.position.set(
+      Math.cos(theta) * radius,
+      Math.sin(theta) * radius,
+      0
+    );
+
+    electron.userData = {
+      isElectron: true,
+      radius,
+      theta,
+      speed: 0.018 + shellIndex * 0.0026
+    };
+
+    electron.castShadow = false;
+    group.add(electron);
+    electronMeshes.push(electron);
+  }
+
+  orbitGroups.push(group);
+  return group;
 }
 
 function createAtomModel(e, basePos, tileHeight) {
@@ -504,7 +571,7 @@ function createAtomModel(e, basePos, tileHeight) {
   const protonMat = new THREE.MeshStandardMaterial({ color: 0xff4f66, emissive: 0xff1e38, emissiveIntensity: 0.45, roughness: 0.28, metalness: 0.08 });
   const neutronMat = new THREE.MeshStandardMaterial({ color: 0xdbe7f6, emissive: 0x53677f, emissiveIntensity: 0.22, roughness: 0.48, metalness: 0.03 });
   const nucleonGeo = new THREE.SphereGeometry(0.083, 22, 16);
-  const totalNucleons = e.Z + e.N;
+  /*const totalNucleons = e.Z + e.N;
   const nucleonKinds = shuffledNucleonKinds(e.Z, e.N);
   const positions = nucleonPositions(totalNucleons, e.Z * 7919 + e.N * 104729);
   const random = seededRandom(e.Z * 57 + e.N * 131);
@@ -515,7 +582,56 @@ function createAtomModel(e, basePos, tileHeight) {
     particle.rotation.set(random() * Math.PI, random() * Math.PI, random() * Math.PI);
     particle.castShadow = true;
     nucleus.add(particle);
+  }*/
+
+  const totalNucleons = e.Z + e.N;
+  const nucleonKinds = shuffledNucleonKinds(e.Z, e.N);
+  const positions = nucleonPositions(totalNucleons, e.Z * 7919 + e.N * 104729);
+  const random = seededRandom(e.Z * 57 + e.N * 131);
+  
+  const protonMesh = new THREE.InstancedMesh(nucleonGeo, protonMat, e.Z);
+  const neutronMesh = new THREE.InstancedMesh(nucleonGeo, neutronMat, e.N);
+  
+  protonMesh.castShadow = false;
+  protonMesh.receiveShadow = false;
+  neutronMesh.castShadow = false;
+  neutronMesh.receiveShadow = false;
+  
+  const matrix = new THREE.Matrix4();
+  const quaternion = new THREE.Quaternion();
+  const scale = new THREE.Vector3(1, 1, 1);
+  
+  let protonIndex = 0;
+  let neutronIndex = 0;
+  
+  for (let i = 0; i < totalNucleons; i++) {
+    const position = positions[i];
+  
+    quaternion.setFromEuler(
+      new THREE.Euler(
+        random() * Math.PI,
+        random() * Math.PI,
+        random() * Math.PI
+      )
+    );
+  
+    matrix.compose(position, quaternion, scale);
+  
+    if (nucleonKinds[i] === "proton") {
+      protonMesh.setMatrixAt(protonIndex, matrix);
+      protonIndex++;
+    } else {
+      neutronMesh.setMatrixAt(neutronIndex, matrix);
+      neutronIndex++;
+    }
   }
+  
+  protonMesh.instanceMatrix.needsUpdate = true;
+  neutronMesh.instanceMatrix.needsUpdate = true;
+  
+  nucleus.add(protonMesh);
+  nucleus.add(neutronMesh);
+  
   const coreGlow = new THREE.PointLight(0xffb0ba, 1.25, 4.5);
   coreGlow.position.set(0, 0.2, 0);
   atomGroup.add(coreGlow);
@@ -677,7 +793,7 @@ function setHudCollapsed(collapsed) {
   hudToggleButton.setAttribute("title", collapsed ? "설정 펼치기" : "설정 접기");
 }
 
-function updateTileHeights() {
+/*function updateTileHeights() {
   for (const t of tiles) {
     if (!t.mesh.visible && t.e !== selectedElement) continue;
     t.currentHeight += (t.targetHeight - t.currentHeight) * 0.12;
@@ -695,6 +811,44 @@ function updateTileHeights() {
       atomGroup.position.set(pos.x, atomCenterY, pos.z);
       controlsTarget.lerp(new THREE.Vector3(pos.x, atomCenterY, pos.z), 0.16);
     }
+  }
+}*/
+function updateOneTileHeight(t) {
+  t.currentHeight += (t.targetHeight - t.currentHeight) * 0.12;
+
+  const h = Math.max(BASE_H, t.currentHeight);
+  const pos = tilePosition(t.e);
+
+  t.mesh.scale.y = h;
+  t.mesh.position.set(pos.x, h / 2, pos.z);
+  t.label.position.set(pos.x, h + 0.014, pos.z);
+}
+
+function updateTileHeights() {
+  if (selectedElement) {
+    const selectedTile = tiles.find(t => t.e === selectedElement);
+
+    if (selectedTile) {
+      updateOneTileHeight(selectedTile);
+
+      if (atomGroup && !focusTween) {
+        const pos = tilePosition(selectedElement);
+        const atomCenterY = atomCenterYFor(selectedElement, selectedTile.currentHeight);
+
+        atomGroup.position.set(pos.x, atomCenterY, pos.z);
+
+        controlsTarget.lerp(
+          new THREE.Vector3(pos.x, atomCenterY, pos.z),
+          0.16
+        );
+      }
+    }
+
+    return;
+  }
+
+  for (const t of tiles) {
+    updateOneTileHeight(t);
   }
 }
 
@@ -724,7 +878,7 @@ function updateFullViewCameraInertia() {
   viewTiltVelocity.multiplyScalar(FULL_VIEW_INERTIA_DAMPING);
 }
 
-function animateAtom() {
+/*function animateAtom() {
   if (!atomGroup) return;
   atomGroup.rotation.y += 0.0025;
   atomGroup.traverse(obj => {
@@ -735,6 +889,26 @@ function animateAtom() {
       obj.position.set(Math.cos(theta) * radius, Math.sin(theta) * radius, 0);
     }
   });
+}*/
+function animateAtom() {
+  if (!atomGroup) return;
+
+  atomGroup.rotation.y += 0.0025;
+
+  for (const orbit of orbitGroups) {
+    orbit.rotation.z += orbit.userData.speed;
+  }
+
+  for (const electron of electronMeshes) {
+    const u = electron.userData;
+    u.theta += u.speed;
+
+    electron.position.set(
+      Math.cos(u.theta) * u.radius,
+      Math.sin(u.theta) * u.radius,
+      0
+    );
+  }
 }
 
 function getIntersect(event) {
