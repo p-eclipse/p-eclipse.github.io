@@ -139,9 +139,9 @@ function makeLabelTexture(e, categoryColor) {
   ctx.font = "900 168px system-ui, sans-serif";
   ctx.fillText(e.s, 256, 256);
   ctx.fillStyle = "rgba(0,0,0,0.72)";
-  ctx.font = "700 96px system-ui, sans-serif";
-  ctx.fillText(e.Z, 256, 148);
   ctx.font = "700 72px system-ui, sans-serif";
+  ctx.fillText(e.Z, 256, 148);
+  ctx.font = "700 64px system-ui, sans-serif";
   ctx.fillText(e.n, 256, 376);
   //ctx.fillStyle = `#${categoryColor.toString(16).padStart(6, "0")}`;
   //ctx.fillRect(104, 404, 304, 12);
@@ -262,8 +262,8 @@ function createPrintedBlock(width, depth, height, x, z, texture, baseColor = 0x0
 
 function createSeriesGuide(labelText, row, color) {
   const c = document.createElement("canvas");
-  c.width = 1400;
-  c.height = 420;
+  c.width = 1560;
+  c.height = 360;
   const ctx = c.getContext("2d");
   ctx.fillStyle = "#0a1829";
   ctx.fillRect(0, 0, c.width, c.height);
@@ -272,7 +272,7 @@ function createSeriesGuide(labelText, row, color) {
   ctx.fillRect(78, 322, 1244, 34);
   ctx.lineWidth = 14;
   ctx.strokeStyle = "rgba(0,0,0,0.62)";
-  ctx.font = "950 236px system-ui, sans-serif";
+  ctx.font = "950 128px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.strokeText(labelText, 700, 190);
@@ -333,12 +333,12 @@ function createCategoryLegendOnTable() {
   ];
 
   const c = document.createElement("canvas");
-  c.width = 2600;
-  c.height = 720;
+  c.width = 2620;
+  c.height = 600;
   const ctx = c.getContext("2d");
   ctx.fillStyle = "#0a1829";
   ctx.fillRect(0, 0, c.width, c.height);
-  ctx.font = "950 92px system-ui, sans-serif";
+  ctx.font = "950 72px system-ui, sans-serif";
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
 
@@ -357,7 +357,7 @@ function createCategoryLegendOnTable() {
 
     ctx.fillStyle = hex;
     ctx.beginPath();
-    ctx.arc(x, y, 48, 0, Math.PI * 2);
+    ctx.arc(x, y, 24, 0, Math.PI * 2);
     ctx.fill();
     ctx.lineWidth = 9;
     ctx.strokeStyle = "rgba(0,0,0,0.52)";
