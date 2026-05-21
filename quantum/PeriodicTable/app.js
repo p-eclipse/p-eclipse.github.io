@@ -56,13 +56,18 @@ const FULL_VIEW_YAW_STOP = 0.00005;
 const ATOM_DRAG_YAW_SPEED = 0.0075;
 const ATOM_INERTIA_DAMPING = 0.935;
 const ATOM_INERTIA_STOP = 0.00008;
+
+const ATOM_DRAG_THETA_SPEED = 0.0065;
+const ATOM_THETA_MIN = 0.001;
+const ATOM_THETA_MAX = Math.PI / 2;
+
 const ATOM_BAR_GAP = 0.16;
 
 let currentMetric = "protons";
 let selectedElement = null;
 let atomGroup = null;
 let focusTween = null;
-let tableYaw = 0, tableYawVelocity = 0, atomYawVelocity = 0;
+let tableYaw = 0, tableYawVelocity = 0, atomYawVelocity = 0, atomThetaVelocity = 0;
 const viewTilt = new THREE.Vector2(0, 0);
 const viewTiltVelocity = new THREE.Vector2(0, 0);
 let orbitGroups = [];
@@ -737,6 +742,7 @@ function focusElement(e) {
   viewTiltVelocity.set(0, 0);
   tableYawVelocity = 0;
   atomYawVelocity = 0;
+  atomThetaVelocity = 0;
   backToTableButton.classList.add("visible");
   setAtomNavVisible(true);
   showAtomInfoControls();
@@ -760,7 +766,7 @@ function isAtomViewActive() {
   return !!selectedElement && !!atomGroup;
 }
 
-function rotateAtomCamera(deltaYaw) {
+/*function rotateAtomCamera(deltaYaw) {
   if (!isAtomViewActive()) return;
   const offset = camera.position.clone().sub(controlsTarget);
   offset.applyAxisAngle(WORLD_UP, deltaYaw);
@@ -768,6 +774,48 @@ function rotateAtomCamera(deltaYaw) {
   camera.up.copy(WORLD_UP);
   camera.lookAt(controlsTarget);
   camera.updateProjectionMatrix();
+}*/
+function getAtomCameraSpherical() {
+  const offset = camera.position.clone().sub(controlsTarget);
+  const radius = Math.max(0.001, offset.length());
+
+  return {
+    radius,
+    theta: Math.acos(THREE.MathUtils.clamp(offset.y / radius, -1, 1)),
+    phi: Math.atan2(offset.x, offset.z)
+  };
+}
+
+function setAtomCameraFromSpherical(radius, theta, phi) {
+  const clampedTheta = THREE.MathUtils.clamp(
+    theta,
+    ATOM_THETA_MIN,
+    ATOM_THETA_MAX
+  );
+
+  const sinTheta = Math.sin(clampedTheta);
+
+  camera.position.set(
+    controlsTarget.x + radius * sinTheta * Math.sin(phi),
+    controlsTarget.y + radius * Math.cos(clampedTheta),
+    controlsTarget.z + radius * sinTheta * Math.cos(phi)
+  );
+
+  camera.up.copy(WORLD_UP);
+  camera.lookAt(controlsTarget);
+  camera.updateProjectionMatrix();
+}
+
+function rotateAtomCamera(deltaYaw, deltaTheta = 0) {
+  if (!isAtomViewActive()) return;
+
+  const spherical = getAtomCameraSpherical();
+
+  setAtomCameraFromSpherical(
+    spherical.radius,
+    spherical.theta + deltaTheta,
+    spherical.phi + deltaYaw
+  );
 }
 
 function changeMetric(metric) {
@@ -852,7 +900,7 @@ function updateTileHeights() {
   }
 }
 
-function updateAtomCameraInertia() {
+/*function updateAtomCameraInertia() {
   if (!isAtomViewActive() || focusTween || pointerDown?.dragged) return;
   if (Math.abs(atomYawVelocity) < ATOM_INERTIA_STOP) {
     atomYawVelocity = 0;
@@ -860,6 +908,23 @@ function updateAtomCameraInertia() {
   }
   rotateAtomCamera(atomYawVelocity);
   atomYawVelocity *= ATOM_INERTIA_DAMPING;
+}*/
+function updateAtomCameraInertia() {
+  if (!isAtomViewActive() || focusTween || pointerDown?.dragged) return;
+
+  const yawMoving = Math.abs(atomYawVelocity) >= ATOM_INERTIA_STOP;
+  const thetaMoving = Math.abs(atomThetaVelocity) >= ATOM_INERTIA_STOP;
+
+  if (!yawMoving && !thetaMoving) {
+    atomYawVelocity = 0;
+    atomThetaVelocity = 0;
+    return;
+  }
+
+  rotateAtomCamera(atomYawVelocity, atomThetaVelocity);
+
+  atomYawVelocity *= ATOM_INERTIA_DAMPING;
+  atomThetaVelocity *= ATOM_INERTIA_DAMPING;
 }
 
 function updateFullViewCameraInertia() {
@@ -996,6 +1061,7 @@ function updateTwoPointerGesture() {
   stopInteractionTween();
 
   atomYawVelocity = 0;
+  atomThetaVelocity = 0;
   viewTiltVelocity.set(0, 0);
   tableYawVelocity = 0;
 
@@ -1096,6 +1162,7 @@ function startSmoothReset() {
   viewTiltVelocity.set(0, 0);
   tableYawVelocity = 0;
   atomYawVelocity = 0;
+  atomThetaVelocity = 0;
   backToTableButton.classList.remove("visible");
   setAtomNavVisible(false);
   pointerDown = null;
@@ -1324,9 +1391,27 @@ renderer.domElement.addEventListener("pointermove", event => {
   const speedBoost = THREE.MathUtils.clamp(16 / dt, 0.45, 1.9);
 
   if (isAtomViewActive()) {
-    const deltaYaw = -dx * ATOM_DRAG_YAW_SPEED;
+    /*const deltaYaw = -dx * ATOM_DRAG_YAW_SPEED;
     rotateAtomCamera(deltaYaw);
     atomYawVelocity = THREE.MathUtils.clamp(deltaYaw * speedBoost, -0.13, 0.13);
+    return;*/
+    const deltaYaw = -dx * ATOM_DRAG_YAW_SPEED;
+    const deltaTheta = dy * ATOM_DRAG_THETA_SPEED;
+  
+    rotateAtomCamera(deltaYaw, deltaTheta);
+  
+    atomYawVelocity = THREE.MathUtils.clamp(
+      deltaYaw * speedBoost,
+      -0.13,
+      0.13
+    );
+  
+    atomThetaVelocity = THREE.MathUtils.clamp(
+      deltaTheta * speedBoost,
+      -0.11,
+      0.11
+    );
+  
     return;
   }
 
