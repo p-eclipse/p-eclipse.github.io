@@ -535,7 +535,7 @@ function createElectronOrbit(shellIndex, radius, count, electronMat, electronGeo
   group.userData.speed = 0.0045 + shellIndex * 0.0012;*/
 
   const orbitDirection = -1;
-  const orbitSpeedScale = 0.4;
+  const orbitSpeedScale = 0.04;
   
   const baseX = Math.PI / 2 + (shellIndex % 2 === 0 ? 0.42 : -0.42);
   const baseY = shellIndex * 0.38;
