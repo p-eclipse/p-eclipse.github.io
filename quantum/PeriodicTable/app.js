@@ -67,6 +67,7 @@ let currentMetric = "protons";
 let selectedElement = null;
 let atomGroup = null;
 let focusTween = null;
+let infoPanelMinimized = false;
 let tableYaw = 0, tableYawVelocity = 0, atomYawVelocity = 0, atomThetaVelocity = 0;
 const viewTilt = new THREE.Vector2(0, 0);
 const viewTiltVelocity = new THREE.Vector2(0, 0);
@@ -670,6 +671,12 @@ function showInfo(e) {
   selectedElement = e;
   const story = curationBySymbol[e.s] ?? fallbackCuration[e.category] ?? "이 원소는 안정 동위원소, 산화수, 광물 형태, 화합물 성질에 따라 여러 과학 분야에서 전혀 다른 얼굴로 등장합니다.";
   info.innerHTML = `
+    <button
+      class="info-minimize"
+      type="button"
+      aria-label="${infoPanelMinimized ? "원소 설명 펼치기" : "원소 설명 최소화"}"
+      title="${infoPanelMinimized ? "원소 설명 펼치기" : "원소 설명 최소화"}"
+    >${infoPanelMinimized ? "+" : "−"}</button>
     <div class="symbol-row">
       <div class="big-symbol">${e.s}</div>
       <div>
@@ -688,14 +695,40 @@ function showInfo(e) {
       <div class="curation-list"><div class="curation-item">${story}</div></div>
     </div>
   `;
+  setInfoPanelMinimized(infoPanelMinimized);
+}
+
+
+function setInfoPanelMinimized(minimized) {
+  infoPanelMinimized = minimized;
+  info.classList.toggle("minimized", minimized);
+
+  const button = info.querySelector(".info-minimize");
+  if (button) {
+    button.textContent = minimized ? "+" : "−";
+    button.setAttribute(
+      "aria-label",
+      minimized ? "원소 설명 펼치기" : "원소 설명 최소화"
+    );
+    button.setAttribute(
+      "title",
+      minimized ? "원소 설명 펼치기" : "원소 설명 최소화"
+    );
+  }
 }
 
 function showAtomInfoControls() {
   info.classList.add("visible");
 }
 
+/*function hideAtomInfoControls() {
+  info.classList.remove("visible");
+  info.innerHTML = "";
+}*/
 function hideAtomInfoControls() {
   info.classList.remove("visible");
+  info.classList.remove("minimized");
+  infoPanelMinimized = false;
   info.innerHTML = "";
 }
 
@@ -759,6 +792,7 @@ function focusElement(e) {
   atomThetaVelocity = 0;
   backToTableButton.classList.add("visible");
   setAtomNavVisible(true);
+  infoPanelMinimized = window.innerWidth <= 860;
   showAtomInfoControls();
   const pos = tilePosition(e);
   const tile = tiles.find(t => t.e === e);
@@ -1298,6 +1332,14 @@ function runSelfTests() {
   console.assert(ABSOLUTE_NUCLEON_SCALE_MAX === 294, "absolute nucleon scale uses Og mass number");
   console.assert(heightFor(elementsByZ.at(-1), "massNumber") === BASE_H + MAX_H, "Og mass number reaches maximum height");
 }
+
+info.addEventListener("click", event => {
+  const button = event.target.closest(".info-minimize");
+  if (!button) return;
+
+  event.stopPropagation();
+  setInfoPanelMinimized(!infoPanelMinimized);
+});
 
 metricButtons.forEach(btn => btn.addEventListener("click", () => changeMetric(btn.dataset.metric)));
 hudToggleButton.addEventListener("click", () => setHudCollapsed(!hud.classList.contains("collapsed")));
