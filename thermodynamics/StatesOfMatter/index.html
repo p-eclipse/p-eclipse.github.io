@@ -9,483 +9,26 @@
       --bg: #101216;
       --panel: #1b1f27;
       --panel2: #242a35;
-      --text: #eef2f7;
-      --muted: #aab3c2;
+      --text: #111827;
+      --muted: #6b7280;
       --accent: #ff6a00;
       --cool: #4aa3ff;
       --heat: #ff6a00;
       --line: #384252;
-      --good: #74d67a;
+      --good: #34c759;
     }
 
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
-      background: radial-gradient(circle at top, #202531 0%, #101216 60%);
-      color: var(--text);
+      background: #f7f7f8;
+      color: #111827;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       overflow: hidden;
     }
 
     .app {
-      width: 100vw;
-      height: 100vh;
-      display: grid;
-      grid-template-columns: minmax(520px, 1fr) 420px;
-      gap: 14px;
-      padding: 14px;
-    }
-
-    .card {
-      background: rgba(27, 31, 39, 0.96);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
-      overflow: hidden;
-      min-height: 0;
-    }
-
-    .sim-card {
-      position: relative;
-      display: grid;
-      grid-template-rows: auto 1fr;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 18px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      background: linear-gradient(90deg, rgba(255,106,0,0.10), rgba(74,163,255,0.08));
-    }
-
-    .title {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-    }
-
-    .sub {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .badge {
-      padding: 7px 12px;
-      border-radius: 999px;
-      background: #111722;
-      border: 1px solid rgba(255,255,255,0.10);
-      font-weight: 800;
-      font-size: 14px;
-      white-space: nowrap;
-    }
-
-    #simCanvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      background: #050505;
-    }
-
-    .side {
-      display: grid;
-      grid-template-rows: auto auto 1fr auto;
-      gap: 14px;
-      min-height: 0;
-    }
-
-    .controls {
-      padding: 16px;
-    }
-
-    .tempBox {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      align-items: end;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .tempLabel {
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .tempValue {
-      font-size: 36px;
-      font-weight: 900;
-      letter-spacing: -0.04em;
-      line-height: 1;
-    }
-
-    .stateText {
-      font-size: 15px;
-      color: var(--muted);
-      margin-bottom: 14px;
-      line-height: 1.45;
-      min-height: 46px;
-    }
-
-    .buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    button {
-      appearance: none;
-      border: 0;
-      border-radius: 14px;
-      padding: 14px 12px;
-      font-size: 16px;
-      font-weight: 900;
-      color: white;
-      cursor: pointer;
-      box-shadow: 0 10px 24px rgba(0,0,0,0.25);
-      transition: transform 0.08s, filter 0.15s, opacity 0.15s;
-    }
-
-    button:active { transform: translateY(1px) scale(0.99); }
-    button.off { opacity: 0.42; filter: grayscale(0.35); }
-    .heat { background: linear-gradient(180deg, #ff8a1f, #e24e00); }
-    .cool { background: linear-gradient(180deg, #62b8ff, #1667d8); }
-    .reset { background: linear-gradient(180deg, #687386, #3b4453); width: 100%; font-size: 14px; padding: 11px; }
-
-    .selectRow {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 8px;
-      margin: 14px 0 8px;
-    }
-
-    .selectRow button {
-      font-size: 13px;
-      padding: 10px 8px;
-      background: #2a3140;
-      box-shadow: none;
-    }
-
-    .selectRow button.active {
-      outline: 2px solid var(--accent);
-      background: #3a2d22;
-    }
-
-    .barWrap {
-      height: 12px;
-      background: #111722;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 999px;
-      overflow: hidden;
-      margin-top: 8px;
-    }
-
-    .bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--cool), white, var(--heat));
-      transition: width 0.08s linear;
-    }
-
-    .graphCard {
-      padding: 14px;
-      display: grid;
-      grid-template-rows: auto 1fr;
-      min-height: 270px;
-    }
-
-    .graphTitle {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
-
-    #graphCanvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      background: #111722;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .legend {
-      padding: 14px 16px;
-      font-size: 13px;
-      line-height: 1.55;
-      color: var(--muted);
-    }
-
-    .legend b { color: var(--text); }
-
-    .phaseBox {
-      padding: 14px 16px;
-      display: grid;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .phaseItem {
-      display: grid;
-      grid-template-columns: 78px 1fr;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .phaseMeter {
-      height: 8px;
-      background: #111722;
-      border-radius: 999px;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .phaseFill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #f2f2f2, #ff6a00);
-    }
-
-    @media (max-width: 900px) {
-      body { overflow: auto; }
-      .app {
-        height: auto;
-        min-height: 100vh;
-        grid-template-columns: 1fr;
-      }
-      .sim-card { height: 58vh; min-height: 430px; }
-      .side { grid-template-rows: auto auto auto auto; }
-      .graphCard { height: 300px; }
-    }
-  
-
-    /* GPT standard layout override */
-    body {
-      background: #f7f7f8;
-      color: #111827;
-      overflow: hidden;
-    }
-
-    .app {
-      width: 100vw;
-      height: 100vh;
-      display: grid;
-      grid-template-rows: 1fr auto;
-      grid-template-columns: 1fr;
-      gap: 16px;
-      padding: 20px;
-      background: #f7f7f8;
-    }
-
-    .card {
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 18px;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-    }
-
-    .header {
-      background: #ffffff;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    .title { color: #111827; }
-    .sub, .stateText, .graphTitle, .phaseBox { color: #6b7280; }
-
-    .badge {
-      background: #f3f4f6;
-      border: 1px solid #e5e7eb;
-      color: #111827;
-    }
-
-    .mainGrid {
-      min-height: 0;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
-    .sim-card,
-    .graphCard {
-      min-height: 0;
-      display: grid;
-      grid-template-rows: auto 1fr;
-    }
-
-    .graphCard { padding: 0; }
-
-    #graphCanvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      background: #ffffff;
-      border: 0;
-      border-radius: 0;
-    }
-
-    .bottomGrid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-      align-items: stretch;
-    }
-
-    .phaseBox {
-      display: none !important;
-    }
-
-    .controls,
-    .phaseBox {
-      padding: 16px;
-    }
-
-    .phaseBox {
-      align-content: center;
-    }
-
-    @media (max-width: 900px) {
-      body { overflow: auto; }
-      .app {
-        height: auto;
-        min-height: 100vh;
-        grid-template-rows: auto auto;
-        padding: 14px;
-      }
-      .mainGrid,
-      .bottomGrid {
-        grid-template-columns: 1fr;
-      }
-      .sim-card,
-      .graphCard {
-        height: 430px;
-      }
-    }
-  
-
-    /* Final compact UI sizing */
-    .app {
-      max-width: 1440px;
-      margin: 0 auto;
-      grid-template-rows: minmax(0, 1fr) auto;
-      padding: 16px;
-      gap: 12px;
-    }
-
-    .mainGrid {
-      min-height: 0;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 12px;
-    }
-
-    .sim-card,
-    .graphCard {
-      height: auto;
-      min-height: 0;
-    }
-
-    .header {
-      padding: 10px 14px;
-      min-height: 54px;
-    }
-
-    .title {
-      font-size: 16px;
-    }
-
-    .sub {
-      font-size: 11px;
-    }
-
-    .badge {
-      padding: 5px 10px;
-      font-size: 13px;
-    }
-
-    .bottomGrid {
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-
-    .controls {
-      padding: 12px 14px;
-    }
-
-    .tempBox {
-      margin-bottom: 8px;
-    }
-
-    .tempValue {
-      font-size: 28px;
-    }
-
-    .stateText {
-      min-height: 0;
-      margin-bottom: 10px;
-      font-size: 13px;
-    }
-
-    .buttons {
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    button {
-      padding: 10px 10px;
-      font-size: 14px;
-      border-radius: 12px;
-    }
-
-    .selectRow {
-      margin: 10px 0 8px;
-      gap: 8px;
-    }
-
-    .selectRow button {
-      padding: 8px 8px;
-      font-size: 12px;
-    }
-
-    .reset {
-      padding: 9px;
-      font-size: 13px;
-    }
-
-    .barWrap {
-      height: 9px;
-      margin-top: 8px;
-    }
-
-    #simCanvas {
-      background: #ffffff;
-    }
-
-    @media (max-width: 900px) {
-      .app {
-        max-width: none;
-        padding: 12px;
-      }
-      .mainGrid {
-        grid-template-columns: 1fr;
-      }
-      .sim-card,
-      .graphCard {
-        height: 380px;
-      }
-    }
-  
-
-    /* Right-side controls layout */
-    .app {
-      max-width: none;
       width: 100vw;
       height: 100vh;
       margin: 0;
@@ -494,6 +37,16 @@
       grid-template-rows: minmax(0, 1fr);
       gap: 12px;
       padding: 14px;
+      background: #f7f7f8;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      overflow: hidden;
+      min-height: 0;
     }
 
     .mainGrid {
@@ -518,47 +71,262 @@
       min-height: 0;
     }
 
+    .sim-card,
+    .graphCard {
+      position: relative;
+      height: 100%;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      min-height: 54px;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #111827;
+    }
+
+    .sub {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    .badge {
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      color: #111827;
+      font-weight: 800;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    #simCanvas,
+    #graphCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #ffffff;
+    }
+
     .controls {
       height: fit-content;
       max-height: calc(100vh - 28px);
       overflow: auto;
+      padding: 12px 14px;
+      display: grid;
+      gap: 14px;
     }
 
-    .sim-card,
-    .graphCard {
-      height: 100%;
-      min-height: 0;
+    .controlHeaderBlock {
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
     }
+
+    .controlEyebrow,
+    .controlTitle {
+      font-size: 12px;
+      font-weight: 800;
+      color: #6b7280;
+      letter-spacing: 0.02em;
+    }
+
+    .controlEyebrow { margin-bottom: 8px; }
 
     .tempBox {
+      display: grid;
       grid-template-columns: 1fr;
+      align-items: end;
       gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .tempLabel {
+      color: #6b7280;
+      font-size: 12px;
+      font-weight: 700;
     }
 
     .tempValue {
       font-size: 32px;
-    }
-
-    .buttons,
-    .selectRow {
-      grid-template-columns: 1fr;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
     }
 
     .stateText {
+      min-height: 0;
+      margin-bottom: 10px;
+      font-size: 13px;
       line-height: 1.45;
+      color: #374151;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .controlGroup {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      background: #f9fafb;
+    }
+
+    .primaryGroup {
+      background: #ffffff;
+      border-color: #d1d5db;
+    }
+
+    .compactGroup { gap: 6px; }
+
+    .buttons,
+    .selectRow {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 10px;
+      font-size: 14px;
+      font-weight: 900;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+      transition: transform 0.08s, filter 0.15s, opacity 0.15s;
+    }
+
+    button:active { transform: translateY(1px) scale(0.99); }
+    button.off { opacity: 0.42; filter: grayscale(0.35); }
+
+    .heat { background: linear-gradient(180deg, #ff8a1f, #e24e00); }
+    .cool { background: linear-gradient(180deg, #62b8ff, #1667d8); }
+    .reset { background: linear-gradient(180deg, #687386, #3b4453); width: 100%; font-size: 13px; padding: 9px; }
+
+    .selectRow { margin: 10px 0 8px; }
+
+    .selectRow button {
+      font-size: 12px;
+      padding: 8px 8px;
+      background: #2a3140;
+      box-shadow: none;
+    }
+
+    .selectRow button.active {
+      outline: 2px solid var(--accent);
+      background: #3a2d22;
+    }
+
+    .secondaryReset {
+      background: linear-gradient(180deg, #f3f4f6, #e5e7eb);
+      color: #111827;
+      box-shadow: none;
+    }
+
+    .barWrap {
+      height: 9px;
+      background: #111722;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--cool), white, var(--heat));
+      transition: width 0.08s linear;
+    }
+
+    .phaseBox { display: none !important; }
+
+    .graphToggleWrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #374151;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .appleSwitch {
+      position: relative;
+      width: 52px;
+      height: 30px;
+      display: inline-block;
+      flex: 0 0 auto;
+    }
+
+    .appleSwitch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .switchSlider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #d1d5db;
+      border-radius: 999px;
+      transition: 0.22s ease;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.18);
+    }
+
+    .switchSlider::before {
+      content: "";
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      left: 2px;
+      top: 2px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.22s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.28);
+    }
+
+    .appleSwitch input:checked + .switchSlider {
+      background: #34c759;
+    }
+
+    .appleSwitch input:checked + .switchSlider::before {
+      transform: translateX(22px);
     }
 
     @media (max-width: 1100px) {
+      body { overflow: auto; }
+
       .app {
         grid-template-columns: 1fr;
         grid-template-rows: auto auto;
         height: auto;
         min-height: 100vh;
         overflow: visible;
-      }
-
-      body {
-        overflow: auto;
       }
 
       .mainGrid {
@@ -577,83 +345,9 @@
         height: 380px;
       }
 
-      .controls {
-        max-height: none;
-      }
-
-      .buttons,
-      .selectRow {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .selectRow {
-        grid-template-columns: 1fr 1fr 1fr;
-      }
-    }
-  
-
-    /* UI hierarchy refinement */
-    .controls {
-      display: grid;
-      gap: 14px;
-    }
-
-    .controlHeaderBlock {
-      padding-bottom: 12px;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    .controlEyebrow,
-    .controlTitle {
-      font-size: 12px;
-      font-weight: 800;
-      color: #6b7280;
-      letter-spacing: 0.02em;
-    }
-
-    .controlEyebrow {
-      margin-bottom: 8px;
-    }
-
-    .controlGroup {
-      display: grid;
-      gap: 8px;
-      padding: 12px;
-      border: 1px solid #e5e7eb;
-      border-radius: 14px;
-      background: #f9fafb;
-    }
-
-    .primaryGroup {
-      background: #ffffff;
-      border-color: #d1d5db;
-    }
-
-    .compactGroup {
-      gap: 6px;
-    }
-
-    .buttons button {
-      font-size: 15px;
-    }
-
-    .secondaryReset {
-      background: linear-gradient(180deg, #f3f4f6, #e5e7eb);
-      color: #111827;
-      box-shadow: none;
-    }
-
-    .tempLabel {
-      font-size: 12px;
-      color: #6b7280;
-    }
-
-    .stateText {
-      color: #374151;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 10px;
+      .controls { max-height: none; }
+      .buttons { grid-template-columns: 1fr 1fr; }
+      .selectRow { grid-template-columns: 1fr 1fr 1fr; }
     }
   </style>
 </head>
@@ -674,10 +368,16 @@
       <section class="card graphCard">
         <div class="header">
           <div>
-            <div class="title">온도-시간 그래프</div>
-            <div class="sub">0℃와 100℃에서 온도 정체 구간이 나타납니다.</div>
+            <div class="title" id="graphTitle">온도-시간 그래프</div>
+            <div class="sub" id="graphSub">0℃와 100℃에서 온도 정체 구간이 나타납니다.</div>
           </div>
-          <div class="badge" id="stateBadge">고체</div>
+          <div class="graphToggleWrap">
+            <span id="graphModeText">온도</span>
+            <label class="appleSwitch" aria-label="그래프 종류 전환">
+              <input type="checkbox" id="graphToggle" />
+              <span class="switchSlider"></span>
+            </label>
+          </div>
         </div>
         <canvas id="graphCanvas"></canvas>
       </section>
@@ -735,7 +435,6 @@
     const gtx = gCanvas.getContext('2d');
 
     const tempText = document.getElementById('tempText');
-    const stateBadge = document.getElementById('stateBadge');
     const stateText = document.getElementById('stateText');
     const modeBadge = document.getElementById('modeBadge');
     const tempBar = document.getElementById('tempBar');
@@ -749,6 +448,11 @@
     const solidStart = document.getElementById('solidStart');
     const liquidStart = document.getElementById('liquidStart');
     const gasStart = document.getElementById('gasStart');
+
+    const graphToggle = document.getElementById('graphToggle');
+    const graphModeText = document.getElementById('graphModeText');
+    const graphTitleEl = document.getElementById('graphTitle');
+    const graphSubEl = document.getElementById('graphSub');
 
     const N = 72;
     const MOLECULE_COLLISION_RADIUS = 14;
@@ -787,6 +491,7 @@
     let last = performance.now();
     let freezingTargetsLocked = false;
     let gasRestitution = GAS_RESTITUTION_BASE;
+    let graphMode = 'temperature';
 
     function resize() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -809,13 +514,13 @@
     function rand(a, b) { return a + Math.random() * (b - a); }
     function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
     function lerp(a, b, t) { return a + (b - a) * t; }
-    function smoothstep(t) { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); }
+    function smoothstep(x) { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }
 
     function containerBounds() {
       return { x: W * 0.055, y: H * 0.06, w: W * 0.89, h: H * 0.82, floor: H * 0.88 };
     }
 
-    function makeMolecules(startPhase='solid') {
+    function makeMolecules(startPhase = 'solid') {
       molecules = [];
       for (let i = 0; i < N; i++) {
         molecules.push({
@@ -836,6 +541,28 @@
       setState(startPhase, true);
     }
 
+    function averageEnergyValue() {
+      return particleInternalEnergyValue();
+    }
+
+    function particleInternalEnergyValue() {
+      if (!molecules.length) return 0;
+
+      let kinetic = 0;
+      molecules.forEach(m => {
+        const v2 = m.vx * m.vx + m.vy * m.vy;
+        const w2 = (m.w || 0) * (m.w || 0);
+        kinetic += 0.5 * MOLECULE_MASS * v2 + 0.5 * MOLECULE_INERTIA * w2;
+      });
+
+      const avgKinetic = kinetic / molecules.length;
+      const tempContribution = clamp((temp - MIN_T) / (MAX_T - MIN_T), 0, 1) * 55;
+      const latentContribution = meltProgress * 28 + boilProgress * 42;
+      const motionContribution = clamp(avgKinetic / 1200, 0, 60);
+
+      return clamp(tempContribution + latentContribution + motionContribution, 0, 130);
+    }
+
     function setStart(which) {
       direction = 0;
       if (which === 'solid') { temp = -20; meltProgress = 0; boilProgress = 0; }
@@ -843,24 +570,21 @@
       if (which === 'gas') { temp = 120; meltProgress = 1; boilProgress = 1; gasRestitution = GAS_RESTITUTION_BASE; }
       setState(which, true);
       time = 0;
-      history = [{t:0, temp}];
+      history = [{ t: 0, temp, energy: averageEnergyValue() }];
       updateUI();
     }
 
-    function setState(s, instant=false) {
-      const wasLiquidLike = phase === 'liquid' || (meltProgress > 0.15 && boilProgress < 0.15);
+    function setState(s, instant = false) {
       phase = s;
       if (s === 'solid') {
-        if (instant) {
-          assignTargets();
-        } else {
-          assignLocalCrystalTargets();
-        }
+        if (instant) assignTargets();
+        else assignLocalCrystalTargets();
       } else {
         assignTargets();
       }
+
       const b = containerBounds();
-      molecules.forEach((m, i) => {
+      molecules.forEach((m) => {
         if (s === 'solid') {
           m.x = instant ? m.tx : m.x;
           m.y = instant ? m.ty : m.y;
@@ -884,7 +608,7 @@
       });
     }
 
-    function makeHoneycombVertices(cx, cy, edge, ringRange, bounds=null) {
+    function makeHoneycombVertices(cx, cy, edge, ringRange, bounds = null) {
       const verts = [];
       const seen = new Set();
       for (let r = -ringRange; r <= ringRange; r++) {
@@ -910,8 +634,6 @@
     function assignTargets() {
       if (!molecules.length) return;
       const b = containerBounds();
-
-      // 초기 고체 배치: O들이 육각형 고리의 꼭짓점만 차지하도록 한다.
       const cx = b.x + b.w / 2;
       const cy = b.floor - H * 0.40;
       const verts = makeHoneycombVertices(cx, cy, ICE_EDGE, 6, b).slice(0, N);
@@ -937,8 +659,6 @@
     }
 
     function orientCrystalMolecules() {
-      // 핵심: 이웃 물분자 사이에서 H-H가 아니라 H-O가 가까워지도록 배향한다.
-      // 산소 위치가 정해진 뒤, 가까운 O 이웃을 찾고 donor/acceptor 방향성을 교대로 부여한다.
       molecules.forEach((m, idx) => {
         m.crystalRole = idx % 2 === 0 ? 'donor' : 'acceptor';
       });
@@ -960,7 +680,6 @@
           return;
         }
 
-        // 서로 약 120도 벌어진 두 방향을 고른다. 이 두 방향이 H 두 개의 방향 후보가 된다.
         let bestPair = null;
         let bestScore = Infinity;
         for (let i = 0; i < near.length; i++) {
@@ -974,19 +693,14 @@
           }
         }
 
-        if (!bestPair) {
-          bestPair = [near[0]];
-        }
+        if (!bestPair) bestPair = [near[0]];
 
         if (m.crystalRole === 'donor' && bestPair.length >= 2) {
-          // donor: H 두 개가 이웃 O 두 개를 향한다. 즉 H···O 구조.
           const a1 = bestPair[0].a;
           const a2 = bestPair[1].a;
           m.crystalAngle = meanAngle(a1, a2);
           m.hBondTargets = [bestPair[0].n, bestPair[1].n];
         } else if (m.crystalRole === 'acceptor' && bestPair.length >= 2) {
-          // acceptor: 이웃 donor가 내 O로 H를 내밀 수 있도록,
-          // 내 H는 그 결합축 반대쪽으로 돌린다. 이렇게 해야 H-H 접근이 줄고 O-H 접근이 남는다.
           const a1 = bestPair[0].a + Math.PI;
           const a2 = bestPair[1].a + Math.PI;
           m.crystalAngle = meanAngle(a1, a2);
@@ -1005,9 +719,6 @@
       const b = containerBounds();
       const cx = molecules.reduce((sum, m) => sum + m.x, 0) / molecules.length;
       const cy = molecules.reduce((sum, m) => sum + m.y, 0) / molecules.length;
-
-      // 현재 분자군의 중심을 기준으로 honeycomb 꼭짓점 후보를 만든다.
-      // 전역 초기 위치로 돌아가지 않는다.
       const candidates = makeHoneycombVertices(cx, cy, ICE_EDGE, 7, null);
       const used = new Set();
       const ordered = [...molecules].sort((a, b) => {
@@ -1065,7 +776,6 @@
         else if (phase === 'liquid' && temp < BOIL_T) temp = Math.min(BOIL_T, temp + rate * dt);
         else if ((phase === 'liquid' || phase === 'gas') && temp === BOIL_T && boilProgress < 1) {
           boilProgress = Math.min(1, boilProgress + dt * rate / BOIL_LATENT);
-          // 기화 중에는 온도는 정체되지만, 입자 배열이 풀리며 병진운동에너지가 증가한다.
           applyVaporizationTranslationalEnergy(dt);
           if (boilProgress >= 1) setState('gas');
         }
@@ -1078,7 +788,6 @@
         }
         else if (phase === 'liquid' && temp > MELT_T) temp = Math.max(MELT_T, temp - rate * dt);
         else if ((phase === 'liquid' || phase === 'solid') && temp === MELT_T && meltProgress > 0) {
-          // 응고가 시작되는 첫 순간, 현재 위치를 기준으로 로컬 육각 결정 타겟을 확정한다.
           if (!freezingTargetsLocked) {
             assignLocalCrystalTargets();
             freezingTargetsLocked = true;
@@ -1088,8 +797,6 @@
             meltProgress = 0;
             phase = 'solid';
             molecules.forEach(m => {
-              // 응고 완료 순간에도 좌표를 강제로 스냅하지 않는다.
-              // 이미 진행 중인 국소 결정화 운동을 그대로 감쇠시켜 자연스럽게 멈추게 한다.
               m.vx *= 0.15;
               m.vy *= 0.15;
             });
@@ -1098,11 +805,7 @@
         else if (phase === 'solid' && temp > MIN_T) temp = Math.max(MIN_T, temp - rate * dt);
       }
 
-      // 온도 자체가 실제로 변한 경우에만 입자 에너지를 조절한다.
-      // 매번 전체 입자를 바꾸지 않고 약 80%만 선택해 자연스러운 열적 요동처럼 보이게 한다.
-      if (Math.abs(temp - tempBefore) > 1e-6) {
-        applyThermalEnergyAdjustment(dt, direction);
-      }
+      if (Math.abs(temp - tempBefore) > 1e-6) applyThermalEnergyAdjustment(dt, direction);
     }
 
     function applyVaporizationTranslationalEnergy(dt) {
@@ -1125,20 +828,11 @@
       const isLiquidEnergyMode = phase === 'liquid' && gasness < 0.20;
       const isGasEnergyMode = phase === 'gas' || gasness > 0.85;
 
-      // 기체 가열/냉각: 속도나 각속도를 직접 건드리지 않고 반발계수만 조절한다.
       if (isGasEnergyMode) {
         if (heatSign > 0) {
-          gasRestitution = clamp(
-            gasRestitution + (0.010 + 0.010 * tempNorm) * dt,
-            GAS_RESTITUTION_MIN,
-            GAS_RESTITUTION_MAX
-          );
+          gasRestitution = clamp(gasRestitution + (0.010 + 0.010 * tempNorm) * dt, GAS_RESTITUTION_MIN, GAS_RESTITUTION_MAX);
         } else {
-          gasRestitution = clamp(
-            gasRestitution - (0.55 + 0.45 * tempNorm) * dt,
-            GAS_RESTITUTION_MIN,
-            GAS_RESTITUTION_MAX
-          );
+          gasRestitution = clamp(gasRestitution - (0.55 + 0.45 * tempNorm) * dt, GAS_RESTITUTION_MIN, GAS_RESTITUTION_MAX);
         }
         return;
       }
@@ -1148,12 +842,10 @@
 
         if (heatSign > 0) {
           if (isLiquidEnergyMode) {
-            // 액체 가열: 회전운동에너지를 주로 증가시키되, 병진운동에너지도 아주 소량만 가한다.
             const translationalKick = (2.5 + 5.0 * tempNorm) * dt;
             const kickAngle = rand(0, Math.PI * 2);
             m.vx += Math.cos(kickAngle) * translationalKick;
             m.vy += Math.sin(kickAngle) * translationalKick;
-
             const angularBoost = 1 + (0.16 + 0.30 * tempNorm) * dt * fluidness;
             if (m.w !== undefined) m.w *= angularBoost;
           } else {
@@ -1165,7 +857,6 @@
           }
         } else {
           if (isLiquidEnergyMode) {
-            // 액체 냉각: 병진운동은 그대로 두고 회전운동에너지만 감소시킨다.
             const angularDamp = 1 - (3.00 + 3.60 * tempNorm) * dt * fluidness;
             if (m.w !== undefined) m.w *= clamp(angularDamp, 0.30, 1);
           } else {
@@ -1180,7 +871,6 @@
     }
 
     function activeStructure() {
-      // 액체에서는 결정 구조 영향 완전히 제거
       if (boilProgress > 0 && boilProgress < 1) return 0.1;
       if (meltProgress > 0 && meltProgress < 1) return lerp(1.0, 0.0, meltProgress);
       if (phase === 'solid') return 1;
@@ -1188,15 +878,11 @@
       return 0.02;
     }
 
-    function smoothstep(x){return x*x*(3-2*x);} 
-
-function updateMolecules(dt) {
+    function updateMolecules(dt) {
       const b = containerBounds();
       const tempNorm = clamp((temp - MIN_T) / (MAX_T - MIN_T), 0, 1);
       const gasness = clamp(boilProgress, 0, 1);
       const liquidness = clamp(meltProgress, 0, 1) * (1 - gasness);
-
-      // 0=완전 액체/기체, 1=완전 고체. 상전이 중에는 연속적으로 섞인다.
       const crystallinity = smoothstep(clamp(1 - meltProgress, 0, 1));
       const solidWeight = crystallinity;
       const fluidWeight = 1 - solidWeight;
@@ -1207,24 +893,16 @@ function updateMolecules(dt) {
         return d - Math.PI;
       };
 
-      const localMeanAngle = (a, c) => Math.atan2(
-        Math.sin(a) + Math.sin(c),
-        Math.cos(a) + Math.cos(c)
-      );
+      const localMeanAngle = (a, c) => Math.atan2(Math.sin(a) + Math.sin(c), Math.cos(a) + Math.cos(c));
 
       molecules.forEach((m) => {
         const t = performance.now() * 0.001 + m.seed;
         if (m.lockedAngle === undefined) m.lockedAngle = m.angle;
 
-        // ---------- 액체·기체 병진운동 ----------
-        // 온도가 높을수록 병진운동도 활발해진다. 고체화될수록 이 효과는 사라진다.
         const translationalSpeed = lerp(58, 210, gasness) * (0.75 + 2.20 * tempNorm);
         m.vx += rand(-1, 1) * translationalSpeed * dt * 2.6 * fluidWeight;
         m.vy += rand(-1, 1) * translationalSpeed * dt * 2.6 * fluidWeight;
 
-        // 액체·기체 온도 상승 → 병진 운동에너지 증가.
-        // 단, 냉각 후 버튼을 떼었을 때 다시 목표속도로 끌어올리는 버그를 막기 위해
-        // 능동적인 에너지 boost는 가열 중(direction > 0)일 때만 작동시킨다.
         const isLiquidHeatingMode = direction > 0 && phase === 'liquid' && gasness < 0.20;
         const isVaporizingMode = direction > 0 && boilProgress > 0 && boilProgress < 1;
         const isGasHeatingMode = direction > 0 && (phase === 'gas' || gasness > 0.85) && !isVaporizingMode;
@@ -1239,7 +917,6 @@ function updateMolecules(dt) {
           }
         }
 
-        // 현재 온도에서 지나치게 큰 속도만 제한한다. 낮은 속도를 억지로 회복시키지는 않는다.
         if (fluidWeight > 0.05) {
           const speedCap = (45 + 120 * tempNorm + 115 * gasness) * fluidWeight + 25;
           const vmag = Math.hypot(m.vx, m.vy);
@@ -1250,27 +927,20 @@ function updateMolecules(dt) {
         }
 
         if (liquidness > 0.1) {
-          // 액체는 아래쪽에 머물되, 중앙으로 뭉치지는 않게 한다.
-          // 냉각 중에는 중력/침강 효과를 더 크게 하여 입자들이 아래로 내려오도록 한다.
           const coolingSettleBoost = direction < 0 && phase === 'liquid' ? 3.8 : 1.0;
           m.vy += (b.floor - 42 - m.y) * 0.050 * coolingSettleBoost * dt * fluidWeight;
           m.vx += rand(-1, 1) * 18 * dt * fluidWeight;
         }
 
-        // 100℃ 이하 + 기화/액화 잠열 구간에서는 중력가속도가 액체 상태와 같은 값으로 존재한다.
-        // 기화/액화 중에도 위로 쉽게 튀어나가지 않도록, 온도 보간으로 약화시키지 않고 같은 중력값을 준다.
         const inBoilingTransition = boilProgress > 0 && boilProgress < 1;
         const isPureGas = phase === 'gas' && boilProgress >= 1;
         const hasGravity = !isPureGas && (temp <= BOIL_T || inBoilingTransition || phase === 'solid');
         if (hasGravity) {
           const coolingBoost = direction < 0 ? COOLING_GRAVITY_BOOST : 0;
           const gravity = GRAVITY_BELOW_BOILING + coolingBoost;
-          // 고체도 중력의 영향을 받도록 fluidWeight 곱을 제거한다.
-          // 단, 순수 기체 상태는 위 조건에서 제외되어 중력 0을 유지한다.
           m.vy += gravity * dt;
         }
 
-        // ---------- 응고: 인력/반발 + 느린 배향 ----------
         if (solidWeight > 0.001) {
           const neighbors = molecules
             .filter(n => n !== m)
@@ -1287,18 +957,11 @@ function updateMolecules(dt) {
             const desired = ICE_EDGE;
             const nx = Math.cos(nb.a);
             const ny = Math.sin(nb.a);
-
-            // 너무 가까우면 반발, 너무 멀면 약한 인력. 좌표 스냅 없이 속도에 힘으로 누적한다.
             let force = 0;
-            if (nb.d < desired * 0.78) {
-              force = -0.55 * (desired * 0.78 - nb.d);
-            } else if (nb.d < desired * 0.96) {
-              force = -0.18 * (desired * 0.96 - nb.d);
-            } else if (nb.d > desired * 1.15) {
-              force = 0.055 * (nb.d - desired * 1.15);
-            }
+            if (nb.d < desired * 0.78) force = -0.55 * (desired * 0.78 - nb.d);
+            else if (nb.d < desired * 0.96) force = -0.18 * (desired * 0.96 - nb.d);
+            else if (nb.d > desired * 1.15) force = 0.055 * (nb.d - desired * 1.15);
 
-            // H가 이웃 물분자의 O 주변 음전하 영역으로 깊게 들어오면 추가 반발.
             const h1 = m.angle + WATER_HALF_ANGLE;
             const h2 = m.angle - WATER_HALF_ANGLE;
             const d1 = Math.abs(localAngleDiff(nb.a, h1));
@@ -1308,7 +971,6 @@ function updateMolecules(dt) {
             if (badApproach) {
               const overlap = (WATER_HALF_ANGLE * 0.70 - Math.min(d1, d2)) / (WATER_HALF_ANGLE * 0.70);
               force -= (0.20 + 0.35 * overlap) * (desired * 1.05 - nb.d);
-              // 토크는 매우 약하게만 넣어 과속 회전을 막는다.
               m.lockedAngle += (d1 < d2 ? 1 : -1) * 0.0012 * solidWeight;
             }
 
@@ -1319,7 +981,6 @@ function updateMolecules(dt) {
             nb.n.vy -= ny * f * 0.25;
           });
 
-          // 목표 방향은 lockedAngle이 천천히 따라가게 해서 각도 튐을 막는다.
           if (neighbors.length >= 2) {
             let bestA = neighbors[0].a;
             let bestB = neighbors[1].a;
@@ -1343,16 +1004,10 @@ function updateMolecules(dt) {
           }
         }
 
-        // ---------- 위치 업데이트 ----------
         m.x += m.vx * dt;
         m.y += m.vy * dt;
 
-        // ---------- 회전/각진동 정책 ----------
-        // 액체·기체: 온도가 높을수록 자유 회전속도가 빨라진다.
-        // 고체: 자유 회전은 사라지고, 온도가 높을수록 기준각 주변 각진동의 진폭이 커진다.
         const baseAngle = m.lockedAngle ?? m.crystalAngle ?? m.angle;
-
-        // 고체 각진동: 진동수를 크게 잡아 떨림이 잘 보이게 한다.
         const solidTempResponse = Math.pow(tempNorm, 1.65);
         const solidVibrationFreq = 18.0 + 96.0 * solidTempResponse;
         const solidVibrationAmp = (0.010 + 1.85 * solidTempResponse) * solidWeight;
@@ -1361,14 +1016,11 @@ function updateMolecules(dt) {
         const vibrationRestore = (0.095 + 0.170 * solidWeight) * solidWeight;
         m.angle += dVib * vibrationRestore;
 
-        // 액체·기체 자유 회전: 온도 의존. 고체 성분이 생기면 자연스럽게 꺼진다.
         const fluidRotationSpeed = 0.45 + 8.2 * tempNorm + 4.8 * gasness;
         const targetAngularSpeed = fluidRotationSpeed * fluidWeight;
         const spinSign = Math.abs(m.w) > 0.001 ? Math.sign(m.w) : (m.av >= 0 ? 1 : -1);
         if (fluidWeight > 0.05) {
           const currentSpin = Math.abs(m.w);
-          // 목표 각속도까지 자동 회복시키는 동작은 가열 중에만 허용한다.
-          // 냉각 후 정지하면, 낮아진 각속도가 다시 살아나지 않는다.
           if (direction > 0 && !(phase === 'gas' || gasness > 0.85) && currentSpin < targetAngularSpeed) {
             m.w += spinSign * (targetAngularSpeed - currentSpin) * 0.020;
           }
@@ -1380,16 +1032,13 @@ function updateMolecules(dt) {
         }
         m.angle += m.w * dt * fluidWeight;
 
-        // 위치 흔들림은 사용하지 않는다. 부르르 떨림은 각진동으로만 표현한다.
         m.renderJitterX = 0;
         m.renderJitterY = 0;
 
-        // 고체화될수록 속도 감쇠. 급정지는 피하고 점진적으로 멈춘다.
         const damping = lerp(0.995, 0.925, solidWeight);
         m.vx *= damping;
         m.vy *= damping;
 
-        // ---------- 경계 ----------
         const r = MOLECULE_COLLISION_RADIUS;
         if (m.x < b.x + r) { m.x = b.x + r; m.vx = Math.abs(m.vx) * 0.45; }
         if (m.x > b.x + b.w - r) { m.x = b.x + b.w - r; m.vx = -Math.abs(m.vx) * 0.45; }
@@ -1397,7 +1046,7 @@ function updateMolecules(dt) {
         if (m.y > b.floor - r) { m.y = b.floor - r; m.vy = -Math.abs(m.vy) * 0.45; }
       });
 
-      collideMolecules(dt, gasness, crystallinity);
+      collideMolecules(gasness, crystallinity);
     }
 
     function moleculeRigidSites(m) {
@@ -1436,8 +1085,6 @@ function updateMolecules(dt) {
       const invI = 1 / MOLECULE_INERTIA;
       const denom = invMass + invMass + raCrossN * raCrossN * invI + rbCrossN * rbCrossN * invI;
 
-      // 액체는 생략된 다체 상호작용/내부 자유도로 에너지가 분산되는 효과를 반영해 비탄성에 가깝게,
-      // 기체는 자유 비행과 탄성 충돌 느낌을 살리기 위해 더 탄성적으로 둔다.
       const currentGasness = clamp(boilProgress, 0, 1);
       const dynamicFluidRestitution = lerp(0.45, gasRestitution, currentGasness);
       const restitution = phase === 'solid' ? 0.25 : dynamicFluidRestitution;
@@ -1458,7 +1105,7 @@ function updateMolecules(dt) {
       b.y += ny * correction;
     }
 
-    function collideMolecules(dt, gasness, structure) {
+    function collideMolecules(gasness, structure) {
       const fluidWeight = 1 - structure;
       const useRigidCollision = fluidWeight > 0.18 || gasness > 0.05;
 
@@ -1525,16 +1172,12 @@ function updateMolecules(dt) {
     function drawContainer() {
       const b = containerBounds();
       ctx.clearRect(0, 0, W, H);
-
-      // 간단한 2D 용기: 화려한 3D 효과 제거
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, W, H);
 
-      // 용기 내부 배경
       ctx.fillStyle = '#f8fafc';
       ctx.fillRect(b.x, b.y, b.w, b.floor - b.y);
 
-      // 용기 벽
       ctx.strokeStyle = '#94a3b8';
       ctx.lineWidth = 3;
       ctx.lineCap = 'round';
@@ -1545,7 +1188,6 @@ function updateMolecules(dt) {
       ctx.lineTo(b.x + b.w, b.y);
       ctx.stroke();
 
-      // 윗부분은 열린 용기처럼 약한 선만 표시
       ctx.strokeStyle = '#cbd5e1';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -1553,7 +1195,6 @@ function updateMolecules(dt) {
       ctx.lineTo(b.x + b.w - 6, b.y);
       ctx.stroke();
 
-      // 바닥 기준선
       ctx.strokeStyle = '#64748b';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -1608,22 +1249,6 @@ function updateMolecules(dt) {
       ctx.restore();
     }
 
-
-    function drawRoundedRect(x, y, w, h, r) {
-      const radius = Math.min(r, w / 2, h / 2);
-      ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.lineTo(x + w - radius, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
-      ctx.lineTo(x + w, y + h - radius);
-      ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
-      ctx.lineTo(x + radius, y + h);
-      ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
-      ctx.lineTo(x, y + radius);
-      ctx.quadraticCurveTo(x, y, x + radius, y);
-      ctx.closePath();
-    }
-
     function drawPhaseHeatDiagram() {
       const info = phaseHeatDiagramInfo();
       if (!info) return;
@@ -1632,14 +1257,9 @@ function updateMolecules(dt) {
       const pulse = 0.74 + 0.26 * Math.sin(performance.now() * 0.005);
       const bottomInside = b.floor + 8;
       const bottomOutside = Math.min(H - 18, b.floor + Math.max(28, H * 0.085));
-
-      // 열 흡수와 열 방출을 같은 다이어그램 문법으로 표현한다.
-      // 가열 중: 바깥 → 용기 안쪽, 냉각 중: 용기 안쪽 → 바깥.
       const arrowCount = W < 520 ? 3 : 5;
       const startX = b.x + b.w * 0.20;
       const endX = b.x + b.w * 0.80;
-      const arrowWidth = 4.2;
-      const sideArrowWidth = 3.6;
 
       ctx.save();
       ctx.globalAlpha = pulse;
@@ -1647,11 +1267,8 @@ function updateMolecules(dt) {
       for (let i = 0; i < arrowCount; i++) {
         const t = arrowCount === 1 ? 0.5 : i / (arrowCount - 1);
         const x = lerp(startX, endX, t);
-        if (info.absorbing) {
-          drawSchematicArrow(x, bottomOutside, x, bottomInside, info.lineColor, arrowWidth);
-        } else {
-          drawSchematicArrow(x, bottomInside, x, bottomOutside, info.lineColor, arrowWidth);
-        }
+        if (info.absorbing) drawSchematicArrow(x, bottomOutside, x, bottomInside, info.lineColor, 4.2);
+        else drawSchematicArrow(x, bottomInside, x, bottomOutside, info.lineColor, 4.2);
 
         ctx.fillStyle = info.color;
         ctx.font = '700 13px system-ui';
@@ -1667,11 +1284,11 @@ function updateMolecules(dt) {
         const yMid2 = b.y + (b.floor - b.y) * 0.62;
         [yMid1, yMid2].forEach(y => {
           if (info.absorbing) {
-            drawSchematicArrow(b.x - sideGap, y, b.x - 7, y, info.lineColor, sideArrowWidth);
-            drawSchematicArrow(b.x + b.w + sideGap, y, b.x + b.w + 7, y, info.lineColor, sideArrowWidth);
+            drawSchematicArrow(b.x - sideGap, y, b.x - 7, y, info.lineColor, 3.6);
+            drawSchematicArrow(b.x + b.w + sideGap, y, b.x + b.w + 7, y, info.lineColor, 3.6);
           } else {
-            drawSchematicArrow(b.x - 7, y, b.x - sideGap, y, info.lineColor, sideArrowWidth);
-            drawSchematicArrow(b.x + b.w + 7, y, b.x + b.w + sideGap, y, info.lineColor, sideArrowWidth);
+            drawSchematicArrow(b.x - 7, y, b.x - sideGap, y, info.lineColor, 3.6);
+            drawSchematicArrow(b.x + b.w + 7, y, b.x + b.w + sideGap, y, info.lineColor, 3.6);
           }
         });
       }
@@ -1679,108 +1296,166 @@ function updateMolecules(dt) {
       ctx.restore();
     }
 
-    function drawHydrogenBondNetwork() {
-      const structure = activeStructure();
-      if (structure < 0.60) return;
-      ctx.save();
-      ctx.globalAlpha = clamp((structure - 0.60) / 0.40, 0, 1) * 0.75;
-      ctx.strokeStyle = 'rgba(255,255,255,0.72)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([3, 6]);
-      molecules.forEach(m => {
-        if (!m.hBondTargets) return;
-        m.hBondTargets.forEach(n => {
-          const d2 = (n.tx - m.tx) ** 2 + (n.ty - m.ty) ** 2;
-          if (d2 > 90 * 90) return;
-          ctx.beginPath();
-          ctx.moveTo(m.x, m.y);
-          ctx.lineTo(n.x, n.y);
-          ctx.stroke();
-        });
-      });
-      ctx.restore();
-    }
-
     function drawMolecule(m) {
       const ox = m.x;
       const oy = m.y;
-
-      // 전체 물분자 크기 축소
-      const bond = WATER_BOND;
-      const halfAngle = WATER_HALF_ANGLE;
-      const hRadius = WATER_H_RADIUS;
-      const oRadius = WATER_O_RADIUS;
-
-      const hx1 = ox + Math.cos(m.angle + halfAngle) * bond;
-      const hy1 = oy + Math.sin(m.angle + halfAngle) * bond;
-      const hx2 = ox + Math.cos(m.angle - halfAngle) * bond;
-      const hy2 = oy + Math.sin(m.angle - halfAngle) * bond;
+      const hx1 = ox + Math.cos(m.angle + WATER_HALF_ANGLE) * WATER_BOND;
+      const hy1 = oy + Math.sin(m.angle + WATER_HALF_ANGLE) * WATER_BOND;
+      const hx2 = ox + Math.cos(m.angle - WATER_HALF_ANGLE) * WATER_BOND;
+      const hy2 = oy + Math.sin(m.angle - WATER_HALF_ANGLE) * WATER_BOND;
 
       ctx.save();
       ctx.shadowColor = 'rgba(0,0,0,0.38)';
       ctx.shadowBlur = 3;
       ctx.shadowOffsetY = 1.5;
 
-      // 레이어링: H → O → H
       ctx.fillStyle = 'white';
-      ctx.beginPath(); ctx.arc(hx1, hy1, hRadius, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(hx1, hy1, WATER_H_RADIUS, 0, Math.PI * 2); ctx.fill();
 
       ctx.fillStyle = '#ff3b2f';
-      ctx.beginPath(); ctx.arc(ox, oy, oRadius, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(ox, oy, WATER_O_RADIUS, 0, Math.PI * 2); ctx.fill();
 
       ctx.fillStyle = 'white';
-      ctx.beginPath(); ctx.arc(hx2, hy2, hRadius, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(hx2, hy2, WATER_H_RADIUS, 0, Math.PI * 2); ctx.fill();
 
       ctx.restore();
     }
 
     function drawGraph() {
       gtx.clearRect(0, 0, graphW, graphH);
-      gtx.fillStyle = '#111722';
+      gtx.fillStyle = '#ffffff';
       gtx.fillRect(0, 0, graphW, graphH);
 
-      const padL = 42, padR = 14, padT = 14, padB = 34;
-      const x0 = padL, y0 = graphH - padB, x1 = graphW - padR, y1 = padT;
+      const isEnergyMode = graphMode === 'energy';
 
-      gtx.strokeStyle = 'rgba(255,255,255,0.15)';
+      if (isEnergyMode) {
+        drawInternalEnergyBarGraph();
+        return;
+      }
+
+      const padL = 52, padR = 16, padT = 18, padB = 36;
+      const x0 = padL, y0 = graphH - padB, x1 = graphW - padR, y1 = padT;
+      const yMin = MIN_T;
+      const yMax = MAX_T;
+
+      gtx.strokeStyle = '#e5e7eb';
       gtx.lineWidth = 1;
+
       for (let T of [0, 100]) {
-        const y = y0 - (T - MIN_T) / (MAX_T - MIN_T) * (y0 - y1);
-        gtx.beginPath(); gtx.moveTo(x0, y); gtx.lineTo(x1, y); gtx.stroke();
-        gtx.fillStyle = 'rgba(255,255,255,0.62)';
+        const y = y0 - (T - yMin) / (yMax - yMin) * (y0 - y1);
+        gtx.beginPath();
+        gtx.moveTo(x0, y);
+        gtx.lineTo(x1, y);
+        gtx.stroke();
+
+        gtx.fillStyle = '#6b7280';
         gtx.font = '12px system-ui';
         gtx.fillText(T + '℃', 8, y + 4);
       }
 
-      gtx.strokeStyle = 'rgba(255,255,255,0.35)';
-      gtx.beginPath(); gtx.moveTo(x0, y1); gtx.lineTo(x0, y0); gtx.lineTo(x1, y0); gtx.stroke();
+      gtx.strokeStyle = '#9ca3af';
+      gtx.lineWidth = 1.5;
+      gtx.beginPath();
+      gtx.moveTo(x0, y1);
+      gtx.lineTo(x0, y0);
+      gtx.lineTo(x1, y0);
+      gtx.stroke();
 
       if (history.length > 1) {
         const span = Math.max(60, history[history.length - 1].t);
-        gtx.strokeStyle = direction >= 0 ? '#ff8a1f' : '#62b8ff';
+        gtx.strokeStyle = direction >= 0 ? '#ff8a1f' : '#2563eb';
         gtx.lineWidth = 3;
         gtx.beginPath();
+
         history.forEach((p, idx) => {
           const x = x0 + (p.t / span) * (x1 - x0);
-          const y = y0 - (p.temp - MIN_T) / (MAX_T - MIN_T) * (y0 - y1);
-          if (idx === 0) gtx.moveTo(x, y); else gtx.lineTo(x, y);
+          const y = y0 - (p.temp - yMin) / (yMax - yMin) * (y0 - y1);
+          if (idx === 0) gtx.moveTo(x, y);
+          else gtx.lineTo(x, y);
         });
+
         gtx.stroke();
       }
 
-      gtx.fillStyle = 'rgba(255,255,255,0.68)';
+      gtx.fillStyle = '#374151';
       gtx.font = '12px system-ui';
       gtx.fillText('시간', graphW - 42, graphH - 10);
+
       gtx.save();
-      gtx.translate(13, 58);
+      gtx.translate(14, 62);
       gtx.rotate(-Math.PI / 2);
       gtx.fillText('온도', 0, 0);
       gtx.restore();
     }
 
+    function drawInternalEnergyBarGraph() {
+      const energy = particleInternalEnergyValue();
+      const maxEnergy = 130;
+      const ratio = clamp(energy / maxEnergy, 0, 1);
+
+      const padT = 26;
+      const padB = 34;
+      const usableH = graphH - padT - padB;
+      const barW = Math.min(130, graphW * 0.34);
+      const barH = usableH * ratio;
+      const x = graphW / 2 - barW / 2;
+      const y = graphH - padB - barH;
+
+      gtx.fillStyle = '#f8fafc';
+      gtx.fillRect(0, 0, graphW, graphH);
+
+      gtx.strokeStyle = '#e5e7eb';
+      gtx.lineWidth = 1;
+      for (let E of [25, 50, 75, 100, 125]) {
+        const gy = graphH - padB - (E / maxEnergy) * usableH;
+        gtx.beginPath();
+        gtx.moveTo(42, gy);
+        gtx.lineTo(graphW - 42, gy);
+        gtx.stroke();
+
+        gtx.fillStyle = '#9ca3af';
+        gtx.font = '12px system-ui';
+        gtx.textAlign = 'right';
+      }
+
+      const gradient = gtx.createLinearGradient(0, graphH - padB, 0, padT);
+      gradient.addColorStop(0, '#60a5fa');
+      gradient.addColorStop(0.45, '#34c759');
+      gradient.addColorStop(1, '#ff8a1f');
+
+      gtx.fillStyle = '#e5e7eb';
+      roundRect(gtx, x, padT, barW, usableH, 18);
+      gtx.fill();
+
+      gtx.fillStyle = gradient;
+      roundRect(gtx, x, y, barW, barH, 18);
+      gtx.fill();
+
+      gtx.strokeStyle = '#9ca3af';
+      gtx.lineWidth = 1.5;
+      roundRect(gtx, x, padT, barW, usableH, 18);
+      gtx.stroke();
+
+      gtx.textAlign = 'left';
+    }
+
+    function roundRect(context, x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      context.beginPath();
+      context.moveTo(x + radius, y);
+      context.lineTo(x + w - radius, y);
+      context.quadraticCurveTo(x + w, y, x + w, y + radius);
+      context.lineTo(x + w, y + h - radius);
+      context.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+      context.lineTo(x + radius, y + h);
+      context.quadraticCurveTo(x, y + h, x, y + h - radius);
+      context.lineTo(x, y + radius);
+      context.quadraticCurveTo(x, y, x + radius, y);
+      context.closePath();
+    }
+
     function updateUI() {
       tempText.textContent = temp.toFixed(1);
-      stateBadge.textContent = phaseName();
       modeBadge.textContent = direction > 0 ? '가열 중' : direction < 0 ? '냉각 중' : '정지';
       heatBtn.classList.toggle('off', direction !== 1);
       coolBtn.classList.toggle('off', direction !== -1);
@@ -1808,21 +1483,31 @@ function updateMolecules(dt) {
       }
     }
 
+    function updateGraphToggleUI() {
+      graphModeText.textContent = graphMode === 'energy' ? '활발한 정도' : '온도';
+      graphTitleEl.textContent = graphMode === 'energy' ? '입자의 활발한 정도 그래프' : '온도-시간 그래프';
+      graphSubEl.textContent = graphMode === 'energy'
+        ? '현재의 입자가 활발한 정도를 막대그래프로 나타냅니다.'
+        : '0℃와 100℃에서 온도 정체 구간이 나타납니다.';
+    }
+
     function frame(now) {
       const dt = Math.min(0.033, (now - last) / 1000);
       last = now;
       time += dt;
       updateThermal(dt);
       updateMolecules(dt);
+
       if (history.length === 0 || time - history[history.length - 1].t > 0.12) {
-        history.push({t: time, temp});
+        history.push({ t: time, temp, energy: averageEnergyValue() });
         if (history.length > 520) history.shift();
         if (history.length && history[0].t > 0) {
           const base = history[0].t;
-          history = history.map(p => ({t: p.t - base, temp: p.temp}));
+          history = history.map(p => ({ t: p.t - base, temp: p.temp, energy: p.energy }));
           time -= base;
         }
       }
+
       drawContainer();
       drawPhaseHeatDiagram();
       molecules.forEach(drawMolecule);
@@ -1838,11 +1523,18 @@ function updateMolecules(dt) {
     solidStart.addEventListener('click', () => setStart('solid'));
     liquidStart.addEventListener('click', () => setStart('liquid'));
     gasStart.addEventListener('click', () => setStart('gas'));
+
+    graphToggle.addEventListener('change', () => {
+      graphMode = graphToggle.checked ? 'energy' : 'temperature';
+      updateGraphToggleUI();
+    });
+
     window.addEventListener('resize', resize);
 
     resize();
     makeMolecules('solid');
-    history = [{t:0, temp}];
+    history = [{ t: 0, temp, energy: averageEnergyValue() }];
+    updateGraphToggleUI();
     updateUI();
     requestAnimationFrame((t) => { last = t; requestAnimationFrame(frame); });
   </script>
