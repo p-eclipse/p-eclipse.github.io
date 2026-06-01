@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Gargantua-like Black Hole Simulation</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%; margin: 0; overflow: hidden;
+      background: #02030a; color: white;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+    }
+    #app { position: fixed; inset: 0; }
+    canvas { display: block; }
+    .hud, .controls {
+      position: fixed; z-index: 10;
+      border: 1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(10,12,20,.72), rgba(4,5,10,.46));
+      backdrop-filter: blur(18px) saturate(1.2);
+      -webkit-backdrop-filter: blur(18px) saturate(1.2);
+      border-radius: 22px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.38);
+    }
+    .hud {
+      top: 18px; left: 18px; width: min(430px, calc(100vw - 36px));
+      padding: 16px;
+      pointer-events: none; user-select: none;
+    }
+    .hud h1 { margin: 0 0 8px; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; }
+    .hud p { margin: 0; font-size: 12.5px; line-height: 1.55; color: rgba(255,255,255,.66); }
+    .controls {
+      top: 18px; right: 18px; width: min(380px, calc(100vw - 36px));
+      display: grid; gap: 10px; padding: 14px; user-select: none;
+    }
+    .row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; min-height: 32px; }
+    .sliderRow { display: grid; grid-template-columns: 110px 1fr 44px; gap: 10px; align-items: center; }
+    label { font-size: 12.5px; color: rgba(255,255,255,.84); }
+    .value { font-size: 12px; text-align: right; color: rgba(255,255,255,.72); font-variant-numeric: tabular-nums; }
+    input[type="range"] { width: 100%; accent-color: #ffb36a; }
+    .switch {
+      position: relative; width: 54px; height: 32px; border: 0; border-radius: 999px;
+      background: rgba(255,255,255,.18); cursor: pointer; padding: 0;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+    .switch::after {
+      content: ""; position: absolute; width: 28px; height: 28px; left: 2px; top: 2px;
+      border-radius: 50%; background: white; box-shadow: 0 3px 12px rgba(0,0,0,.42);
+      transition: transform .18s cubic-bezier(.2,.8,.2,1);
+    }
+    .switch.on { background: linear-gradient(90deg, #b9d9ff, #ffb46b); }
+    .switch.on::after { transform: translateX(22px); }
+    .badge {
+      position: fixed; left: 18px; bottom: 18px; z-index: 10;
+      padding: 10px 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 999px;
+      background: rgba(6,8,14,.5); backdrop-filter: blur(14px); color: rgba(255,255,255,.68);
+      font-size: 12px; pointer-events: none; user-select: none;
+    }
+    @media (max-width: 760px) {
+      .hud { display: none; }
+      .controls { top: auto; left: 16px; right: 16px; bottom: 16px; width: auto; }
+      .badge { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <section class="hud">
+    <h1>Gargantua-like Kerr Visualizer</h1>
+    <p>
+      좌표 격자에 시점거리 기반 알파 페이드를 추가했습니다. 카메라에서 일정 거리 이상 떨어진 격자는 점점 투명해지고, 더 먼 격자는 보이지 않도록 하여 화면의 시각적 부담을 줄였습니다.
+    </p>
+  </section>
+  <section class="controls">
+    <div class="row"><label>3D 시공간 좌표축</label><button id="gridToggle" class="switch on"></button></div>
+    <div class="row"><label>시험입자 궤적</label><button id="particleToggle" class="switch on"></button></div>
+    <div class="sliderRow"><label>블랙홀 질량</label><input id="massSlider" type="range" min="0.35" max="1.70" step="0.01" value="0.92"><span id="massValue" class="value">0.92</span></div>
+    <div class="sliderRow"><label>블랙홀 회전</label><input id="spinSlider" type="range" min="0" max="1.80" step="0.01" value="0.72"><span id="spinValue" class="value">0.72</span></div>
+    <div class="sliderRow"><label>관찰자 시간</label><input id="timeSlider" type="range" min="0.05" max="3.00" step="0.01" value="1.00"><span id="timeValue" class="value">1.00</span></div>
+    <div class="sliderRow"><label>격자 밝기</label><input id="gridBrightSlider" type="range" min="0.25" max="2.5" step="0.01" value="1.35"><span id="gridBrightValue" class="value">1.35</span></div>
+  </section>
+  <div class="badge">Drag: orbit camera · Wheel/Pinch: zoom · test particles optional</div>
+
+  <script type="importmap">
+    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+  </script>
+
+  <script type="module">
+    import * as THREE from "three";
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+    const app = document.getElementById("app");
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.26;
+    app.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x02030a, 0.012);
+
+    const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.04, 1600);
+    camera.position.set(0, 10, 25);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.045;
+    controls.rotateSpeed = 0.48;
+    controls.zoomSpeed = 0.62;
+    controls.minDistance = 7;
+    controls.maxDistance = 120;
+    controls.target.set(0, 0.4, 0);
+
+    const params = { grid: true, particles: true, spin: 0.72, mass: 0.92, timeScale: 1.00, gridBright: 1.35 };
+    const clock = new THREE.Clock();
+    const uniforms = {
+      uTime: { value: 0 },
+      uSpin: { value: params.spin },
+      uLensMass: { value: params.mass },
+      uFlow: { value: params.mass },
+      uGridBright: { value: params.gridBright },
+      uCameraPos: { value: camera.position.clone() }
+    };
+
+    function makeStarTexture(size = 1024) {
+      const c = document.createElement("canvas");
+      c.width = c.height = size;
+      const ctx = c.getContext("2d");
+      const g = ctx.createRadialGradient(size*.42, size*.44, size*.03, size*.5, size*.5, size*.75);
+      g.addColorStop(0, "rgba(255,170,90,.24)");
+      g.addColorStop(.35, "rgba(100,80,255,.16)");
+      g.addColorStop(1, "rgba(0,0,0,1)");
+      ctx.fillStyle = g; ctx.fillRect(0,0,size,size);
+      for (let i=0;i<4200;i++) {
+        const x = Math.random()*size, y = Math.random()*size;
+        const r = Math.random()*Math.random()*1.35 + .12;
+        const a = 0.20 + Math.random()*Math.random()*.95;
+        ctx.fillStyle = Math.random()>.75 ? `rgba(255,224,188,${a})` : `rgba(225,238,255,${a})`;
+        ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    const starSphere = new THREE.Mesh(
+      new THREE.SphereGeometry(650, 32, 16),
+      new THREE.MeshBasicMaterial({
+        map: makeStarTexture(),
+        side: THREE.BackSide,
+        fog: false,
+        depthWrite: false,
+        depthTest: false
+      })
+    );
+    starSphere.renderOrder = -10;
+    // 별 배경은 제거했습니다. 필요하면 아래 줄의 주석을 해제하세요.
+    // scene.add(starSphere);
+    scene.add(new THREE.AmbientLight(0x8fa8ff, 0.12));
+
+    const blackHoleGroup = new THREE.Group();
+    scene.add(blackHoleGroup);
+
+    const horizon = new THREE.Mesh(
+      new THREE.SphereGeometry(2.05, 64, 32),
+      new THREE.ShaderMaterial({
+        uniforms: { uSpin: uniforms.uSpin },
+        depthWrite: true,
+        depthTest: true,
+        vertexShader: `
+          varying vec3 vN; varying vec3 vW;
+          void main(){ vN = normalize(normalMatrix * normal); vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }
+        `,
+        fragmentShader: `
+          void main(){
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+          }
+        `
+      })
+    );
+    horizon.renderOrder = 2;
+    blackHoleGroup.add(horizon);
+
+    const diskTracer = new THREE.Mesh(
+      new THREE.PlaneGeometry(120, 120, 1, 1),
+      new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        transparent: true,
+        depthWrite: false,
+        depthTest: false,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        vertexShader: `
+          varying vec3 vWorld;
+          void main(){ vec4 w = modelMatrix * vec4(position,1.0); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }
+        `,
+        fragmentShader: `
+          precision highp float;
+          varying vec3 vWorld;
+          uniform vec3 uCameraPos;
+          uniform float uTime;
+          uniform float uSpin;
+          uniform float uLensMass;
+          float eventHorizonRadius(){
+            return 2.05 * (0.72 + 0.30 * uLensMass);
+          }
+          float photonOrbitRadius(){
+            float EH = eventHorizonRadius();
+            return EH * 1.50;
+          }
+          float apparentShadowRadius(){
+            float EH = eventHorizonRadius();
+            return EH * 2.598076;
+          }
+          float photonRingHalfWidth(){
+            return max(0.055, eventHorizonRadius() * 0.035);
+          }
+          const float R_IN = 3.12;
+          const float R_OUT = 11.4;
+          const float PHOTON_GAP = 0.72;
+
+          float hash(float n){ return fract(sin(n) * 43758.5453123); }
+          float noise(vec2 p){
+            vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
+            float a=hash(i.x+i.y*57.0), b=hash(i.x+1.0+i.y*57.0), c=hash(i.x+(i.y+1.0)*57.0), d=hash(i.x+1.0+(i.y+1.0)*57.0);
+            return mix(mix(a,b,f.x), mix(c,d,f.x), f.y);
+          }
+
+          vec4 sampleDisk(vec3 p, vec3 rd, float order, float attenuation){
+            float r = length(p.xz);
+            float phi = atan(p.z, p.x);
+            float rPhoton = photonOrbitRadius();
+            float wPhoton = photonRingHalfWidth();
+            float mainInner = max(R_IN, rPhoton + PHOTON_GAP);
+
+            float mainDiskWindow = smoothstep(mainInner, mainInner + 0.16, r) * (1.0 - smoothstep(R_OUT - 0.55, R_OUT, r));
+            float photonCore = exp(-pow((r - rPhoton) / wPhoton, 2.0));
+            float photonDiskWindow = smoothstep(rPhoton - 2.2*wPhoton, rPhoton - 0.45*wPhoton, r) * (1.0 - smoothstep(rPhoton + 0.45*wPhoton, rPhoton + 2.2*wPhoton, r));
+
+            float cleanGap = 1.0 - smoothstep(rPhoton + 2.2*wPhoton, rPhoton + PHOTON_GAP, r) * (1.0 - smoothstep(mainInner, mainInner + 0.18, r));
+            float radialWindow = mainDiskWindow;
+            float omega = 2.8 / pow(max(r, 2.7), 1.5);
+
+            float ringPhase = r;
+            float wideRings = 0.0;
+            wideRings += 0.72 * exp(-pow(sin(ringPhase * 2.35 + 0.15) / 0.31, 2.0));
+            wideRings += 0.54 * exp(-pow(sin(ringPhase * 3.15 + 1.20) / 0.22, 2.0));
+            wideRings += 0.42 * exp(-pow(sin(ringPhase * 4.60 + 2.10) / 0.17, 2.0));
+
+            float thinRings = 0.0;
+            thinRings += 0.44 * pow(smoothstep(0.50, 1.00, 0.5 + 0.5 * sin(ringPhase * 6.80 + 0.40)), 2.7);
+            thinRings += 0.32 * pow(smoothstep(0.56, 1.00, 0.5 + 0.5 * sin(ringPhase * 9.70 + 2.80)), 3.8);
+            thinRings += 0.22 * pow(smoothstep(0.62, 1.00, 0.5 + 0.5 * sin(ringPhase * 13.40 + 1.70)), 5.0);
+
+            float microRings = 0.14 * pow(0.5 + 0.5 * sin(ringPhase * 18.0 + 0.8 * sin(phi * 2.0)), 8.0);
+            float ringField = clamp(wideRings + thinRings + microRings, 0.0, 2.15);
+
+            float slowAzimuth = 0.5 + 0.5 * sin(phi * 3.0 - uTime * omega * 2.2 + 0.45 * sin(r * 0.8));
+            float fineAzimuth = 0.5 + 0.5 * sin(phi * 9.0 - uTime * omega * 4.4 + r * 0.32);
+            float azimuthMod = 0.82 + 0.14 * slowAzimuth + 0.06 * fineAzimuth;
+            float cleanTexture = 0.97 + 0.03 * noise(vec2(phi * 2.0, r * 1.1 - uTime * 0.08));
+
+            float density = mainDiskWindow * (0.22 + 0.95 * ringField) * azimuthMod * cleanTexture;
+            density += photonDiskWindow * (1.20 + 3.40 * photonCore) * (0.92 + 0.08 * fineAzimuth);
+            density *= cleanGap;
+
+            float temp = pow(1.0 - smoothstep(rPhoton, R_OUT, r), 1.58);
+            vec3 col = mix(vec3(0.95, .34, .10), vec3(1.0, .70, .36), temp);
+            col = mix(col, vec3(1.0, .93, .76), pow(temp, 2.55) * .70);
+            col = mix(col, vec3(1.0, .92, .66), photonDiskWindow * 0.72);
+            vec3 tangent = normalize(vec3(-sin(phi), 0.0, cos(phi)));
+            float beaming = 0.60 + 1.12 * max(dot(tangent, -rd), 0.0) * (0.35 + 0.65 * uSpin);
+            float innerBright = 1.0 + 1.35 * exp(-abs(r - 3.28) * 1.75) + photonDiskWindow * 2.85;
+            float alpha = density * beaming * innerBright * attenuation * (1.0 + 0.66 * order);
+            alpha *= 1.30;
+            return vec4(col * alpha * 2.82, alpha);
+          }
+
+          void main(){
+            vec3 ro = uCameraPos;
+            vec3 rd = normalize(vWorld - ro);
+            vec3 p = ro;
+            float prevY = p.y;
+            vec4 accum = vec4(0.0);
+            float M = 0.78 + 0.68 * uLensMass;
+            float EH = eventHorizonRadius();
+            float travel = 0.0;
+            float order = 0.0;
+
+            for(int i=0; i<92; i++){
+              float r = length(p);
+              if(r < EH) break;
+              float stepLen = clamp(0.040 * r + 0.045 * travel, 0.050, 2.25);
+              vec3 prev = p;
+              prevY = p.y;
+
+              vec3 radialBend = -normalize(p) * (1.65 * M / max(r*r, 0.36));
+              vec3 frameDir = normalize(vec3(-p.z, 0.0, p.x) + vec3(0.0001,0.0,0.0));
+              float frame = uSpin * M / max(r*r*r, 0.85);
+              rd = normalize(rd + radialBend * stepLen + frameDir * frame * stepLen * 0.24);
+              p += rd * stepLen;
+              travel += stepLen;
+
+              if((prevY > 0.0 && p.y <= 0.0) || (prevY < 0.0 && p.y >= 0.0)){
+                float f = abs(prevY) / max(abs(prevY - p.y), 0.00001);
+                vec3 hp = mix(prev, p, f);
+                float rr = length(hp.xz);
+                float rp = photonOrbitRadius();
+                float wp = photonRingHalfWidth();
+                float mainStart = max(R_IN, rp + PHOTON_GAP);
+                if(((rr > rp - 2.5 * wp && rr < rp + 2.5 * wp) || rr > mainStart) && rr < R_OUT){
+                  float distanceComp = 1.0 + 0.006 * min(travel, 160.0);
+                  float travelFade = exp(-0.00045 * max(travel - 25.0, 0.0));
+                  vec4 c = sampleDisk(hp, rd, order, distanceComp * travelFade * (1.0 - accum.a));
+                  accum.rgb += c.rgb * (1.0 - accum.a);
+                  accum.a += c.a * (1.0 - accum.a);
+                  order += 0.72;
+                  if(accum.a > 0.93) break;
+                }
+              }
+              if(travel > 220.0) break;
+            }
+
+            if(accum.a < 0.004) discard;
+            gl_FragColor = vec4(accum.rgb, clamp(accum.a, 0.0, 0.96));
+          }
+        `
+      })
+    );
+    diskTracer.renderOrder = 20;
+    scene.add(diskTracer);
+
+    function createJet(sign){
+      const geo = new THREE.ConeGeometry(1.05, 22, 48, 1, true);
+      geo.translate(0, sign * 11, 0);
+      if(sign < 0) geo.rotateX(Math.PI);
+      const mat = new THREE.ShaderMaterial({
+        uniforms: { uTime: uniforms.uTime }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+        vertexShader: `varying vec3 vPos; void main(){ vPos=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+        fragmentShader: `varying vec3 vPos; uniform float uTime; void main(){ float h=abs(vPos.y)/22.0; float r=length(vPos.xz); float core=exp(-r*3.8)*(1.0-smoothstep(.05,1.0,h)); float pulse=.62+.38*sin(uTime*7.0-h*28.0); vec3 col=mix(vec3(.34,.68,1.0),vec3(1.0,.82,.50),core)*pulse; float a=core*.28*(1.0-h); gl_FragColor=vec4(col*a*2.2,a); }`
+      });
+      return new THREE.Mesh(geo, mat);
+    }
+    blackHoleGroup.add(createJet(1));
+    blackHoleGroup.add(createJet(-1));
+
+    const gridGroup = new THREE.Group();
+    scene.add(gridGroup);
+
+    function makeGrid(){
+      const mat = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        vertexShader: `
+          attribute float axisId;
+          varying float vAlpha;
+          varying float vR;
+          varying float vAxis;
+          uniform float uTime;
+          uniform float uSpin;
+          uniform float uFlow;
+          uniform float uGridBright;
+
+          const float EPS = 0.0001;
+
+          float kerrR(vec3 p, float a){
+            float R2 = dot(p, p);
+            return sqrt(max(
+              0.5 * (R2 - a*a) + 0.5 * sqrt((R2 - a*a) * (R2 - a*a) + 4.0 * a*a * p.y * p.y),
+              0.001
+            ));
+          }
+
+          void main(){
+            vec3 p0 = position;
+
+            float M = 0.72 + 0.70 * uFlow;
+            float a = clamp(uSpin, 0.0, 1.80) * M;
+            float r0 = kerrR(p0, a);
+            float horizon = M * (1.0 + sqrt(max(1.0 - min(a*a/(M*M), 0.999), 0.001)));
+
+            vec3 radial0 = normalize(p0 + vec3(EPS));
+            float cosTheta0 = clamp(p0.y / max(r0, EPS), -1.0, 1.0);
+            float sinTheta0 = sqrt(max(1.0 - cosTheta0*cosTheta0, 0.0));
+            float rho20 = r0*r0 + a*a*cosTheta0*cosTheta0;
+
+            // Kerr/Doran rain-frame radial fall speed: v_r ~ -sqrt(2Mr/rho^2).
+            // It is used as an advection speed for the grid, not as a literal material velocity.
+            float fallSpeed = sqrt(max(2.0 * M * r0 / max(rho20, 0.08), 0.0));
+            float fallGate = smoothstep(88.0, horizon + 1.0, r0);
+            fallSpeed *= fallGate;
+
+            // Stream coordinate keeps the total grid count constant: lines fall inward, new straight
+            // Minkowski-cube grid segments appear from the outer boundary without accumulating near r_+.
+            float streamMin = horizon + 0.55;
+            float streamMax = 96.0;
+            float streamSpan = streamMax - streamMin;
+            float streamPhase = r0 - streamMin - uTime * uFlow * 3.15 * fallSpeed;
+            float streamR = streamMin + mod(streamPhase, streamSpan);
+
+            // Far field must remain an undeformed rectilinear cubic lattice.
+            // Near field uses the falling stream radius.
+            float streamBlend = smoothstep(86.0, 18.0, r0);
+            float r1 = mix(r0, streamR, streamBlend);
+            vec3 p = radial0 * r1;
+
+            // Recompute Kerr quantities after radial advection.
+            float r = kerrR(p, a);
+            float cosTheta = clamp(p.y / max(r, EPS), -1.0, 1.0);
+            float sinTheta = sqrt(max(1.0 - cosTheta*cosTheta, 0.0));
+            float rho2 = r*r + a*a*cosTheta*cosTheta;
+            float Delta = r*r - 2.0*M*r + a*a;
+            float Sigma2 = (r*r + a*a)*(r*r + a*a) - a*a*Delta*sinTheta*sinTheta;
+
+            // Kerr frame dragging: omega = 2Mar / Sigma^2.
+            // The twist is strongest near the equatorial ergoregion and vanishes in the far field.
+            float omega = 2.0 * M * a * r / max(Sigma2, 0.25);
+            float warp = smoothstep(90.0, 5.0, r);
+            float equatorWeight = pow(sinTheta, 1.35);
+            float dragAngle = uTime * omega * 18.0 * warp * equatorWeight;
+            float ca = cos(dragAngle);
+            float sa = sin(dragAngle);
+            p.xz = mat2(ca, -sa, sa, ca) * p.xz;
+
+            // Additional stationary spatial deformation: near-hole radial squeeze, with no effect far away.
+            float lapseLike = sqrt(max(2.0 * M * r / max(rho2, 0.08), 0.0));
+            vec3 radial = normalize(p + vec3(EPS));
+            float extraFall = warp * lapseLike * 0.34 / max(r - horizon + 1.35, 0.35);
+            extraFall = min(extraFall, max(r - horizon - 0.18, 0.0));
+            p -= radial * extraFall;
+
+            // Slight polar anisotropy: Kerr deformation is not spherically symmetric when a != 0.
+            float polarFlatten = warp * lapseLike * 0.035 * equatorWeight;
+            p.y *= 1.0 - polarFlatten;
+
+            r = kerrR(p, a);
+            float horizonMask = smoothstep(horizon + 0.35, horizon + 1.25, r);
+            float pileupComp = clamp((r1*r1) / max(r0*r0, 1.0), 0.10, 1.0);
+            float near = smoothstep(68.0, 4.0, r);
+
+            // View-distance fade: reduce visual overload by hiding grid lines far from the camera.
+            float viewDist = length(p - cameraPosition);
+            float viewFade = 1.0 - smoothstep(72.0, 118.0, viewDist);
+
+            vR = r;
+            vAxis = axisId;
+            vAlpha = uGridBright * horizonMask * pileupComp * viewFade * (0.14 + 0.48 * near);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(p,1.0);
+          }
+        `,
+        fragmentShader: `
+          varying float vAlpha; varying float vR; varying float vAxis;
+          void main(){
+            vec3 cx=vec3(.50,.78,1.0), cy=vec3(1.0,.68,.38), cz=vec3(.66,1.0,.86);
+            vec3 col = vAxis < .5 ? cx : (vAxis < 1.5 ? cy : cz);
+            col = mix(col*.64, vec3(.96,.99,1.0), smoothstep(18.0,2.5,vR));
+            gl_FragColor = vec4(col, clamp(vAlpha,0.0,.76));
+          }
+        `
+      });
+
+      const extent = 96, step = 16, div = 78;
+      const verts = [], axes = [];
+      function pushVertex(x,y,z,axis){ verts.push(x,y,z); axes.push(axis); }
+      function addSegmented(axis, A, B){
+        for(let i=0;i<div;i++){
+          const u0 = -extent + 2*extent*i/div;
+          const u1 = -extent + 2*extent*(i+1)/div;
+          if(axis===0){ pushVertex(u0,A,B,axis); pushVertex(u1,A,B,axis); }
+          else if(axis===1){ pushVertex(A,u0,B,axis); pushVertex(A,u1,B,axis); }
+          else { pushVertex(A,B,u0,axis); pushVertex(A,B,u1,axis); }
+        }
+      }
+      const coords=[]; for(let v=-extent; v<=extent+.001; v+=step) coords.push(v);
+      for(const y of coords) for(const z of coords) addSegmented(0,y,z);
+      for(const x of coords) for(const z of coords) addSegmented(1,x,z);
+      for(const x of coords) for(const y of coords) addSegmented(2,x,y);
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.Float32BufferAttribute(verts,3));
+      geo.setAttribute("axisId", new THREE.Float32BufferAttribute(axes,1));
+      return new THREE.LineSegments(geo, mat);
+    }
+    gridGroup.add(makeGrid());
+
+    const particleGroup = new THREE.Group();
+    scene.add(particleGroup);
+    const COUNT = 180, STEPS = 16;
+    const posArr = new Float32Array(COUNT * STEPS * 3);
+    const alphaArr = new Float32Array(COUNT * STEPS);
+    const trailGeo = new THREE.BufferGeometry();
+    trailGeo.setAttribute("position", new THREE.BufferAttribute(posArr,3));
+    trailGeo.setAttribute("aAlpha", new THREE.BufferAttribute(alphaArr,1));
+    const trail = new THREE.LineSegments(trailGeo, new THREE.ShaderMaterial({
+      transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+      vertexShader:`attribute float aAlpha; varying float vA; void main(){ vA=aAlpha; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+      fragmentShader:`varying float vA; void main(){ gl_FragColor=vec4(.76,.88,1.0,vA*.36); }`
+    }));
+    particleGroup.add(trail);
+    const pMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(.035,6,4), new THREE.MeshBasicMaterial({color:0xcfe8ff,transparent:true,opacity:.82,blending:THREE.AdditiveBlending}), COUNT);
+    pMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    particleGroup.add(pMesh);
+    const dummy = new THREE.Object3D();
+    const particles = [];
+    function resetParticle(p){
+      const r=22+Math.random()*34, a=Math.random()*Math.PI*2, y=(Math.random()-.5)*14;
+      p.pos.set(Math.cos(a)*r,y,Math.sin(a)*r);
+      p.vel.set(-Math.sin(a), (Math.random()-.5)*.05, Math.cos(a)).multiplyScalar(.05+Math.random()*.08);
+      for(let i=0;i<STEPS;i++) p.hist[i].copy(p.pos);
+    }
+    for(let i=0;i<COUNT;i++){ const p={pos:new THREE.Vector3(), vel:new THREE.Vector3(), hist:Array.from({length:STEPS},()=>new THREE.Vector3())}; resetParticle(p); particles.push(p); }
+    function updateParticles(dt){
+      if(!params.particles) return;
+      if(dt <= 0.0001) return;
+      const h = Math.min(dt,.032), M=18, soft=2.15;
+      for(let i=0;i<COUNT;i++){
+        const p=particles[i];
+        const r=p.pos.length()+.0001, rp=Math.sqrt(p.pos.x*p.pos.x+p.pos.z*p.pos.z)+.001;
+        const radial=p.pos.clone().multiplyScalar(-1/r);
+        const tangent=new THREE.Vector3(-p.pos.z/rp,0,p.pos.x/rp);
+        const inv=1/(r*r+soft*soft);
+        p.vel.add(radial.multiplyScalar(M*inv*h*.62*params.mass));
+        p.vel.add(tangent.multiplyScalar(params.spin*M*inv*h*.42/Math.sqrt(r+.7)));
+        p.vel.multiplyScalar(.9992);
+        p.pos.addScaledVector(p.vel,h*18);
+        if(r<2.35 || r>66 || !Number.isFinite(p.pos.x)) resetParticle(p);
+        p.hist.pop(); p.hist.unshift(p.pos.clone());
+        dummy.position.copy(p.pos); dummy.scale.setScalar(.8+.8*Math.exp(-Math.abs(r-3)*.55)); dummy.updateMatrix(); pMesh.setMatrixAt(i,dummy.matrix);
+        for(let j=0;j<STEPS-1;j++){
+          const base=(i*STEPS+j)*3, q=p.hist[j];
+          posArr[base]=q.x; posArr[base+1]=q.y; posArr[base+2]=q.z;
+          alphaArr[i*STEPS+j]=(1-j/STEPS)*Math.min(1,Math.max(0,(r-2.2)/12));
+        }
+      }
+      pMesh.instanceMatrix.needsUpdate=true;
+      trailGeo.attributes.position.needsUpdate=true;
+      trailGeo.attributes.aAlpha.needsUpdate=true;
+    }
+
+    function bindSwitch(id, key, target){
+      const el=document.getElementById(id);
+      el.addEventListener("click",()=>{ params[key]=!params[key]; el.classList.toggle("on",params[key]); target.visible=params[key]; });
+    }
+    bindSwitch("gridToggle","grid",gridGroup);
+    bindSwitch("particleToggle","particles",particleGroup);
+    function bindSlider(id, valueId, key, uniformA, uniformB){
+      const input=document.getElementById(id), value=document.getElementById(valueId);
+      input.addEventListener("input",()=>{
+        params[key]=Number(input.value);
+        value.textContent=params[key].toFixed(2);
+        if(uniformA) uniformA.value=params[key];
+        if(uniformB) uniformB.value=params[key];
+      });
+    }
+    bindSlider("spinSlider","spinValue","spin",uniforms.uSpin);
+    bindSlider("massSlider","massValue","mass",uniforms.uLensMass, uniforms.uFlow);
+    bindSlider("timeSlider","timeValue","timeScale",null);
+    bindSlider("gridBrightSlider","gridBrightValue","gridBright",uniforms.uGridBright);
+
+    addEventListener("resize",()=>{
+      camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth<760 ? 1.10 : 1.25));
+    });
+
+    function animate(){
+      requestAnimationFrame(animate);
+      const dt=clock.getDelta() * params.timeScale;
+      uniforms.uTime.value += dt;
+      uniforms.uCameraPos.value.copy(camera.position);
+      starSphere.rotation.y += dt*.006;
+      const eventHorizonScale = 0.72 + 0.30 * params.mass;
+      const apparentShadowScale = 2.598076 * eventHorizonScale;
+      horizon.scale.setScalar(apparentShadowScale);
+      blackHoleGroup.rotation.y += dt*.003*params.spin;
+      diskTracer.position.set(0, 0, 0);
+      diskTracer.lookAt(camera.position);
+      const tracerDist = camera.position.distanceTo(diskTracer.position);
+      const fovRad = THREE.MathUtils.degToRad(camera.fov);
+      const frustumHeight = 2 * tracerDist * Math.tan(fovRad * 0.5);
+      const coverSize = frustumHeight * Math.max(camera.aspect, 1.0) * 1.28;
+      diskTracer.scale.setScalar(coverSize / 120);
+      updateParticles(dt);
+      controls.update();
+      renderer.render(scene,camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
