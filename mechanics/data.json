@@ -5,6 +5,11 @@
       "name": "Sound Spectrum",
       "path": "./soundspectrum/",
       "description": "소리 진동수 스펙트럼 분석기"
+    },
+    {
+      "name": "Black Hole",
+      "path": "./BlackHole/",
+      "description": "블랙홀 시뮬레이터"
     }
   ]
 }
