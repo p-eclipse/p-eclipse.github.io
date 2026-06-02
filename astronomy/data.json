@@ -2,9 +2,9 @@
   "title": "Astronomy",
   "folders": [
     {
-      "name": "Pale Blue Dot",
-      "path": "./PaleBlueDot/",
-      "description": "태양계 실제 거리 비례를 확인하세요"
+      "name": "Pale Dots",
+      "path": "./PaleDots/",
+      "description": "태양계 실제 거리 비례로 탐험하세요."
     },
     {
       "name": "Black Hole",
