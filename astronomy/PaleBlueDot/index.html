@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>달이 1픽셀이라면</title>
+
+<style>
+@font-face {
+  font-family: "FuturaCustom";
+  src: url("./Futura-Medium(3).otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "KoPubDotumCustom";
+  src: url("./KoPubWorld Dotum_Pro Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --fg: #f2f2f2;
+  --muted: rgba(255,255,255,0.38);
+  --post-voyager-progress: 0;
+  --sun-return-x: -160px;
+  --sun-return-opacity: 0;
+  --pbd-opacity: 0;
+  --voyager-marker-opacity: 1;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  color: var(--fg);
+  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
+}
+
+#viewport {
+  width: 100vw;
+  height: 100vh;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  cursor: grab;
+  background: #000;
+}
+
+#viewport:active { cursor: grabbing; }
+
+#space {
+  position: relative;
+  width: 1745820px;
+  height: 100vh;
+  min-height: 100vh;
+  background: #000;
+}
+
+.intro {
+  position: absolute;
+  left: 120px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 520px;
+  pointer-events: none;
+}
+
+.intro h1 {
+  margin: 0;
+  font-size: 84px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.1;
+}
+
+.intro p {
+  margin-top: 26px;
+  font-family: "KoPubDotumCustom", sans-serif;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.95;
+}
+
+.body-cluster {
+  position: absolute;
+  top: 43%;
+  transform: translate(-50%, -50%);
+  min-width: 280px;
+  height: 560px;
+  pointer-events: auto;
+}
+
+.dot {
+  position: absolute;
+  z-index: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.body-name {
+  position: absolute;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+  line-height: 1;
+  opacity: 0.92;
+  text-shadow: 0 0 10px rgba(255,255,255,0.08);
+}
+
+.body-sub {
+  position: absolute;
+  font-family: "KoPubDotumCustom", sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.72);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  opacity: 0.88;
+}
+
+.arrow {
+  position: absolute;
+  z-index: 2;
+  width: 1px;
+  background: rgba(255,255,255,0.62);
+  pointer-events: none;
+}
+
+.arrow::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-right: 1px solid rgba(255,255,255,0.62);
+  border-bottom: 1px solid rgba(255,255,255,0.62);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.arrow.up::after {
+  top: -1px;
+  transform: translateX(-50%) rotate(225deg);
+}
+
+.arrow.down::after { bottom: -1px; }
+
+.info-card {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "KoPubDotumCustom", sans-serif;
+  color: rgba(255,255,255,0.68);
+  font-size: 11px;
+  line-height: 1.7;
+  text-align: center;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.body-cluster:hover .info-card { opacity: 1; }
+
+.message {
+  position: absolute;
+  top: 31%;
+  width: 460px;
+  transform: translateX(-50%);
+  font-family: "KoPubDotumCustom", sans-serif;
+  color: rgba(255,255,255,0.58);
+  line-height: 1.9;
+  font-size: 15px;
+}
+
+.message strong {
+  display: block;
+  margin-bottom: 8px;
+  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
+  color: rgba(255,255,255,0.92);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+}
+
+.asteroid-belt {
+  position: absolute;
+  top: 37%;
+  height: 170px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.asteroid-dot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.62);
+}
+
+.asteroid-label {
+  position: absolute;
+  left: 50%;
+  top: 132px;
+  transform: translateX(-50%);
+  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
+  font-size: 34px;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.74);
+  white-space: nowrap;
+}
+
+.asteroid-sub {
+  position: absolute;
+  left: 50%;
+  top: 176px;
+  transform: translateX(-50%);
+  font-family: "KoPubDotumCustom", sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.52);
+  white-space: nowrap;
+}
+
+#readout {
+  position: fixed;
+  z-index: 30;
+  left: 50%;
+  bottom: 104px;
+  transform: translateX(-50%);
+  font-family: "KoPubDotumCustom", sans-serif;
+  color: rgba(255,255,255,0.76);
+  font-size: 14px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  opacity: calc(1 - var(--pbd-opacity, 0));
+  transition: opacity 120ms linear;
+}
+
+#positionPointer {
+  position: fixed;
+  z-index: 34;
+  left: 50%;
+  bottom: 72px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 10px solid rgba(255,255,255,0.92);
+  pointer-events: none;
+  opacity: calc(1 - var(--pbd-opacity, 0));
+  transition: opacity 120ms linear;
+}
+
+#centerLine {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 32;
+  width: 1px;
+  height: 52px;
+  background: rgba(255,255,255,0.78);
+  pointer-events: none;
+}
+
+#unitButtons {
+  position: fixed;
+  z-index: 35;
+  left: 50%;
+  bottom: 132px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  opacity: calc(1 - var(--pbd-opacity, 0));
+  transition: opacity 120ms linear;
+}
+
+#unitButtons button {
+  border: 1px solid rgba(255,255,255,0.28);
+  background: transparent;
+  color: rgba(255,255,255,0.52);
+  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+#unitButtons button.active {
+  color: white;
+  border-color: rgba(255,255,255,0.72);
+  background: rgba(255,255,255,0.08);
+}
+
+#bodyNav {
+  position: fixed;
+  z-index: 36;
+  left: 50%;
+  top: 18px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 999px;
+  background: rgba(0,0,0,0.34);
+  backdrop-filter: blur(12px);
+}
+
+#bodyNav button {
+  border: 0;
+  background: transparent;
+  color: rgba(255,255,255,0.58);
+  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  padding: 6px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+#bodyNav button:hover {
+  color: white;
+  background: rgba(255,255,255,0.08);
+}
+
+#ruler {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  z-index: 20;
+  width: 100vw;
+  height: 92px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: calc(1 - var(--post-voyager-progress, 0));
+  transition: opacity 100ms linear;
+}
+
+.tick {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255,255,255,0.72);
+}
+
+.tick.minor { height: 28px; }
+
+.tick.major {
+  width: 2px;
+  height: 42px;
+  background: rgba(255,255,255,0.95);
+}
+
+#lightSpeedButton {
+  position: fixed;
+  right: 32px;
+  bottom: 98px;
+  z-index: 36;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 50%;
+  background: rgba(255,255,255,0.045);
+  color: rgba(255,255,255,0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+#lightSpeedButton:hover {
+  color: white;
+  border-color: rgba(255,255,255,0.58);
+  background: rgba(255,255,255,0.10);
+}
+
+#lightSpeedButton.active {
+  color: white;
+  border-color: rgba(255,255,255,0.88);
+  background: rgba(255,255,255,0.16);
+  box-shadow: 0 0 28px rgba(180,220,255,0.26);
+}
+
+#lightSpeedButton svg {
+  width: 23px;
+  height: 23px;
+  stroke-width: 1.7;
+}
+
+#progress {
+  position: fixed;
+  z-index: 40;
+  top: 0;
+  left: 0;
+  height: 1px;
+  width: 0;
+  background: rgba(255,255,255,0.82);
+}
+
+#sunReturnStar {
+  position: fixed;
+  z-index: 33;
+  left: var(--sun-return-x, -160px);
+  top: 47%;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+  opacity: var(--sun-return-opacity, 0);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle,
+      rgba(255,255,255,1) 0%,
+      rgba(255,252,220,1) 18%,
+      rgba(255,230,120,0.92) 34%,
+      rgba(255,210,80,0.34) 58%,
+      rgba(255,210,80,0.0) 72%
+    );
+  box-shadow:
+    0 0 7px rgba(255,255,255,0.95),
+    0 0 18px rgba(255,235,150,0.72),
+    0 0 44px rgba(255,210,80,0.28);
+}
+
+#sunReturnStar::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 4px rgba(255,255,255,1);
+}
+
+#sunReturnStar::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255,245,190,0.20) 0%, rgba(255,245,190,0.08) 38%, rgba(255,245,190,0) 72%);
+}
+
+.pale-blue-marker .body-name,
+.pale-blue-marker .body-sub,
+.pale-blue-marker .info-card,
+.pale-blue-marker .arrow,
+.pale-blue-marker .arrow::after,
+.pale-blue-marker .pale-blue-point {
+  opacity: var(--voyager-marker-opacity, 1);
+}
+
+#paleBlueFinal {
+  position: fixed;
+  inset: 0;
+  z-index: 31;
+  pointer-events: none;
+  opacity: var(--pbd-opacity, 0);
+  background: #000;
+  transition: opacity 120ms linear;
+}
+
+#paleBlueFinalImageWrap {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: min(100vw, 760px);
+  height: 52vh;
+  transform: translateX(-50%);
+  overflow: hidden;
+  opacity: 0.88;
+}
+
+#paleBlueFinalImageWrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: auto;
+  filter: contrast(1.06) brightness(0.86) saturate(0.92);
+}
+
+#paleBlueFinalImageWrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.18) 68%, #000 100%);
+}
+
+#paleBlueEarthLabel {
+  position: absolute;
+  right: 21%;
+  top: 42%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "KoPubDotumCustom", sans-serif;
+  color: rgba(255,255,255,0.82);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+#paleBlueEarthLabel::before {
+  content: "";
+  width: 42px;
+  height: 1px;
+  background: rgba(255,255,255,0.72);
+}
+
+#paleBlueSource {
+  position: absolute;
+  left: 42px;
+  top: 34px;
+  max-width: 560px;
+  font-family: "KoPubDotumCustom", sans-serif;
+  color: rgba(255,255,255,0.68);
+  font-size: 12px;
+  line-height: 1.7;
+  letter-spacing: 0.03em;
+}
+
+#paleBlueSource strong {
+  display: block;
+  margin-bottom: 6px;
+  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
+  color: rgba(255,255,255,0.9);
+  font-size: 18px;
+  letter-spacing: 0.14em;
+}
+
+#paleBlueQuotePanel {
+  position: absolute;
+  left: 50%;
+  top: 56vh;
+  width: min(980px, calc(100vw - 96px));
+  max-height: 38vh;
+  transform: translateX(-50%);
+  overflow-y: auto;
+  padding: 10px 6px 48px;
+  pointer-events: auto;
+  color: rgba(255,255,255,0.82);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.35) transparent;
+}
+
+#paleBlueQuotePanel h2 {
+  margin: 0 0 10px;
+  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
+  font-size: 36px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: rgba(210,230,255,0.94);
+}
+
+#paleBlueQuotePanel .author {
+  margin-bottom: 28px;
+  font-family: "KoPubDotumCustom", sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.58);
+}
+
+#paleBlueQuotePanel p {
+  margin: 0 0 22px;
+  font-family: "KoPubDotumCustom", sans-serif;
+  font-size: 15px;
+  line-height: 1.95;
+  word-break: keep-all;
+}
+
+#paleBlueQuotePanel .sourceBlock {
+  margin-top: 36px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255,255,255,0.24);
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+#paleBlueQuotePanel .sourceBlock a {
+  color: rgba(190,220,255,0.86);
+  text-decoration: none;
+}
+
+@media (max-width: 700px) {
+  .intro {
+    left: 28px;
+    top: 42%;
+    width: calc(100vw - 56px);
+  }
+
+  .intro h1 { font-size: 48px; }
+  .intro p { font-size: 14px; }
+
+  #readout {
+    font-size: 12px;
+    bottom: 98px;
+  }
+
+  #unitButtons { bottom: 126px; }
+}
+</style>
+</head>
+
+<body>
+
+<div id="viewport">
+  <div id="progress"></div>
+
+  <div id="space">
+    <section class="intro">
+      <h1>
+        MOON<br>
+        = 1PX
+      </h1>
+
+      <p>
+        달의 지름을 단 하나의 픽셀로 축소하면,<br>
+        태양계는 더 이상 “행성들의 집합”처럼 보이지 않는다.
+        <br><br>
+        대신 우리는 거의 끝없이 이어지는 공허와,
+        그 안에 흩어진 작은 점들을 보게 된다.
+        <br><br>
+        이 스크롤은 이동이 아니라,
+        거리 자체를 체감하기 위한 인터페이스다.
+      </p>
+    </section>
+  </div>
+</div>
+
+<div id="bodyNav"></div>
+
+<div id="unitButtons">
+  <button data-unit="au" class="active">AU</button>
+  <button data-unit="light">광분</button>
+  <button data-unit="km">km</button>
+</div>
+
+<div id="readout">0.000 AU</div>
+<div id="positionPointer"></div>
+
+<div id="paleBlueFinal">
+  <div id="paleBlueFinalImageWrap">
+    <img src="./PIA00452.jpg" alt="Voyager 1 Pale Blue Dot photograph" />
+    <div id="paleBlueEarthLabel">지구 · 창백한 푸른 점</div>
+  </div>
+
+  <div id="paleBlueSource">
+    <strong>PALE BLUE DOT</strong>
+    Voyager 1 · 1990 · 약 40.5 AU<br>
+    이미지 출처: NASA Science · Voyager 1’s Pale Blue Dot
+  </div>
+
+  <section id="paleBlueQuotePanel" aria-label="칼 세이건 창백한 푸른 점 인용문 번역">
+    <h2>창백한 푸른 점</h2>
+    <div class="author">칼 세이건, 『창백한 푸른 점』 중에서</div>
+
+    <p>이 먼 시점에서 보면, 지구는 특별히 눈에 띄지 않을지도 모릅니다. 그러나 우리에게는 다릅니다. 저 점을 다시 보십시오. 그것이 여기입니다. 그것이 집입니다. 그것이 우리입니다. 그 위에서 당신이 사랑하는 모든 사람, 당신이 아는 모든 사람, 당신이 들어본 모든 사람, 지금까지 존재했던 모든 인간이 삶을 살아냈습니다.</p>
+
+    <p>우리의 기쁨과 고통의 총합, 수천 개의 자신만만한 종교와 이념과 경제 이론들, 모든 사냥꾼과 채집자, 모든 영웅과 겁쟁이, 모든 문명의 창조자와 파괴자, 모든 왕과 농부, 사랑에 빠진 모든 젊은 연인, 모든 어머니와 아버지, 희망에 찬 아이, 발명가와 탐험가, 모든 도덕의 교사, 모든 부패한 정치가, 모든 “슈퍼스타”, 모든 “최고 지도자”, 우리 종의 역사 속 모든 성인과 죄인이 그곳에 살았습니다. 햇빛 한 줄기 속에 떠 있는 먼지 한 알갱이 위에서.</p>
+
+    <p>지구는 거대한 우주라는 무대에서 아주 작은 무대입니다. 수많은 장군과 황제들이 영광과 승리 속에서 저 점의 일부를 잠시 지배하는 주인이 되고자 흘리게 한 피의 강을 생각해 보십시오. 이 픽셀의 한 구석에 사는 사람들이, 거의 구별되지 않는 다른 구석의 사람들에게 가한 끝없는 잔혹함을 생각해 보십시오. 그들의 오해가 얼마나 잦았는지, 서로를 죽이려는 열망이 얼마나 강했는지, 그들의 증오가 얼마나 뜨거웠는지를 생각해 보십시오.</p>
+
+    <p>우리의 허세, 상상 속의 자기중요감, 우주에서 우리가 어떤 특권적 위치에 있다는 착각은 이 창백한 빛의 점 앞에서 도전받습니다. 우리의 행성은 거대하게 감싸는 우주의 어둠 속에 외롭게 놓인 작은 점입니다. 우리의 무지 속에서, 이 광대함 속에서, 우리 자신으로부터 우리를 구해 주기 위해 다른 곳에서 도움이 올 것이라는 암시는 전혀 없습니다.</p>
+
+    <p>지구는 지금까지 생명이 존재한다고 알려진 유일한 세계입니다. 적어도 가까운 미래에는, 우리 종이 이주할 수 있는 다른 곳은 없습니다. 방문은 가능할지 모릅니다. 그러나 정착은 아직 아닙니다. 좋든 싫든, 지금 이 순간 지구는 우리가 버텨 서야 할 자리입니다.</p>
+
+    <p>천문학은 겸손을 배우고 인격을 세우는 경험이라고들 말합니다. 우리의 자만이 얼마나 어리석은지를 보여 주는 데, 이 멀리서 찍힌 작은 세계의 이미지보다 더 나은 증거는 없을지도 모릅니다. 제게 이 이미지는 우리가 서로를 더 친절하게 대하고, 우리가 지금까지 알아 온 유일한 집인 이 창백한 푸른 점을 보존하고 아껴야 할 책임을 일깨워 줍니다.</p>
+
+    <div class="sourceBlock">
+      출처: NASA Science, “Voyager 1’s Pale Blue Dot”<br>
+      <a href="https://science.nasa.gov/mission/voyager/voyager-1s-pale-blue-dot/" target="_blank" rel="noopener noreferrer">https://science.nasa.gov/mission/voyager/voyager-1s-pale-blue-dot/</a>
+    </div>
+  </section>
+</div>
+
+<div id="centerLine"></div>
+<div id="sunReturnStar"></div>
+<div id="ruler"></div>
+
+<button id="lightSpeedButton" aria-label="광속 이동 체험" title="광속 이동 체험">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3 12h12" />
+    <path d="M10 6l6 6-6 6" />
+    <path d="M2 7h5" opacity="0.55" />
+    <path d="M1 17h7" opacity="0.55" />
+    <path d="M18 4v3" opacity="0.8" />
+    <path d="M18 17v3" opacity="0.8" />
+  </svg>
+</button>
+
+<script>
+const MOON_DIAMETER_KM = 3474.8;
+const AU_KM = 149597870.7;
+const LIGHT_MINUTE_KM = 299792.458 * 60;
+const OFFSET = 1400;
+const MAX_SCROLL_DISTANCE_KM = AU_KM * 40.5;
+
+let currentUnit = "au";
+let postVoyagerProgress = 0;
+let postVoyagerVirtualScroll = 0;
+const POST_VOYAGER_SCROLL_LENGTH = 900;
+
+const bodies = [
+  { name: "SUN", ko: "태양", key: "sun", color: "#ffd21f", diameter: 1392700, distance: 0, sub: "THE LOCAL STAR" },
+  { name: "MERCURY", ko: "수성", key: "mercury", color: "#8f8a83", diameter: 4879, distance: 57900000, sub: "SMALL ROCK" },
+  { name: "VENUS", ko: "금성", key: "venus", color: "#e6c56d", diameter: 12104, distance: 108200000, sub: "BRIGHT CLOUD" },
+  { name: "EARTH", ko: "지구", key: "earth", color: "#00e5ff", diameter: 12742, distance: 149600000, sub: "YOU ARE HERE" },
+  { name: "MOON", ko: "달", key: "moon", color: "#ffffff", diameter: 3474.8, distance: 149984400, sub: "ONE PIXEL" },
+  { name: "MARS", ko: "화성", key: "mars", color: "#c95f3f", diameter: 6779, distance: 227900000, sub: "RED DESERT" },
+  { name: "JUPITER", ko: "목성", key: "jupiter", color: "#d59b62", diameter: 139820, distance: 778500000, sub: "GIANT PLANET" },
+  { name: "SATURN", ko: "토성", key: "saturn", color: "#d8bd79", diameter: 116460, distance: 1433500000, sub: "RING WORLD" },
+  { name: "URANUS", ko: "천왕성", key: "uranus", color: "#7fd7d9", diameter: 50724, distance: 2872500000, sub: "ICE GIANT" },
+  { name: "NEPTUNE", ko: "해왕성", key: "neptune", color: "#4169e1", diameter: 49244, distance: 4495100000, sub: "BLUE EDGE" }
+];
+
+const specialMarkers = [
+  {
+    title: "PALE BLUE DOT",
+    subtitle: "Voyager 1 · 1990",
+    distance: AU_KM * 40.5,
+    color: "rgba(180,220,255,0.95)",
+    description: "보이저 1호가 지구를 촬영한 위치"
+  }
+];
+
+const messages = [
+  { x: 9000, title: "BEGIN", text: "왼쪽에는 제목이 있고, 오른쪽에는 태양이 있다. 여기서부터 거리는 숫자가 아니라 체감이 된다." },
+  { x: 22000, title: "EMPTY", text: "화면이 비어 보인다면 정상이다. 태양계는 대부분 이런 식으로 존재한다." },
+  { x: 42000, title: "SCALE", text: "크기는 한눈에 보이지만, 거리는 걸어가야만 이해된다." },
+  { x: 68000, title: "DOT", text: "행성은 그림 속 주인공처럼 보이지만, 실제 비율에서는 점에 가깝다." },
+  { x: 96000, title: "WAIT", text: "아무 일도 일어나지 않는 구간이 길수록, 이 모형은 더 정직해진다." },
+  { x: 135000, title: "MODEL", text: "교과서 그림은 한 장에 넣기 위해 거리를 거의 반드시 배신한다." },
+  { x: 185000, title: "SILENCE", text: "천체와 천체 사이에는 설명보다 긴 침묵이 놓여 있다." },
+  { x: 245000, title: "SCROLL", text: "이 스크롤은 이동이 아니라 거리 감각을 견디는 장치다." },
+  { x: 330000, title: "THIN", text: "태양계는 빽빽한 구조가 아니라, 거의 비어 있는 얇은 배치다." },
+  { x: 430000, title: "FAR", text: "멀다는 말은 편리하지만, 이 정도로 멀다는 사실은 몸이 먼저 이해한다." },
+  { x: 560000, title: "PALE BLUE", text: "우리가 사는 세계는 크기로 특별하지 않다. 그럼에도 그곳이 전부다." },
+  { x: 760000, title: "EDGE", text: "가장자리에 가까워질수록, 행성보다 간격이 더 선명해진다." },
+  { x: 980000, title: "AFTER", text: "여기까지 왔어도 우주는 거의 시작도 하지 않았다." },
+  { x: 1335000, title: "BEYOND NEPTUNE", text: "해왕성을 지나면 익숙한 행성 목록은 끝난다. 그러나 공간은 끝나지 않는다." },
+  { x: 1435000, title: "OUTWARD", text: "이제부터는 행성의 질서보다 탐사선의 고독이 더 선명해진다." },
+  { x: 1535000, title: "SIGNAL", text: "보이저의 신호는 빛의 속도로 와도 몇 시간 뒤에야 도착한다." },
+  { x: 1635000, title: "LOOK BACK", text: "여기쯤에서 뒤돌아보면 지구는 이미 세계가 아니라 하나의 점이 된다." },
+  { x: 1705000, title: "CAMERA", text: "창백한 푸른 점은 망원경이 아니라 거리감이 만든 이미지다." }
+];
+
+const viewport = document.getElementById("viewport");
+const space = document.getElementById("space");
+const readout = document.getElementById("readout");
+const progress = document.getElementById("progress");
+const ruler = document.getElementById("ruler");
+const bodyNav = document.getElementById("bodyNav");
+const lightSpeedButton = document.getElementById("lightSpeedButton");
+const root = document.documentElement;
+
+let minorStepPx = 10;
+let majorStepPx = 50;
+
+function kmToPx(km) {
+  return km / MOON_DIAMETER_KM;
+}
+
+function diameterToPx(km) {
+  return Math.max(km / MOON_DIAMETER_KM, 1);
+}
+
+function formatKm(km) {
+  return `${Math.round(km).toLocaleString("ko-KR")} km`;
+}
+
+function formatAU(km) {
+  return `${(km / AU_KM).toFixed(3)} AU`;
+}
+
+function formatLightMinute(km) {
+  return `${(km / LIGHT_MINUTE_KM).toFixed(2)} 광분`;
+}
+
+function formatDistanceByUnit(km) {
+  if (currentUnit === "au") return formatAU(km);
+  if (currentUnit === "light") return formatLightMinute(km);
+  return formatKm(km);
+}
+
+function syncSpaceWidthToMaxDistance() {
+  const maxDistancePx = kmToPx(MAX_SCROLL_DISTANCE_KM);
+  space.style.width = `${OFFSET + maxDistancePx + viewport.clientWidth / 2}px`;
+}
+
+function applyRulerScale() {
+  const pxPerLightMinute = LIGHT_MINUTE_KM / MOON_DIAMETER_KM;
+  const pxPerAU = AU_KM / MOON_DIAMETER_KM;
+
+  if (currentUnit === "km") {
+    minorStepPx = 10;
+    majorStepPx = 50;
+  }
+
+  if (currentUnit === "light") {
+    minorStepPx = pxPerLightMinute * 0.01;
+    majorStepPx = pxPerLightMinute * 0.05;
+  }
+
+  if (currentUnit === "au") {
+    minorStepPx = pxPerAU * 0.01;
+    majorStepPx = pxPerAU * 0.05;
+  }
+
+  renderRulerTicks();
+}
+
+function renderRulerTicks() {
+  const scrollX = viewport.scrollLeft;
+  const viewportWidth = viewport.clientWidth;
+
+  ruler.innerHTML = "";
+
+  const spaceStart = scrollX;
+  const spaceEnd = scrollX + viewportWidth;
+  const zero = OFFSET;
+
+  const minorStartIndex = Math.max(0, Math.floor((spaceStart - zero) / minorStepPx) - 2);
+  const minorEndIndex = Math.ceil((spaceEnd - zero) / minorStepPx) + 2;
+
+  for (let i = minorStartIndex; i <= minorEndIndex; i++) {
+    const spaceX = zero + i * minorStepPx;
+    const screenX = spaceX - scrollX;
+
+    if (screenX < -4 || screenX > viewportWidth + 4) continue;
+
+    const tick = document.createElement("div");
+    tick.className = "tick minor";
+    tick.style.left = `${screenX}px`;
+    ruler.appendChild(tick);
+  }
+
+  const majorStartIndex = Math.max(0, Math.floor((spaceStart - zero) / majorStepPx) - 2);
+  const majorEndIndex = Math.ceil((spaceEnd - zero) / majorStepPx) + 2;
+
+  for (let i = majorStartIndex; i <= majorEndIndex; i++) {
+    const spaceX = zero + i * majorStepPx;
+    const screenX = spaceX - scrollX;
+
+    if (screenX < -4 || screenX > viewportWidth + 4) continue;
+
+    const tick = document.createElement("div");
+    tick.className = "tick major";
+    tick.style.left = `${screenX}px`;
+    ruler.appendChild(tick);
+  }
+}
+
+function addBody(body) {
+  const x = kmToPx(body.distance) + OFFSET;
+  const d = diameterToPx(body.diameter);
+  const earthPx = diameterToPx(12742);
+  const neptunePx = diameterToPx(49244);
+  const jupiterPx = diameterToPx(139820);
+
+  const arrowEndGap = earthPx * 3;
+  const labelGap = neptunePx;
+  let arrowLength = Math.max(22, neptunePx * 1.2);
+
+  const cluster = document.createElement("div");
+  cluster.className = "body-cluster";
+  cluster.style.left = `${x}px`;
+
+  const dot = document.createElement("div");
+  dot.className = "dot";
+  dot.style.width = `${d}px`;
+  dot.style.height = `${d}px`;
+  dot.style.background = body.color;
+
+  const name = document.createElement("div");
+  name.className = "body-name";
+  name.textContent = body.name;
+
+  const sub = document.createElement("div");
+  sub.className = "body-sub";
+  sub.textContent = body.sub;
+
+  const arrow = document.createElement("div");
+  arrow.className = body.key === "moon" ? "arrow up" : "arrow down";
+
+  const card = document.createElement("div");
+  card.className = "info-card";
+  card.innerHTML =
+    `${body.ko}<br>` +
+    `${formatAU(body.distance)} · ${formatLightMinute(body.distance)}<br>` +
+    `${formatKm(body.distance)} · ${d.toFixed(d < 10 ? 2 : 1)} px`;
+
+  const dotX = 50;
+  const dotCenterY = body.key === "sun" ? 350 : 260;
+  const bodyTopY = dotCenterY - d / 2;
+  const bodyBottomY = dotCenterY + d / 2;
+
+  dot.style.left = `${dotX}%`;
+  dot.style.top = `${dotCenterY}px`;
+
+  let arrowStartY;
+  let arrowEndY;
+
+  if (body.key === "moon") {
+    arrowLength += jupiterPx * 1.5;
+    arrowEndY = bodyBottomY + arrowEndGap;
+    arrowStartY = arrowEndY + arrowLength;
+  } else {
+    arrowEndY = bodyTopY - arrowEndGap;
+    arrowStartY = arrowEndY - arrowLength;
+  }
+
+  arrow.style.left = `${dotX}%`;
+  arrow.style.top = `${Math.min(arrowStartY, arrowEndY)}px`;
+  arrow.style.height = `${Math.abs(arrowEndY - arrowStartY)}px`;
+
+  const nameSize = body.key === "sun" ? 64 : body.key === "moon" ? 42 : 54;
+  const subSize = body.key === "moon" ? 13 : 13;
+  const groupGap = 8;
+  const groupHeight = nameSize + groupGap + subSize;
+
+  let nameTop;
+
+  if (body.key === "moon") {
+    nameTop = arrowStartY + labelGap;
+  } else {
+    nameTop = arrowStartY - labelGap - groupHeight;
+    if (nameTop < 8) nameTop = arrowStartY + labelGap;
+  }
+
+  name.style.left = `${dotX}%`;
+  name.style.top = `${nameTop}px`;
+  name.style.transform = "translateX(-50%)";
+  name.style.color = body.color;
+  name.style.fontSize = `${nameSize}px`;
+
+  sub.style.left = `${dotX}%`;
+  sub.style.top = `${nameTop + nameSize + groupGap}px`;
+  sub.style.transform = "translateX(-50%)";
+
+  card.style.left = `${dotX}%`;
+  card.style.top = body.key === "moon"
+    ? `${nameTop + nameSize + groupGap + subSize + 20 + earthPx * 3}px`
+    : `${dotCenterY + d / 2 + 28}px`;
+  card.style.transform = "translateX(-50%)";
+
+  cluster.appendChild(dot);
+  cluster.appendChild(arrow);
+  cluster.appendChild(name);
+  cluster.appendChild(sub);
+  cluster.appendChild(card);
+  space.appendChild(cluster);
+}
+
+function addAsteroidBelt() {
+  const innerAU = 2.1;
+  const outerAU = 3.3;
+
+  const innerX = kmToPx(innerAU * AU_KM) + OFFSET;
+  const outerX = kmToPx(outerAU * AU_KM) + OFFSET;
+  const width = outerX - innerX;
+
+  const belt = document.createElement("div");
+  belt.className = "asteroid-belt";
+  belt.style.left = `${innerX}px`;
+  belt.style.width = `${width}px`;
+
+  const count = 360;
+
+  for (let i = 0; i < count; i++) {
+    const dot = document.createElement("div");
+    dot.className = "asteroid-dot";
+
+    const x = Math.random() * width;
+    const y = 38 + Math.random() * 76;
+    const sizeRand = Math.random();
+    const size = sizeRand > 0.985 ? 3 : sizeRand > 0.94 ? 2 : 1;
+
+    dot.style.left = `${x}px`;
+    dot.style.top = `${y}px`;
+    dot.style.width = `${size}px`;
+    dot.style.height = `${size}px`;
+    dot.style.opacity = `${0.22 + Math.random() * 0.68}`;
+
+    belt.appendChild(dot);
+  }
+
+  const label = document.createElement("div");
+  label.className = "asteroid-label";
+  label.textContent = "ASTEROID BELT";
+
+  const sub = document.createElement("div");
+  sub.className = "asteroid-sub";
+  sub.textContent = "화성과 목성 사이 · 약 2.1–3.3 AU";
+
+  belt.appendChild(label);
+  belt.appendChild(sub);
+  space.appendChild(belt);
+}
+
+function addSpecialMarker(marker) {
+  const markerX = kmToPx(marker.distance) + OFFSET;
+
+  const wrap = document.createElement("div");
+  wrap.className = "body-cluster pale-blue-marker";
+  wrap.style.left = `${markerX}px`;
+  wrap.style.top = "52%";
+
+  const line = document.createElement("div");
+  line.className = "arrow down";
+  line.style.left = "50%";
+  line.style.top = "120px";
+  line.style.height = "140px";
+  line.style.background = marker.color;
+
+  const point = document.createElement("div");
+  point.className = "pale-blue-point";
+  point.style.position = "absolute";
+  point.style.left = "50%";
+  point.style.top = "262px";
+  point.style.width = "3px";
+  point.style.height = "3px";
+  point.style.borderRadius = "50%";
+  point.style.background = marker.color;
+  point.style.transform = "translate(-50%, -50%)";
+  point.style.boxShadow = "0 0 12px rgba(180,220,255,0.85)";
+
+  const title = document.createElement("div");
+  title.className = "body-name";
+  title.textContent = marker.title;
+  title.style.left = "50%";
+  title.style.top = "0px";
+  title.style.transform = "translateX(-50%)";
+  title.style.fontSize = "54px";
+  title.style.color = marker.color;
+
+  const sub = document.createElement("div");
+  sub.className = "body-sub";
+  sub.textContent = marker.subtitle;
+  sub.style.left = "50%";
+  sub.style.top = "72px";
+  sub.style.transform = "translateX(-50%)";
+
+  const desc = document.createElement("div");
+  desc.className = "info-card";
+  desc.style.opacity = "1";
+  desc.style.left = "50%";
+  desc.style.top = "286px";
+  desc.style.transform = "translateX(-50%)";
+  desc.innerHTML = `${marker.description}<br>${formatAU(marker.distance)} · ${formatLightMinute(marker.distance)}`;
+
+  wrap.appendChild(title);
+  wrap.appendChild(sub);
+  wrap.appendChild(line);
+  wrap.appendChild(point);
+  wrap.appendChild(desc);
+
+  space.appendChild(wrap);
+}
+
+bodies.forEach(addBody);
+addAsteroidBelt();
+specialMarkers.forEach(addSpecialMarker);
+
+bodies.forEach(body => {
+  const button = document.createElement("button");
+  button.textContent = body.ko;
+  button.addEventListener("click", () => {
+    const targetX = kmToPx(body.distance) + OFFSET - viewport.clientWidth / 2;
+    viewport.scrollTo({
+      left: Math.max(0, targetX),
+      behavior: "smooth"
+    });
+  });
+  bodyNav.appendChild(button);
+});
+
+messages.forEach(m => {
+  const div = document.createElement("div");
+  div.className = "message";
+  div.style.left = `${m.x + OFFSET}px`;
+  div.innerHTML = `<strong>${m.title}</strong>${m.text}`;
+  space.appendChild(div);
+});
+
+document.querySelectorAll("#unitButtons button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#unitButtons button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentUnit = btn.dataset.unit;
+    applyRulerScale();
+    updateReadout();
+  });
+});
+
+let isDown = false;
+let startX = 0;
+let savedScrollLeft = 0;
+let lastPointerX = 0;
+let lastPointerTime = 0;
+let inertialVelocity = 0;
+let inertiaFrame = null;
+let lightSpeedFrame = null;
+let isLightSpeedRunning = false;
+let lastLightTimestamp = 0;
+
+function setPostVoyagerProgress(value) {
+  postVoyagerProgress = Math.max(0, Math.min(1, value));
+  root.style.setProperty("--post-voyager-progress", postVoyagerProgress.toFixed(4));
+
+  const targetX = viewport.clientWidth / 2;
+  const startX = -160;
+
+  const voyagerFadeEnd = 0.34;
+  const voyagerFadeT = Math.max(0, Math.min(1, postVoyagerProgress / voyagerFadeEnd));
+  const voyagerOpacity = 1 - voyagerFadeT;
+
+  const sunArrivalEnd = 0.46;
+  const arrivalT = Math.min(1, postVoyagerProgress / sunArrivalEnd);
+  const easedArrival = 1 - Math.pow(1 - arrivalT, 3);
+  const sunX = startX + (targetX - startX) * easedArrival;
+
+  const sunFadeStart = 0.62;
+  const sunFadeEnd = 0.82;
+  const sunFadeT = Math.max(0, Math.min(1, (postVoyagerProgress - sunFadeStart) / (sunFadeEnd - sunFadeStart)));
+  const sunOpacity = postVoyagerProgress <= sunFadeStart
+    ? Math.min(1, arrivalT * 1.25)
+    : 1 - sunFadeT;
+
+  const pbdOpacity = sunFadeT;
+
+  root.style.setProperty("--voyager-marker-opacity", voyagerOpacity.toFixed(4));
+  root.style.setProperty("--sun-return-x", `${sunX.toFixed(3)}px`);
+  root.style.setProperty("--sun-return-opacity", sunOpacity.toFixed(4));
+  root.style.setProperty("--pbd-opacity", pbdOpacity.toFixed(4));
+}
+
+function setPostVoyagerVirtualScroll(value) {
+  postVoyagerVirtualScroll = Math.max(0, Math.min(POST_VOYAGER_SCROLL_LENGTH, value));
+  setPostVoyagerProgress(postVoyagerVirtualScroll / POST_VOYAGER_SCROLL_LENGTH);
+}
+
+function stopInertia() {
+  if (inertiaFrame !== null) {
+    cancelAnimationFrame(inertiaFrame);
+    inertiaFrame = null;
+  }
+}
+
+function startInertia() {
+  stopInertia();
+
+  const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+  if (postVoyagerProgress > 0 || viewport.scrollLeft >= maxScroll - 2) {
+    inertialVelocity = 0;
+    return;
+  }
+
+  let velocity = inertialVelocity * 16.67;
+  if (Math.abs(velocity) < 0.08) return;
+
+  function step() {
+    viewport.scrollLeft += velocity;
+    velocity *= 0.94;
+
+    if (Math.abs(velocity) < 0.08) {
+      inertiaFrame = null;
+      return;
+    }
+
+    inertiaFrame = requestAnimationFrame(step);
+  }
+
+  inertiaFrame = requestAnimationFrame(step);
+}
+
+function stopLightSpeedTravel() {
+  isLightSpeedRunning = false;
+  lightSpeedButton.classList.remove("active");
+
+  if (lightSpeedFrame !== null) {
+    cancelAnimationFrame(lightSpeedFrame);
+    lightSpeedFrame = null;
+  }
+}
+
+function startLightSpeedTravel() {
+  stopInertia();
+  isLightSpeedRunning = true;
+  lightSpeedButton.classList.add("active");
+  lastLightTimestamp = performance.now();
+
+  function step(now) {
+    if (!isLightSpeedRunning) return;
+
+    const dt = Math.max(0, now - lastLightTimestamp) / 1000;
+    lastLightTimestamp = now;
+
+    const lightSpeedPxPerSecond = 299792.458 / MOON_DIAMETER_KM;
+    viewport.scrollLeft += lightSpeedPxPerSecond * dt;
+
+    const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+    if (viewport.scrollLeft >= maxScroll) {
+      stopLightSpeedTravel();
+      return;
+    }
+
+    lightSpeedFrame = requestAnimationFrame(step);
+  }
+
+  lightSpeedFrame = requestAnimationFrame(step);
+}
+
+lightSpeedButton.addEventListener("click", () => {
+  if (isLightSpeedRunning) stopLightSpeedTravel();
+  else startLightSpeedTravel();
+});
+
+viewport.addEventListener("mousedown", e => {
+  stopLightSpeedTravel();
+  stopInertia();
+
+  isDown = true;
+  startX = e.pageX;
+  savedScrollLeft = viewport.scrollLeft;
+  lastPointerX = e.pageX;
+  lastPointerTime = performance.now();
+  inertialVelocity = 0;
+});
+
+viewport.addEventListener("mouseup", () => {
+  if (!isDown) return;
+  isDown = false;
+  startInertia();
+});
+
+viewport.addEventListener("mouseleave", () => {
+  if (!isDown) return;
+  isDown = false;
+  startInertia();
+});
+
+viewport.addEventListener("mousemove", e => {
+  if (!isDown) return;
+  e.preventDefault();
+
+  const now = performance.now();
+  const dx = e.pageX - lastPointerX;
+  const dt = Math.max(1, now - lastPointerTime);
+
+  inertialVelocity = -dx / dt;
+  lastPointerX = e.pageX;
+  lastPointerTime = now;
+
+  const walk = startX - e.pageX;
+  const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+  const nextScroll = savedScrollLeft + walk;
+
+  if (nextScroll > maxScroll) {
+    stopInertia();
+    inertialVelocity = 0;
+    viewport.scrollLeft = maxScroll;
+    setPostVoyagerVirtualScroll(postVoyagerVirtualScroll + (nextScroll - maxScroll));
+  } else if (nextScroll < 0) {
+    viewport.scrollLeft = 0;
+  } else {
+    if (postVoyagerProgress > 0) setPostVoyagerVirtualScroll(0);
+    viewport.scrollLeft = nextScroll;
+  }
+});
+
+viewport.addEventListener("wheel", e => {
+  const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+  const dominantDelta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+  const atRightEdge = viewport.scrollLeft >= maxScroll - 2;
+  const inPostVoyager = postVoyagerProgress > 0;
+
+  e.preventDefault();
+  stopInertia();
+  inertialVelocity = 0;
+
+  if ((atRightEdge && dominantDelta > 0) || inPostVoyager) {
+    setPostVoyagerVirtualScroll(postVoyagerVirtualScroll + dominantDelta);
+    viewport.scrollLeft = maxScroll;
+  } else {
+    const nextScroll = viewport.scrollLeft + dominantDelta;
+    viewport.scrollLeft = Math.max(0, Math.min(maxScroll, nextScroll));
+  }
+
+  updateReadout();
+}, { passive: false });
+
+function updateReadout() {
+  const maxScrollForPostVoyager = viewport.scrollWidth - viewport.clientWidth;
+  if (viewport.scrollLeft < maxScrollForPostVoyager - 4 && postVoyagerProgress > 0) {
+    setPostVoyagerVirtualScroll(0);
+  }
+
+  const scrollX = viewport.scrollLeft;
+  const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+  const ratio = maxScroll > 0 ? scrollX / maxScroll : 0;
+
+  progress.style.width = `${Math.max(0, Math.min(1, ratio)) * 100}%`;
+
+  const centerPx = scrollX + viewport.clientWidth / 2;
+  const pxFromSun = centerPx - OFFSET;
+  const km = Math.max(0, Math.round(pxFromSun * MOON_DIAMETER_KM));
+
+  readout.textContent = formatDistanceByUnit(km);
+
+  renderRulerTicks();
+  setPostVoyagerProgress(postVoyagerProgress);
+}
+
+window.addEventListener("resize", () => {
+  syncSpaceWidthToMaxDistance();
+  updateReadout();
+});
+
+viewport.addEventListener("scroll", updateReadout, { passive: true });
+
+syncSpaceWidthToMaxDistance();
+applyRulerScale();
+updateReadout();
+
+requestAnimationFrame(() => {
+  viewport.scrollLeft = Math.max(0, kmToPx(specialMarkers[0].distance) + OFFSET - viewport.clientWidth / 2);
+  updateReadout();
+});
+</script>
+
+</body>
+</html>
