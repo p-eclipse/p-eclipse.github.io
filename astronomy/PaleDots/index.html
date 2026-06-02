@@ -8,7 +8,7 @@
 <style>
 @font-face {
   font-family: "FuturaCustom";
-  src: url("./Futura-Medium(3).otf") format("opentype");
+  src: url("./Futura-Medium.otf") format("opentype");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -69,15 +69,16 @@ body {
   left: 120px;
   top: 50%;
   transform: translateY(-50%);
-  width: 520px;
+  width: 900px;
   pointer-events: none;
 }
 
 .intro h1 {
   margin: 0;
-  font-size: 84px;
+  font-family: "FuturaCustom", sans-serif;
+  font-size: 96px;
   font-weight: 500;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.1em;
   line-height: 1.1;
 }
 
@@ -87,6 +88,39 @@ body {
   color: var(--muted);
   font-size: 15px;
   line-height: 1.95;
+}
+
+.control-guide {
+  position: absolute;
+  left: 2140px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 520px;
+  pointer-events: none;
+  color: rgba(255,255,255,0.58);
+  font-family: "KoPubDotumCustom", sans-serif;
+}
+
+.control-guide .eyebrow {
+  margin-bottom: 18px;
+  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.16em;
+  color: rgba(255,255,255,0.82);
+}
+
+.control-guide p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.8;
+  word-break: keep-all;
+}
+
+.control-guide .hint {
+  margin-top: 24px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.36);
 }
 
 .body-cluster {
@@ -103,6 +137,30 @@ body {
   z-index: 1;
   border-radius: 50%;
   transform: translate(-50%, -50%);
+}
+
+.ring {
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-14deg);
+  border: 1px solid rgba(255,255,255,0.58);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ring.saturn-ring {
+  width: 96px;
+  height: 28px;
+  border-color: rgba(216,189,121,0.72);
+}
+
+.ring.uranus-ring {
+  width: 42px;
+  height: 14px;
+  border-color: rgba(127,215,217,0.55);
+  transform: translate(-50%, -50%) rotate(78deg);
 }
 
 .body-name {
@@ -626,20 +684,42 @@ body {
   <div id="space">
     <section class="intro">
       <h1>
-        MOON<br>
-        = 1PX
+        THE PALE DOTS.
       </h1>
 
       <p>
-        달의 지름을 단 하나의 픽셀로 축소하면,<br>
-        태양계는 더 이상 “행성들의 집합”처럼 보이지 않는다.
-        <br><br>
-        대신 우리는 거의 끝없이 이어지는 공허와,
-        그 안에 흩어진 작은 점들을 보게 된다.
-        <br><br>
-        이 스크롤은 이동이 아니라,
-        거리 자체를 체감하기 위한 인터페이스다.
+        달을 1픽셀 크기로 줄여보았습니다.<br>
+        모든 천체의 크기와 천체 간 거리 비율은 그대로입니다.
+        <br>
+        우리는 아직 태양계를 직접 탐험하기엔 너무 일찍 태어났습니다.
+        <br>
+        다만, 우리는 스크롤을 내리면서 태양계의 크기를 상상하기엔 딱 좋은 시기에 태어났죠.
+        <br>
+        태양계를 탐험하는 탐험자(Voyager)로, 당신을 초대합니다.
       </p>
+    </section>
+
+    <section class="control-guide">
+
+      <div class="eyebrow">HOW TO TRAVEL</div>
+
+      <p>가로로 드래그하거나, 마우스 휠을 내려 오른쪽으로 이동합니다.</p>
+
+      <p>화면 아래의 눈금은 태양 중심으로부터의 거리를 나타냅니다.</p>
+
+      <p>아래 버튼으로 AU, 광분, km 단위를 바꿀 수 있습니다. 참고로 점 하나 당 3,500 km랍니다.
+      </p>
+
+      <p>오른쪽 아래의 빛 아이콘을 누르면, 광속으로 이동하는 속도를 체감할 수 있습니다.</p>
+
+      <div class="hint">
+
+        행성 이름 버튼을 누르면 해당 천체 근처로 이동합니다.<br>
+
+        하지만 직접 스크롤하는 편이 더 멀게 느껴집니다.
+
+      </div>
+
     </section>
   </div>
 </div>
@@ -709,25 +789,25 @@ body {
 const MOON_DIAMETER_KM = 3474.8;
 const AU_KM = 149597870.7;
 const LIGHT_MINUTE_KM = 299792.458 * 60;
-const OFFSET = 1400;
+const OFFSET = 3600;
 const MAX_SCROLL_DISTANCE_KM = AU_KM * 40.5;
 
 let currentUnit = "au";
 let postVoyagerProgress = 0;
 let postVoyagerVirtualScroll = 0;
-const POST_VOYAGER_SCROLL_LENGTH = 900;
+const POST_VOYAGER_SCROLL_LENGTH = 2000;
 
 const bodies = [
-  { name: "SUN", ko: "태양", key: "sun", color: "#ffd21f", diameter: 1392700, distance: 0, sub: "THE LOCAL STAR" },
-  { name: "MERCURY", ko: "수성", key: "mercury", color: "#8f8a83", diameter: 4879, distance: 57900000, sub: "SMALL ROCK" },
-  { name: "VENUS", ko: "금성", key: "venus", color: "#e6c56d", diameter: 12104, distance: 108200000, sub: "BRIGHT CLOUD" },
-  { name: "EARTH", ko: "지구", key: "earth", color: "#00e5ff", diameter: 12742, distance: 149600000, sub: "YOU ARE HERE" },
-  { name: "MOON", ko: "달", key: "moon", color: "#ffffff", diameter: 3474.8, distance: 149984400, sub: "ONE PIXEL" },
-  { name: "MARS", ko: "화성", key: "mars", color: "#c95f3f", diameter: 6779, distance: 227900000, sub: "RED DESERT" },
-  { name: "JUPITER", ko: "목성", key: "jupiter", color: "#d59b62", diameter: 139820, distance: 778500000, sub: "GIANT PLANET" },
-  { name: "SATURN", ko: "토성", key: "saturn", color: "#d8bd79", diameter: 116460, distance: 1433500000, sub: "RING WORLD" },
-  { name: "URANUS", ko: "천왕성", key: "uranus", color: "#7fd7d9", diameter: 50724, distance: 2872500000, sub: "ICE GIANT" },
-  { name: "NEPTUNE", ko: "해왕성", key: "neptune", color: "#4169e1", diameter: 49244, distance: 4495100000, sub: "BLUE EDGE" }
+  { name: "SUN", ko: "태양", key: "sun", color: "#ffd21f", diameter: 1392700, distance: 0, sub: "가장 가까운 별, 태양" },
+  { name: "MERCURY", ko: "수성", key: "mercury", color: "#8f8a83", diameter: 4879, distance: 57900000, sub: "수성, 일반상대론의 열쇠" },
+  { name: "VENUS", ko: "금성", key: "venus", color: "#e6c56d", diameter: 12104, distance: 108200000, sub: "샛별, 개밥바라기, 금성" },
+  { name: "EARTH", ko: "지구", key: "earth", color: "#00e5ff", diameter: 12742, distance: 149600000, sub: "우리의 유일한 집, 지구" },
+  { name: "MOON", ko: "달", key: "moon", color: "#ffffff", diameter: 3474.8, distance: 149984400, sub: "점 단 하나! 달." },
+  { name: "MARS", ko: "화성", key: "mars", color: "#c95f3f", diameter: 6779, distance: 227900000, sub: "붉은 철의 사막, 화성" },
+  { name: "JUPITER", ko: "목성", key: "jupiter", color: "#d59b62", diameter: 139820, distance: 778500000, sub: "거인, 목성" },
+  { name: "SATURN", ko: "토성", key: "saturn", color: "#d8bd79", diameter: 116460, distance: 1433500000, sub: "아름다운 고리의, 토성" },
+  { name: "URANUS", ko: "천왕성", key: "uranus", color: "#7fd7d9", diameter: 50724, distance: 2872500000, sub: "누운뱅이, 천왕성" },
+  { name: "NEPTUNE", ko: "해왕성", key: "neptune", color: "#4169e1", diameter: 49244, distance: 4495100000, sub: "쪽빛 끝자락, 해왕성" }
 ];
 
 const specialMarkers = [
@@ -741,24 +821,24 @@ const specialMarkers = [
 ];
 
 const messages = [
-  { x: 9000, title: "BEGIN", text: "왼쪽에는 제목이 있고, 오른쪽에는 태양이 있다. 여기서부터 거리는 숫자가 아니라 체감이 된다." },
-  { x: 22000, title: "EMPTY", text: "화면이 비어 보인다면 정상이다. 태양계는 대부분 이런 식으로 존재한다." },
-  { x: 42000, title: "SCALE", text: "크기는 한눈에 보이지만, 거리는 걸어가야만 이해된다." },
-  { x: 68000, title: "DOT", text: "행성은 그림 속 주인공처럼 보이지만, 실제 비율에서는 점에 가깝다." },
-  { x: 96000, title: "WAIT", text: "아무 일도 일어나지 않는 구간이 길수록, 이 모형은 더 정직해진다." },
-  { x: 135000, title: "MODEL", text: "교과서 그림은 한 장에 넣기 위해 거리를 거의 반드시 배신한다." },
-  { x: 185000, title: "SILENCE", text: "천체와 천체 사이에는 설명보다 긴 침묵이 놓여 있다." },
-  { x: 245000, title: "SCROLL", text: "이 스크롤은 이동이 아니라 거리 감각을 견디는 장치다." },
-  { x: 330000, title: "THIN", text: "태양계는 빽빽한 구조가 아니라, 거의 비어 있는 얇은 배치다." },
-  { x: 430000, title: "FAR", text: "멀다는 말은 편리하지만, 이 정도로 멀다는 사실은 몸이 먼저 이해한다." },
-  { x: 560000, title: "PALE BLUE", text: "우리가 사는 세계는 크기로 특별하지 않다. 그럼에도 그곳이 전부다." },
-  { x: 760000, title: "EDGE", text: "가장자리에 가까워질수록, 행성보다 간격이 더 선명해진다." },
-  { x: 980000, title: "AFTER", text: "여기까지 왔어도 우주는 거의 시작도 하지 않았다." },
-  { x: 1335000, title: "BEYOND NEPTUNE", text: "해왕성을 지나면 익숙한 행성 목록은 끝난다. 그러나 공간은 끝나지 않는다." },
-  { x: 1435000, title: "OUTWARD", text: "이제부터는 행성의 질서보다 탐사선의 고독이 더 선명해진다." },
-  { x: 1535000, title: "SIGNAL", text: "보이저의 신호는 빛의 속도로 와도 몇 시간 뒤에야 도착한다." },
-  { x: 1635000, title: "LOOK BACK", text: "여기쯤에서 뒤돌아보면 지구는 이미 세계가 아니라 하나의 점이 된다." },
-  { x: 1705000, title: "CAMERA", text: "창백한 푸른 점은 망원경이 아니라 거리감이 만든 이미지다." }
+  { x: 9000, title: "BEGIN", text: "태양계의 여정에 오신 것을 환영합니다. 이제 곧 첫번째 행성에 도착합니다." },
+  { x: 22000, title: "EMPTY", text: "빈 공간이 좀 많죠? 태양계는 대부분 이런 식으로 존재한답니다." },
+  { x: 40000, title: "WELCOME", text: "여행자분들에게- 우리의 평온한 안식처에서 쉬다 가시기 바랍니다." },
+  { x: 68000, title: "SCALE", text: "너무 먼 거리, 또는 너무 큰 크기는 잘 상상되지 않는다고 합니다." },
+  { x: 96000, title: "WAIT", text: "이제 슬슬 다음 행성이 나올것만 같은데, 왜 안나오죠? 더 가봐야겠군요." },
+  { x: 135000, title: "WHAT WE JUST PASSED", text: "안심하십시오. 방금 지나친 것은 화성과 목성 사이의 소행성 지대입니다." },
+  { x: 185000, title: "SILENCE", text: "천체와 천체 사이는 서로 대화하기엔 좀 많이 멀죠?" },
+  { x: 245000, title: "other name: ZEUS", text: "목성의 영어이름은 로마 신화에서 제우스와 동일시되는 신의 이름이랍니다." },
+  { x: 330000, title: "EMPTY", text: "빈 공간이 좀 많이 많죠? 태양계는 정말 대부분 이런식입니다..." },
+  { x: 430000, title: "THE RING", text: "토성의 고리는 대부분 얼음 결정 등으로 이루어져 있답니다." },
+  { x: 560000, title: "PALE BLUE", text: "우리가 사는 세계는 크기로 특별하지 않습니다. 그럼에도 그곳이 우리의 전부입니다. 이제 말을 줄이지요..." },
+  { x: 760000, title: "FAR, FAR AWAY...", text: "우리가 행성 몇개를 지나쳐왔었죠..?" },
+  { x: 980000, title: "AFTER", text: "여기까지 왔어도 우주는 거의 시작도 하지 않았답니다(두둥)." },
+  { x: 1295000/*1335000*/, title: "BEYOND NEPTUNE", text: "모든 행성을 모두 보았습니다. 이 뒤에는 무엇이 있을까요?" },
+  { x: 1435000, title: "OUTWARD", text: "이제부터는 행성의 질서보다 탐사선의 고독이 더 선명해지는 것 같습니다..." },
+  { x: 1535000, title: "THE SIGNAL", text: "보이저의 신호는 빛의 속도로 옴에도 몇 시간 뒤에야 도착합니다." },
+  { x: 1635000, title: "LOOK BACK", text: "여기쯤에서 뒤돌아보면 지구는 어떻게 보일까요?." },
+  { x: 1705000, title: "CAMERA", text: "만일 여기서 지구를 바라본다면 태양빛때문에 카메라가 망가질 수 있습니다. 그럼에도 사진을 찍으시겠습니까?" }
 ];
 
 const viewport = document.getElementById("viewport");
@@ -888,6 +968,15 @@ function addBody(body) {
   dot.style.height = `${d}px`;
   dot.style.background = body.color;
 
+  let ring = null;
+
+  if (body.key === "saturn" || body.key === "uranus") {
+    ring = document.createElement("div");
+    ring.className = body.key === "saturn"
+      ? "ring saturn-ring"
+      : "ring uranus-ring";
+  }
+
   const name = document.createElement("div");
   name.className = "body-name";
   name.textContent = body.name;
@@ -913,6 +1002,10 @@ function addBody(body) {
 
   dot.style.left = `${dotX}%`;
   dot.style.top = `${dotCenterY}px`;
+  if (ring) {
+    ring.style.left = `${dotX}%`;
+    ring.style.top = `${dotCenterY}px`;
+  }
 
   let arrowStartY;
   let arrowEndY;
@@ -960,6 +1053,7 @@ function addBody(body) {
     : `${dotCenterY + d / 2 + 28}px`;
   card.style.transform = "translateX(-50%)";
 
+  if (ring) cluster.appendChild(ring);
   cluster.appendChild(dot);
   cluster.appendChild(arrow);
   cluster.appendChild(name);
@@ -1339,10 +1433,10 @@ syncSpaceWidthToMaxDistance();
 applyRulerScale();
 updateReadout();
 
-requestAnimationFrame(() => {
+/*requestAnimationFrame(() => {
   viewport.scrollLeft = Math.max(0, kmToPx(specialMarkers[0].distance) + OFFSET - viewport.clientWidth / 2);
   updateReadout();
-});
+});*/
 </script>
 
 </body>
