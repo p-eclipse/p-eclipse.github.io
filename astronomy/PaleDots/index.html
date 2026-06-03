@@ -621,11 +621,12 @@ body {
   transform: translateX(-50%);
   overflow-y: auto;
   padding: 10px 6px 48px;
-  pointer-events: auto;
+  pointer-events: none;
   color: rgba(255,255,255,0.82);
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.35) transparent;
 }
+#paleBlueFinal.pbd-open #paleBlueQuotePanel { pointer-events: auto; }
 
 #paleBlueQuotePanel h2 {
   margin: 0 0 10px;
@@ -815,7 +816,7 @@ const MAX_SCROLL_DISTANCE_KM = AU_KM * 40.5;
 let currentUnit = "au";
 let postVoyagerProgress = 0;
 let postVoyagerVirtualScroll = 0;
-const POST_VOYAGER_SCROLL_LENGTH = 2000;
+const POST_VOYAGER_SCROLL_LENGTH = 5200;
 
 const bodies = [
   { name: "SUN", ko: "태양", key: "sun", color: "#ffd21f", diameter: 1392700, distance: 0, sub: "가장 가까운 별, 태양" },
@@ -1241,17 +1242,17 @@ function setPostVoyagerProgress(value) {
   const targetX = viewport.clientWidth / 2;
   const startX = -160;
 
-  const voyagerFadeEnd = 0.34;
+  const voyagerFadeEnd = 0.42;
   const voyagerFadeT = Math.max(0, Math.min(1, postVoyagerProgress / voyagerFadeEnd));
   const voyagerOpacity = 1 - voyagerFadeT;
 
-  const sunArrivalEnd = 0.46;
+  const sunArrivalEnd = 0.72;
   const arrivalT = Math.min(1, postVoyagerProgress / sunArrivalEnd);
   const easedArrival = 1 - Math.pow(1 - arrivalT, 3);
   const sunX = startX + (targetX - startX) * easedArrival;
 
-  const sunFadeStart = 0.62;
-  const sunFadeEnd = 0.82;
+  const sunFadeStart = 0.78;
+  const sunFadeEnd = 0.94;
   const sunFadeT = Math.max(0, Math.min(1, (postVoyagerProgress - sunFadeStart) / (sunFadeEnd - sunFadeStart)));
   const sunOpacity = postVoyagerProgress <= sunFadeStart
     ? Math.min(1, arrivalT * 1.25)
@@ -1263,6 +1264,14 @@ function setPostVoyagerProgress(value) {
   root.style.setProperty("--sun-return-x", `${sunX.toFixed(3)}px`);
   root.style.setProperty("--sun-return-opacity", sunOpacity.toFixed(4));
   root.style.setProperty("--pbd-opacity", pbdOpacity.toFixed(4));
+
+  const paleBlueFinal = document.getElementById("paleBlueFinal");
+
+  if (pbdOpacity > 0.96) {
+    paleBlueFinal.classList.add("pbd-open");
+  } else {
+    paleBlueFinal.classList.remove("pbd-open");
+  }
 }
 
 function setPostVoyagerVirtualScroll(value) {
@@ -1310,7 +1319,8 @@ function startInertia() {
       viewport.scrollLeft = nextScroll;
     }
   
-    velocity *= 0.94;
+    const friction = "ontouchstart" in window ? MOBILE_INERTIA_FRICTION : 0.94;
+    velocity *= friction;
   
     if (Math.abs(velocity) < 0.08 || postVoyagerProgress >= 1) {
       inertiaFrame = null;
@@ -1401,7 +1411,7 @@ viewport.addEventListener("mousemove", e => {
   lastPointerX = e.pageX;
   lastPointerTime = now;
 
-  const walk = startX - e.pageX;
+  const walk = (touchStartX - t.clientX) * MOBILE_SCROLL_GAIN;
   const maxScroll = viewport.scrollWidth - viewport.clientWidth;
   const nextScroll = savedScrollLeft + walk;
 
@@ -1418,6 +1428,9 @@ viewport.addEventListener("mousemove", e => {
   }
 });
 
+const MOBILE_SCROLL_GAIN = 2.35;
+const MOBILE_INERTIA_GAIN = 2.25;
+const MOBILE_INERTIA_FRICTION = 0.955;
 let touchActive = false;
 let touchStartX = 0;
 let touchStartY = 0;
@@ -1466,12 +1479,12 @@ viewport.addEventListener("touchmove", e => {
   const dx = t.clientX - touchLastX;
   const dt = Math.max(1, now - touchLastTime);
 
-  inertialVelocity = -dx / dt;
+  inertialVelocity = -(dx / dt) * MOBILE_INERTIA_GAIN;
   touchLastX = t.clientX;
   touchLastY = t.clientY;
   touchLastTime = now;
 
-  const walk = touchStartX - t.clientX;
+  const walk = (touchStartX - t.clientX) * MOBILE_SCROLL_GAIN;
   const maxScroll = viewport.scrollWidth - viewport.clientWidth;
   const nextScroll = touchSavedScrollLeft + walk;
 
