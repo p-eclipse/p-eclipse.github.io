@@ -52,6 +52,10 @@ body {
   overflow-y: hidden;
   cursor: grab;
   background: #000;
+
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
 }
 
 #viewport:active { cursor: grabbing; }
@@ -338,6 +342,8 @@ body {
   gap: 6px;
   opacity: calc(1 - var(--pbd-opacity, 0));
   transition: opacity 120ms linear;
+
+  point-events: none;
 }
 
 #unitButtons button {
@@ -347,9 +353,12 @@ body {
   font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
   font-size: 11px;
   letter-spacing: 0.08em;
-  padding: 6px 10px;
+  padding: 4px 8px;
+  min-width: 0;
+  min-height: 0;
   border-radius: 999px;
   cursor: pointer;
+  pointer-evernts: auto;
 }
 
 #unitButtons button.active {
@@ -671,7 +680,18 @@ body {
     bottom: 98px;
   }
 
-  #unitButtons { bottom: 126px; }
+  #unitButtons {
+    bottom: 124px;
+    gap: 4px;
+  }
+
+  #bodyNav {
+    max-width: calc(100vw - 20px);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  #bodyNav::-webkit-scrollbar { display: none; }
 }
 </style>
 </head>
@@ -1270,14 +1290,33 @@ function startInertia() {
   if (Math.abs(velocity) < 0.08) return;
 
   function step() {
-    viewport.scrollLeft += velocity;
+    const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+    const nextScroll = viewport.scrollLeft + velocity;
+  
+    if (nextScroll > maxScroll) {
+      viewport.scrollLeft = maxScroll;
+      setPostVoyagerVirtualScroll(postVoyagerVirtualScroll + (nextScroll - maxScroll));
+    } else if (nextScroll < 0) {
+      viewport.scrollLeft = 0;
+  
+      if (postVoyagerProgress > 0) {
+        setPostVoyagerVirtualScroll(0);
+      }
+    } else {
+      if (postVoyagerProgress > 0) {
+        setPostVoyagerVirtualScroll(0);
+      }
+  
+      viewport.scrollLeft = nextScroll;
+    }
+  
     velocity *= 0.94;
-
-    if (Math.abs(velocity) < 0.08) {
+  
+    if (Math.abs(velocity) < 0.08 || postVoyagerProgress >= 1) {
       inertiaFrame = null;
       return;
     }
-
+  
     inertiaFrame = requestAnimationFrame(step);
   }
 
@@ -1378,6 +1417,100 @@ viewport.addEventListener("mousemove", e => {
     viewport.scrollLeft = nextScroll;
   }
 });
+
+let touchActive = false;
+let touchStartX = 0;
+let touchStartY = 0;
+let touchSavedScrollLeft = 0;
+let touchLastX = 0;
+let touchLastY = 0;
+let touchLastTime = 0;
+let touchIntent = null;
+
+viewport.addEventListener("touchstart", e => {
+  if (e.touches.length !== 1) return;
+
+  stopLightSpeedTravel();
+  stopInertia();
+
+  const t = e.touches[0];
+
+  touchActive = true;
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+  touchSavedScrollLeft = viewport.scrollLeft;
+  touchLastX = t.clientX;
+  touchLastY = t.clientY;
+  touchLastTime = performance.now();
+  touchIntent = null;
+  inertialVelocity = 0;
+}, { passive: true });
+
+viewport.addEventListener("touchmove", e => {
+  if (!touchActive || e.touches.length !== 1) return;
+
+  const t = e.touches[0];
+  const dxFromStart = t.clientX - touchStartX;
+  const dyFromStart = t.clientY - touchStartY;
+
+  if (touchIntent === null) {
+    if (Math.abs(dxFromStart) < 4 && Math.abs(dyFromStart) < 4) return;
+    touchIntent = Math.abs(dxFromStart) >= Math.abs(dyFromStart) ? "horizontal" : "vertical";
+  }
+
+  if (touchIntent !== "horizontal") return;
+
+  e.preventDefault();
+
+  const now = performance.now();
+  const dx = t.clientX - touchLastX;
+  const dt = Math.max(1, now - touchLastTime);
+
+  inertialVelocity = -dx / dt;
+  touchLastX = t.clientX;
+  touchLastY = t.clientY;
+  touchLastTime = now;
+
+  const walk = touchStartX - t.clientX;
+  const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+  const nextScroll = touchSavedScrollLeft + walk;
+
+  if (nextScroll > maxScroll) {
+    viewport.scrollLeft = maxScroll;
+    setPostVoyagerVirtualScroll(postVoyagerVirtualScroll + (nextScroll - maxScroll));
+  } else if (nextScroll < 0) {
+    viewport.scrollLeft = 0;
+
+    if (postVoyagerProgress > 0) {
+      setPostVoyagerVirtualScroll(0);
+    }
+  } else {
+    if (postVoyagerProgress > 0) {
+      setPostVoyagerVirtualScroll(0);
+    }
+
+    viewport.scrollLeft = nextScroll;
+  }
+
+  updateReadout();
+}, { passive: false });
+
+viewport.addEventListener("touchend", () => {
+  if (!touchActive) return;
+
+  touchActive = false;
+
+  if (touchIntent === "horizontal") {
+    startInertia();
+  }
+
+  touchIntent = null;
+}, { passive: true });
+
+viewport.addEventListener("touchcancel", () => {
+  touchActive = false;
+  touchIntent = null;
+}, { passive: true });
 
 viewport.addEventListener("wheel", e => {
   const maxScroll = viewport.scrollWidth - viewport.clientWidth;
