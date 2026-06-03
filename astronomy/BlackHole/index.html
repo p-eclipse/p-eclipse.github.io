@@ -80,7 +80,7 @@
   <section class="hud">
     <h1>Gargantua-like Kerr Visualizer</h1>
     <p>
-      중력렌즈 배경 토글을 추가했습니다. 업로드한 이미지는 HTML과 같은 폴더에 1800.jpg로 두면 4배 업스케일되어 배경 텍스처로 사용되고, 로드 실패 시 절차적 성운 배경으로 대체됩니다. 배경은 블랙홀 주변에서 근사 중력렌즈 굴절과 Kerr-like swirl을 받아 휘어져 보입니다.
+      중력렌즈 배경 토글을 추가했습니다. 업로드한 이미지는 HTML과 같은 폴더에 1800.jpg로 두면 배경 텍스처로 사용되고, 로드 실패 시 절차적 성운 배경으로 대체됩니다. 배경은 블랙홀 주변에서 근사 중력렌즈 굴절과 Kerr-like swirl을 받아 휘어져 보입니다.
     </p>
   </section>
   <section class="controls">
@@ -105,9 +105,10 @@
     import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
     const app = document.getElementById("app");
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    const getRenderPixelRatio = () => Math.min(devicePixelRatio || 1, innerWidth < 760 ? 1.0 : 1.15);
+    const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "default" });
+    renderer.setPixelRatio(getRenderPixelRatio());
     renderer.setSize(innerWidth, innerHeight);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.26;
@@ -150,40 +151,6 @@
       uCameraPos: { value: camera.position.clone() }
     };
 
-    function makeStarTexture(size = 1024) {
-      const c = document.createElement("canvas");
-      c.width = c.height = size;
-      const ctx = c.getContext("2d");
-      const g = ctx.createRadialGradient(size*.42, size*.44, size*.03, size*.5, size*.5, size*.75);
-      g.addColorStop(0, "rgba(255,170,90,.24)");
-      g.addColorStop(.35, "rgba(100,80,255,.16)");
-      g.addColorStop(1, "rgba(0,0,0,1)");
-      ctx.fillStyle = g; ctx.fillRect(0,0,size,size);
-      for (let i=0;i<4200;i++) {
-        const x = Math.random()*size, y = Math.random()*size;
-        const r = Math.random()*Math.random()*1.35 + .12;
-        const a = 0.20 + Math.random()*Math.random()*.95;
-        ctx.fillStyle = Math.random()>.75 ? `rgba(255,224,188,${a})` : `rgba(225,238,255,${a})`;
-        ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
-      }
-      const tex = new THREE.CanvasTexture(c);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      return tex;
-    }
-
-    const starSphere = new THREE.Mesh(
-      new THREE.SphereGeometry(650, 32, 16),
-      new THREE.MeshBasicMaterial({
-        map: makeStarTexture(),
-        side: THREE.BackSide,
-        fog: false,
-        depthWrite: false,
-        depthTest: false
-      })
-    );
-    starSphere.renderOrder = -10;
-    // 별 배경은 제거했습니다. 필요하면 아래 줄의 주석을 해제하세요.
-    // scene.add(starSphere);
     scene.add(new THREE.AmbientLight(0x8fa8ff, 0.12));
 
     // -----------------------------
@@ -193,17 +160,17 @@
 
     function makeFallbackBackgroundTexture(){
       const canvas = document.createElement("canvas");
-      canvas.width = 2048;
-      canvas.height = 1280;
+      canvas.width = 1024;
+      canvas.height = 640;
       const ctx = canvas.getContext("2d");
-      const g = ctx.createRadialGradient(760, 550, 40, 1040, 640, 1040);
+      const g = ctx.createRadialGradient(380, 275, 20, 520, 320, 520);
       g.addColorStop(0.00, "#ffd49a");
       g.addColorStop(0.20, "#9d5bb2");
       g.addColorStop(0.48, "#182069");
       g.addColorStop(1.00, "#01030b");
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      for(let i = 0; i < 5200; i++){
+      for(let i = 0; i < 2200; i++){
         const x = Math.random() * canvas.width;
         const y = Math.random() * canvas.height;
         const s = Math.random() * Math.random() * 1.8 + 0.18;
@@ -215,9 +182,9 @@
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.wrapS = THREE.RepeatWrapping;
       tex.wrapT = THREE.RepeatWrapping;
-      tex.minFilter = THREE.LinearMipmapLinearFilter;
+      tex.minFilter = THREE.LinearFilter;
       tex.magFilter = THREE.LinearFilter;
-      tex.generateMipmaps = true;
+      tex.generateMipmaps = false;
       return tex;
     }
 
@@ -225,26 +192,15 @@
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => {
-        const scale = 4;
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        const ctx = canvas.getContext("2d");
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        ctx.globalCompositeOperation = "soft-light";
-        ctx.fillStyle = "rgba(255,255,255,0.08)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.globalCompositeOperation = "source-over";
-        const tex = new THREE.CanvasTexture(canvas);
+        const tex = new THREE.Texture(img);
+        tex.needsUpdate = true;
         tex.colorSpace = THREE.SRGBColorSpace;
         tex.wrapS = THREE.RepeatWrapping;
         tex.wrapT = THREE.RepeatWrapping;
-        tex.minFilter = THREE.LinearMipmapLinearFilter;
+        tex.minFilter = THREE.LinearFilter;
         tex.magFilter = THREE.LinearFilter;
-        tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-        tex.generateMipmaps = true;
+        tex.anisotropy = Math.min(2, renderer.capabilities.getMaxAnisotropy());
+        tex.generateMipmaps = false;
         onReady(tex);
       };
       img.onerror = () => onReady(makeFallbackBackgroundTexture());
@@ -330,14 +286,16 @@
     scene.add(backgroundPlane);
 
     loadUpscaledBackgroundTexture(BG_IMAGE_URL, tex => {
+      const oldTex = backgroundUniforms.uBgMap.value;
       backgroundUniforms.uBgMap.value = tex;
+      if(oldTex && oldTex !== tex) oldTex.dispose();
     });
 
     const blackHoleGroup = new THREE.Group();
     scene.add(blackHoleGroup);
 
     const horizon = new THREE.Mesh(
-      new THREE.SphereGeometry(2.05, 64, 32),
+      new THREE.SphereGeometry(2.05, 48, 24),
       new THREE.ShaderMaterial({
         uniforms: { uSpin: uniforms.uSpin },
         depthWrite: true,
@@ -891,33 +849,38 @@
         `
       });
 
-      const group = new THREE.Group();
       const extent = 104;
       const step = 16;
       const div = 92;
       const coords = [];
       for(let v = -extent; v <= extent + 0.001; v += step) coords.push(v);
+      const verts = [];
+      const axes = [];
 
       function addLine(axis, A, B){
-        const verts = [];
-        const axes = [];
+        let px = 0, py = 0, pz = 0;
         for(let i = 0; i <= div; i++){
           const u = -extent + 2 * extent * i / div;
-          if(axis === 0) verts.push(u, A, B);
-          else if(axis === 1) verts.push(A, u, B);
-          else verts.push(A, B, u);
-          axes.push(axis);
+          const x = axis === 0 ? u : A;
+          const y = axis === 1 ? u : (axis === 0 ? A : B);
+          const z = axis === 2 ? u : B;
+          if(i > 0){
+            verts.push(px, py, pz, x, y, z);
+            axes.push(axis, axis);
+          }
+          px = x;
+          py = y;
+          pz = z;
         }
-        const geo = new THREE.BufferGeometry();
-        geo.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
-        geo.setAttribute("axisId", new THREE.Float32BufferAttribute(axes, 1));
-        group.add(new THREE.Line(geo, mat));
       }
 
       for(const y of coords) for(const z of coords) addLine(0, y, z);
       for(const x of coords) for(const z of coords) addLine(1, x, z);
       for(const x of coords) for(const y of coords) addLine(2, x, y);
-      return group;
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
+      geo.setAttribute("axisId", new THREE.Float32BufferAttribute(axes, 1));
+      return new THREE.LineSegments(geo, mat);
     }
 
     const infallGridLayers = new THREE.Group();
@@ -928,12 +891,12 @@
     const particleGroup = new THREE.Group();
     scene.add(particleGroup);
 
-    const USER_MAX = 96;
-    const USER_STEPS = 34;
+    const USER_MAX = 64;
+    const USER_STEPS = 28;
     const userParticles = [];
     const userVisualGroup = new THREE.Group();
     particleGroup.add(userVisualGroup);
-    const userParticleGeo = new THREE.SphereGeometry(0.34, 16, 8);
+    const userParticleGeo = new THREE.SphereGeometry(0.34, 10, 6);
     const userPointPositions = new Float32Array(USER_MAX * 3);
     const userPointColors = new Float32Array(USER_MAX * 3);
     const userPointAlpha = new Float32Array(USER_MAX);
@@ -941,6 +904,7 @@
     userPointGeo.setAttribute("position", new THREE.BufferAttribute(userPointPositions, 3));
     userPointGeo.setAttribute("aColor", new THREE.BufferAttribute(userPointColors, 3));
     userPointGeo.setAttribute("aAlpha", new THREE.BufferAttribute(userPointAlpha, 1));
+    userPointGeo.setDrawRange(0, 0);
     const userPointMat = new THREE.ShaderMaterial({
       transparent: true,
       depthWrite: false,
@@ -980,6 +944,7 @@
     userTrailGeo.setAttribute("position", new THREE.BufferAttribute(userTrailPositions, 3));
     userTrailGeo.setAttribute("aColor", new THREE.BufferAttribute(userTrailColors, 3));
     userTrailGeo.setAttribute("aAlpha", new THREE.BufferAttribute(userTrailAlpha, 1));
+    userTrailGeo.setDrawRange(0, 0);
     const userTrailMat = new THREE.ShaderMaterial({
       transparent: true,
       depthWrite: false,
@@ -1003,6 +968,8 @@
     });
     const userTrail = new THREE.LineSegments(userTrailGeo, userTrailMat);
     particleGroup.add(userTrail);
+    let activeUserPointCount = 0;
+    let activeUserTrailVertexCount = 0;
 
     function updateParticles(dt){
       return;
@@ -1090,26 +1057,13 @@
     }
 
     function updateUserParticles(dt){
-      for(let i=0;i<USER_MAX;i++){
-        userPointPositions[i*3+0] = 1e9;
-        userPointPositions[i*3+1] = 1e9;
-        userPointPositions[i*3+2] = 1e9;
-        userPointColors[i*3+0] = 0;
-        userPointColors[i*3+1] = 0;
-        userPointColors[i*3+2] = 0;
-        userPointAlpha[i] = 0;
-      }
-      userTrailPositions.fill(1e9);
-      userTrailColors.fill(0);
-      userTrailAlpha.fill(0);
-
       if(!params.particles || userParticles.length === 0){
-        userPointGeo.attributes.position.needsUpdate = true;
-        userPointGeo.attributes.aColor.needsUpdate = true;
-        userPointGeo.attributes.aAlpha.needsUpdate = true;
-        userTrailGeo.attributes.position.needsUpdate = true;
-        userTrailGeo.attributes.aColor.needsUpdate = true;
-        userTrailGeo.attributes.aAlpha.needsUpdate = true;
+        if(activeUserPointCount !== 0 || activeUserTrailVertexCount !== 0){
+          activeUserPointCount = 0;
+          activeUserTrailVertexCount = 0;
+          userPointGeo.setDrawRange(0, 0);
+          userTrailGeo.setDrawRange(0, 0);
+        }
         return;
       }
 
@@ -1207,10 +1161,13 @@
           p.mesh.material.opacity = THREE.MathUtils.lerp(1.0, visualAlpha, redshiftOnset);
           p.mesh.scale.setScalar((1.85 + 0.45 * visualAlpha) * (1.0 + 0.015 * Math.sin(p.age * 4.0)));
         }
-        p.hist.pop();
-        p.hist.unshift(p.pos.clone());
+        const recycled = p.hist.pop();
+        recycled.copy(p.pos);
+        p.hist.unshift(recycled);
       }
 
+      const pointCount = userParticles.length;
+      const trailVertexCount = pointCount * (USER_STEPS - 1) * 2;
       for(let i=0;i<userParticles.length;i++){
         const p = userParticles[i];
         userPointPositions[i*3+0] = p.pos.x;
@@ -1246,6 +1203,10 @@
         }
       }
 
+      activeUserPointCount = pointCount;
+      activeUserTrailVertexCount = trailVertexCount;
+      userPointGeo.setDrawRange(0, activeUserPointCount);
+      userTrailGeo.setDrawRange(0, activeUserTrailVertexCount);
       userPointGeo.attributes.position.needsUpdate = true;
       userPointGeo.attributes.aColor.needsUpdate = true;
       userPointGeo.attributes.aAlpha.needsUpdate = true;
@@ -1259,12 +1220,9 @@
     const diskPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
     const fallbackPlane = new THREE.Plane();
     const clickPoint = new THREE.Vector3();
-    let pointerDown = null;
+    const clickNormal = new THREE.Vector3();
 
-    renderer.domElement.addEventListener("pointerdown", (e) => {
-      if(!params.addParticleMode) return;
-      e.preventDefault();
-
+    function addParticleFromPointer(e){
       const rect = renderer.domElement.getBoundingClientRect();
       clickNdc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       clickNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -1272,8 +1230,8 @@
 
       let ok = clickRaycaster.ray.intersectPlane(diskPlane, clickPoint);
       if(!ok || clickPoint.length() > 135){
-        const normal = camera.getWorldDirection(new THREE.Vector3()).normalize();
-        fallbackPlane.setFromNormalAndCoplanarPoint(normal, controls.target);
+        camera.getWorldDirection(clickNormal).normalize();
+        fallbackPlane.setFromNormalAndCoplanarPoint(clickNormal, controls.target);
         ok = clickRaycaster.ray.intersectPlane(fallbackPlane, clickPoint);
       }
       if(!ok){
@@ -1288,43 +1246,12 @@
         if(clickPoint.length() < minR) clickPoint.setLength(minR);
         addUserParticle(clickPoint.clone());
       }
-      pointerDown = null;
-    });
+    }
 
-    renderer.domElement.addEventListener("pointerup", (e) => {
-      if(!params.addParticleMode || !pointerDown) return;
+    renderer.domElement.addEventListener("pointerdown", (e) => {
+      if(!params.addParticleMode) return;
       e.preventDefault();
-      const dx = e.clientX - pointerDown.x;
-      const dy = e.clientY - pointerDown.y;
-      const moved = Math.sqrt(dx*dx + dy*dy);
-      const elapsed = performance.now() - pointerDown.t;
-      pointerDown = null;
-      if(moved > 6 || elapsed > 650) return;
-
-      const rect = renderer.domElement.getBoundingClientRect();
-      clickNdc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      clickNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-      clickRaycaster.setFromCamera(clickNdc, camera);
-
-      let ok = clickRaycaster.ray.intersectPlane(diskPlane, clickPoint);
-      if(!ok || clickPoint.length() > 135){
-        const normal = camera.getWorldDirection(new THREE.Vector3()).normalize();
-        fallbackPlane.setFromNormalAndCoplanarPoint(normal, controls.target);
-        ok = clickRaycaster.ray.intersectPlane(fallbackPlane, clickPoint);
-      }
-      if(!ok){
-        const dir = clickRaycaster.ray.direction.clone();
-        clickPoint.copy(clickRaycaster.ray.origin).addScaledVector(dir, 18);
-        ok = true;
-      }
-      if(ok){
-        const minR = eventHorizonWorldRadius() * 3.4;
-        if(clickPoint.lengthSq() < 0.0001){
-          clickPoint.copy(clickRaycaster.ray.origin).addScaledVector(clickRaycaster.ray.direction, Math.max(14, minR));
-        }
-        if(clickPoint.length() < minR) clickPoint.setLength(minR);
-        addUserParticle(clickPoint);
-      }
+      addParticleFromPointer(e);
     });
 
     function setObjectVisible(target, visible){
@@ -1399,32 +1326,44 @@
     bindSlider("timeSlider","timeValue","timeScale",null);
     bindSlider("gridBrightSlider","gridBrightValue","gridBright",uniforms.uGridBright);
 
-    addEventListener("resize",()=>{
-      camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
-      renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth<760 ? 1.10 : 1.25));
+    let resizeQueued = false;
+    function resizeRenderer(){
+      resizeQueued = false;
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(getRenderPixelRatio());
+      renderer.setSize(innerWidth, innerHeight);
+    }
+    addEventListener("resize", () => {
+      if(resizeQueued) return;
+      resizeQueued = true;
+      requestAnimationFrame(resizeRenderer);
     });
 
     function animate(){
       requestAnimationFrame(animate);
-      const dt=clock.getDelta() * params.timeScale;
+      const dt=Math.min(clock.getDelta(), 0.033) * params.timeScale;
       uniforms.uTime.value += dt;
       uniforms.uCameraPos.value.copy(camera.position);
-      starSphere.rotation.y += dt*.006;
       const eventHorizonScale = 0.72 + 0.30 * params.mass;
       const apparentShadowScale = 2.598076 * eventHorizonScale;
       horizon.scale.setScalar(apparentShadowScale);
       blackHoleGroup.rotation.y += dt*.003*params.spin;
-      backgroundPlane.position.set(0, 0, 0);
-      backgroundPlane.lookAt(camera.position);
-
-      diskTracer.position.set(0, 0, 0);
-      diskTracer.lookAt(camera.position);
-      const tracerDist = camera.position.distanceTo(diskTracer.position);
-      const fovRad = THREE.MathUtils.degToRad(camera.fov);
-      const frustumHeight = 2 * tracerDist * Math.tan(fovRad * 0.5);
-      const coverSize = frustumHeight * Math.max(camera.aspect, 1.0) * 1.28;
-      diskTracer.scale.setScalar(coverSize / 120);
-      backgroundPlane.scale.setScalar(coverSize / 120);
+      if(backgroundPlane.visible || diskTracer.visible){
+        const tracerDist = camera.position.length();
+        const fovRad = THREE.MathUtils.degToRad(camera.fov);
+        const frustumHeight = 2 * tracerDist * Math.tan(fovRad * 0.5);
+        const coverSize = frustumHeight * Math.max(camera.aspect, 1.0) * 1.28;
+        const coverScale = coverSize / 120;
+        if(backgroundPlane.visible){
+          backgroundPlane.lookAt(camera.position);
+          backgroundPlane.scale.setScalar(coverScale);
+        }
+        if(diskTracer.visible){
+          diskTracer.lookAt(camera.position);
+          diskTracer.scale.setScalar(coverScale);
+        }
+      }
 
       updateParticles(dt);
       updateUserParticles(dt);
