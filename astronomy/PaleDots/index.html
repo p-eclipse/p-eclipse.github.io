@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>The Pale Dots</title>
 
 <style>
@@ -23,1567 +23,1401 @@
 }
 
 :root {
-  --fg: #f2f2f2;
-  --muted: rgba(255,255,255,0.38);
-  --post-voyager-progress: 0;
-  --sun-return-x: -160px;
-  --sun-return-opacity: 0;
   --pbd-opacity: 0;
-  --voyager-marker-opacity: 1;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 html,
 body {
   margin: 0;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
+  background: #000;
+  color: #f4f4f4;
+  font-family: "FuturaCustom", "KoPubDotumCustom", system-ui, sans-serif;
+  scroll-behavior: auto;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+#scrollSpace {
+  width: 100%;
+  height: 92000px;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
   overflow: hidden;
   background: #000;
-  color: var(--fg);
-  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
 }
 
-#viewport {
-  width: 100vw;
-  height: 100vh;
-  overflow-x: scroll;
-  overflow-y: hidden;
-  cursor: grab;
-  background: #000;
-
-  touch-action: pan-x;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: none;
-}
-
-#viewport:active { cursor: grabbing; }
-
-#space {
-  position: relative;
-  width: 1745820px;
-  height: 100vh;
-  min-height: 100vh;
-  background: #000;
-}
-
-.intro {
+#spaceCanvas {
   position: absolute;
-  left: 120px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 900px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.13;
+  mix-blend-mode: screen;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.18) 0, transparent 1px),
+    radial-gradient(circle at 70% 80%, rgba(255,255,255,0.14) 0, transparent 1px);
+  background-size: 190px 190px, 260px 260px;
+}
+
+#ui {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
   pointer-events: none;
 }
 
-.intro h1 {
-  margin: 0;
-  font-family: "FuturaCustom", sans-serif;
-  font-size: 96px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  line-height: 1.1;
-}
-
-.intro p {
-  margin-top: 26px;
-  font-family: "KoPubDotumCustom", sans-serif;
-  color: var(--muted);
-  font-size: 15px;
-  line-height: 1.95;
-}
-
-.control-guide {
+.caption {
   position: absolute;
-  left: 2140px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 520px;
-  pointer-events: none;
-  color: rgba(255,255,255,0.58);
+  left: 50%;
+  bottom: 13vh;
+  width: min(760px, calc(100vw - 56px));
+  transform: translateX(-50%);
+  text-align: center;
+  opacity: 0;
+  transition: opacity 180ms linear;
+}
+
+.caption.visible {
+  opacity: 1;
+}
+
+.caption .eyebrow {
+  margin-bottom: 14px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: rgba(255,255,255,0.46);
+}
+
+.caption h1 {
+  display: none;
+}
+
+.caption p {
+  margin: 10px auto 0;
+  max-width: 660px;
   font-family: "KoPubDotumCustom", sans-serif;
-}
-
-.control-guide .eyebrow {
-  margin-bottom: 18px;
-  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
-  font-size: 18px;
-  letter-spacing: 0.16em;
-  color: rgba(255,255,255,0.82);
-}
-
-.control-guide p {
-  margin: 0 0 12px;
-  font-size: 14px;
-  line-height: 1.8;
+  font-size: clamp(14px, 2vw, 17px);
+  line-height: 1.85;
+  color: rgba(255,255,255,0.68);
   word-break: keep-all;
 }
 
-.control-guide .hint {
-  margin-top: 24px;
-  font-size: 12px;
-  line-height: 1.7;
-  color: rgba(255,255,255,0.36);
-}
-
-.body-cluster {
-  position: absolute;
-  top: 43%;
-  transform: translate(-50%, -50%);
-  min-width: 280px;
-  height: 560px;
-  pointer-events: auto;
-}
-
-.dot {
-  position: absolute;
-  z-index: 1;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.ring {
-  position: absolute;
-  z-index: 0;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%) rotate(-14deg);
-  border: 1px solid rgba(255,255,255,0.58);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.ring.saturn-ring {
-  width: 96px;
-  height: 28px;
-  border-color: rgba(216,189,121,0.72);
-}
-
-.ring.uranus-ring {
-  width: 42px;
-  height: 14px;
-  border-color: rgba(127,215,217,0.55);
-  transform: translate(-50%, -50%) rotate(78deg);
-}
-
-.body-name {
-  position: absolute;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  white-space: nowrap;
-  line-height: 1;
-  opacity: 0.92;
-  text-shadow: 0 0 10px rgba(255,255,255,0.08);
-}
-
-.body-sub {
-  position: absolute;
-  font-family: "KoPubDotumCustom", sans-serif;
-  font-size: 13px;
-  color: rgba(255,255,255,0.72);
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-  opacity: 0.88;
-}
-
-.arrow {
-  position: absolute;
-  z-index: 2;
-  width: 1px;
-  background: rgba(255,255,255,0.62);
-  pointer-events: none;
-}
-
-.arrow::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  border-right: 1px solid rgba(255,255,255,0.62);
-  border-bottom: 1px solid rgba(255,255,255,0.62);
-  transform: translateX(-50%) rotate(45deg);
-}
-
-.arrow.up::after {
-  top: -1px;
-  transform: translateX(-50%) rotate(225deg);
-}
-
-.arrow.down::after { bottom: -1px; }
-
-.info-card {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: "KoPubDotumCustom", sans-serif;
-  color: rgba(255,255,255,0.68);
-  font-size: 11px;
-  line-height: 1.7;
-  text-align: center;
-  white-space: nowrap;
+#titleCard {
+  position: fixed;
+  inset: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
   opacity: 0;
-  transition: opacity 220ms ease;
-}
-
-.body-cluster:hover .info-card { opacity: 1; }
-
-.message {
-  position: absolute;
-  top: 31%;
-  width: 460px;
-  transform: translateX(-50%);
-  font-family: "KoPubDotumCustom", sans-serif;
-  color: rgba(255,255,255,0.58);
-  line-height: 1.9;
-  font-size: 15px;
-}
-
-.message strong {
-  display: block;
-  margin-bottom: 8px;
-  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
-  color: rgba(255,255,255,0.92);
-  font-size: 24px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-}
-
-.asteroid-belt {
-  position: absolute;
-  top: 37%;
-  height: 170px;
-  transform: translateY(-50%);
   pointer-events: none;
-  opacity: 0.55;
 }
 
-.asteroid-dot {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.62);
+#titleCardInner {
+  text-align: center;
 }
 
-.asteroid-label {
-  position: absolute;
-  left: 50%;
-  top: 132px;
-  transform: translateX(-50%);
-  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
-  font-size: 34px;
-  letter-spacing: 0.14em;
-  color: rgba(255,255,255,0.74);
-  white-space: nowrap;
+#titleCard .title {
+  font-size: clamp(40px, 8.8vw, 112px);
+  line-height: 0.96;
+  font-weight: 500;
+  letter-spacing: 0.08em;
 }
 
-.asteroid-sub {
-  position: absolute;
-  left: 50%;
-  top: 176px;
-  transform: translateX(-50%);
+#titleCard .sub {
+  margin-top: 28px;
   font-family: "KoPubDotumCustom", sans-serif;
-  font-size: 13px;
-  color: rgba(255,255,255,0.52);
-  white-space: nowrap;
+  font-size: clamp(13px, 2vw, 17px);
+  line-height: 1.8;
+  color: rgba(255,255,255,0.58);
 }
 
 #readout {
   position: fixed;
-  z-index: 30;
-  left: 50%;
-  bottom: 104px;
-  transform: translateX(-50%);
-  font-family: "KoPubDotumCustom", sans-serif;
-  color: rgba(255,255,255,0.76);
-  font-size: 14px;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-  opacity: calc(1 - var(--pbd-opacity, 0));
-  transition: opacity 120ms linear;
-}
-
-#positionPointer {
-  position: fixed;
-  z-index: 34;
-  left: 50%;
-  bottom: 72px;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 7px solid transparent;
-  border-right: 7px solid transparent;
-  border-top: 10px solid rgba(255,255,255,0.92);
-  pointer-events: none;
-  opacity: calc(1 - var(--pbd-opacity, 0));
-  transition: opacity 120ms linear;
-}
-
-#centerLine {
-  position: fixed;
-  left: 50%;
-  bottom: 0;
-  z-index: 32;
-  width: 1px;
-  height: 52px;
-  background: rgba(255,255,255,0.78);
-  pointer-events: none;
-}
-
-#unitButtons {
-  position: fixed;
-  z-index: 35;
-  left: 50%;
-  bottom: 132px;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-  opacity: calc(1 - var(--pbd-opacity, 0));
-  transition: opacity 120ms linear;
-
-  point-events: none;
-}
-
-#unitButtons button {
-  border: 1px solid rgba(255,255,255,0.28);
-  background: transparent;
-  color: rgba(255,255,255,0.52);
-  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  padding: 4px 8px;
-  min-width: 0;
-  min-height: 0;
-  border-radius: 999px;
-  cursor: pointer;
-  pointer-evernts: auto;
-}
-
-#unitButtons button.active {
-  color: white;
-  border-color: rgba(255,255,255,0.72);
-  background: rgba(255,255,255,0.08);
-}
-
-#bodyNav {
-  position: fixed;
-  z-index: 36;
-  left: 50%;
-  top: 18px;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-  padding: 6px;
-  border: 1px solid rgba(255,255,255,0.16);
-  border-radius: 999px;
-  background: rgba(0,0,0,0.34);
-  backdrop-filter: blur(12px);
-}
-
-#bodyNav button {
-  border: 0;
-  background: transparent;
-  color: rgba(255,255,255,0.58);
-  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  padding: 6px 9px;
-  border-radius: 999px;
-  cursor: pointer;
-}
-
-#bodyNav button:hover {
-  color: white;
-  background: rgba(255,255,255,0.08);
-}
-
-#ruler {
-  position: fixed;
-  left: 0;
-  bottom: 0;
+  right: 28px;
+  top: 26px;
   z-index: 20;
-  width: 100vw;
-  height: 92px;
-  overflow: hidden;
-  pointer-events: none;
-  opacity: calc(1 - var(--post-voyager-progress, 0));
-  transition: opacity 100ms linear;
+  text-align: right;
+  font-family: "KoPubDotumCustom", sans-serif;
+  font-size: 12px;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.52);
 }
 
-.tick {
-  position: absolute;
-  bottom: 0;
-  width: 1px;
-  background: rgba(255,255,255,0.72);
-}
-
-.tick.minor { height: 28px; }
-
-.tick.major {
-  width: 2px;
-  height: 42px;
-  background: rgba(255,255,255,0.95);
-}
-
-#lightSpeedButton {
+#progressWrap {
   position: fixed;
-  right: 32px;
-  bottom: 98px;
-  z-index: 36;
-  width: 42px;
-  height: 42px;
-  border: 1px solid rgba(255,255,255,0.22);
-  border-radius: 50%;
-  background: rgba(255,255,255,0.045);
-  color: rgba(255,255,255,0.78);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  backdrop-filter: blur(10px);
-  transition: background 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  left: 28px;
+  top: 26px;
+  z-index: 20;
+  width: min(320px, calc(100vw - 56px));
 }
 
-#lightSpeedButton:hover {
-  color: white;
-  border-color: rgba(255,255,255,0.58);
-  background: rgba(255,255,255,0.10);
+#progressLabel {
+  margin-bottom: 10px;
+  font-family: "KoPubDotumCustom", sans-serif;
+  font-size: clamp(15px, 1.4vw, 20px);
+  line-height: 1.35;
+  color: rgba(255,255,255,0.82);
 }
 
-#lightSpeedButton.active {
-  color: white;
-  border-color: rgba(255,255,255,0.88);
+#progressBar {
+  width: 100%;
+  height: 2px;
   background: rgba(255,255,255,0.16);
-  box-shadow: 0 0 28px rgba(180,220,255,0.26);
+  overflow: hidden;
 }
 
-#lightSpeedButton svg {
-  width: 23px;
-  height: 23px;
-  stroke-width: 1.7;
-}
-
-#progress {
-  position: fixed;
-  z-index: 40;
-  top: 0;
-  left: 0;
-  height: 1px;
-  width: 0;
+#progressFill {
+  width: 0%;
+  height: 100%;
   background: rgba(255,255,255,0.82);
 }
 
-#sunReturnStar {
+#rulerUnitToggle {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin-top: 11px;
+  width: 148px;
+  border: 1px solid rgba(255,255,255,0.58);
+  background: rgba(255,255,255,0.16);
+  pointer-events: auto;
+}
+
+#rulerUnitToggle button {
+  appearance: none;
+  border: 0;
+  min-width: 0;
+  height: 26px;
+  padding: 0 8px;
+  background: rgba(0,0,0,0.68);
+  color: rgba(255,255,255,0.64);
+  font-family: "KoPubDotumCustom", sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+#rulerUnitToggle button.active {
+  background: rgba(255,255,255,0.92);
+  color: #050505;
+}
+
+#scrollHint {
   position: fixed;
-  z-index: 33;
-  left: var(--sun-return-x, -160px);
-  top: 47%;
-  width: 10px;
-  height: 10px;
-  pointer-events: none;
-  opacity: var(--sun-return-opacity, 0);
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle,
-      rgba(255,255,255,1) 0%,
-      rgba(255,252,220,1) 18%,
-      rgba(255,230,120,0.92) 34%,
-      rgba(255,210,80,0.34) 58%,
-      rgba(255,210,80,0.0) 72%
-    );
-  box-shadow:
-    0 0 7px rgba(255,255,255,0.95),
-    0 0 18px rgba(255,235,150,0.72),
-    0 0 44px rgba(255,210,80,0.28);
-}
-
-#sunReturnStar::before {
-  content: "";
-  position: absolute;
   left: 50%;
-  top: 50%;
-  width: 2px;
-  height: 2px;
-  border-radius: 50%;
-  background: #fff;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 4px rgba(255,255,255,1);
+  bottom: 34px;
+  z-index: 22;
+  transform: translateX(-50%);
+  font-family: "KoPubDotumCustom", sans-serif;
+  font-size: 12px;
+  color: rgba(255,255,255,0.38);
 }
 
-#sunReturnStar::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(255,245,190,0.20) 0%, rgba(255,245,190,0.08) 38%, rgba(255,245,190,0) 72%);
-}
-
-.pale-blue-marker .body-name,
-.pale-blue-marker .body-sub,
-.pale-blue-marker .info-card,
-.pale-blue-marker .arrow,
-.pale-blue-marker .arrow::after,
-.pale-blue-marker .pale-blue-point {
-  opacity: var(--voyager-marker-opacity, 1);
-}
-
-#paleBlueFinal {
+#pbdPhoto {
   position: fixed;
   inset: 0;
-  z-index: 31;
+  z-index: 14;
   pointer-events: none;
-  opacity: var(--pbd-opacity, 0);
+  opacity: var(--pbd-opacity);
   background: #000;
-  transition: opacity 120ms linear;
 }
 
-#paleBlueFinalImageWrap {
+#pbdPhoto .imageWrap {
   position: absolute;
   left: 50%;
   top: 0;
-  width: min(100vw, 760px);
-  height: 52vh;
+  width: min(100vw, 840px);
+  height: 54vh;
   transform: translateX(-50%);
   overflow: hidden;
-  opacity: 0.88;
+  opacity: 0.92;
 }
 
-#paleBlueFinalImageWrap img {
+#pbdPhoto img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  image-rendering: auto;
-  filter: contrast(1.06) brightness(0.86) saturate(0.92);
+  filter: contrast(1.08) brightness(0.82) saturate(0.94);
 }
 
-#paleBlueFinalImageWrap::after {
+#pbdPhoto .imageWrap::after {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.18) 68%, #000 100%);
+  background: linear-gradient(to bottom, rgba(0,0,0,0.03), rgba(0,0,0,0.20) 68%, #000 100%);
 }
 
-#paleBlueEarthLabel {
+#pbdPhoto .photoCredit {
   position: absolute;
-  right: 21%;
-  top: 42%;
+  left: 8px;
+  top: 5px;
+  right: auto;
+  bottom: auto;
+  z-index: 4;
+
+  /*max-width: calc(100% - 28px);
+  padding: 5px 8px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.42);
+  backdrop-filter: blur(6px);*/
+
+  font-family: "KoPubDotumCustom", sans-serif;
+  font-size: 10px;
+  line-height: 1.45;
+  color: rgba(255,255,255,0.72);
+  text-align: left;
+  pointer-events: none;
+}
+
+#pbdPhoto .pbdVideoWrap {
+  position: absolute;
+  left: 50%;
+  top: 58vh;
+  width: min(760px, calc(100vw - 56px), calc((100vh - 58vh - 28px) * 16 / 9));
+  aspect-ratio: 16 / 9;
+  transform: translateX(-50%);
+  z-index: 5;
+
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.04);
+  overflow: hidden;
+
+  opacity: 0;
+  transition: opacity 260ms linear;
+  pointer-events: none;
+}
+
+#pbdPhoto .pbdVideoWrap iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+#earthLabel {
+  position: absolute;
+  right: 20%;
+  top: 41%;
   display: flex;
   align-items: center;
   gap: 10px;
   font-family: "KoPubDotumCustom", sans-serif;
   color: rgba(255,255,255,0.82);
   font-size: 12px;
-  letter-spacing: 0.04em;
 }
 
-#paleBlueEarthLabel::before {
+#earthLabel::before {
   content: "";
   width: 42px;
   height: 1px;
   background: rgba(255,255,255,0.72);
 }
 
-#paleBlueSource {
-  position: absolute;
-  left: 42px;
-  top: 34px;
-  max-width: 560px;
+#skipButton {
+  position: fixed;
+  z-index: 40;
+  right: 24px;
+  bottom: 24px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(0,0,0,0.36);
+  color: rgba(255,255,255,0.64);
+  border-radius: 999px;
+  padding: 8px 13px;
   font-family: "KoPubDotumCustom", sans-serif;
-  color: rgba(255,255,255,0.68);
-  font-size: 12px;
-  line-height: 1.7;
-  letter-spacing: 0.03em;
+  font-size: 11px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
 }
 
-#paleBlueSource strong {
-  display: block;
-  margin-bottom: 6px;
-  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
-  color: rgba(255,255,255,0.9);
-  font-size: 18px;
-  letter-spacing: 0.14em;
-}
-
-#paleBlueQuotePanel {
-  position: absolute;
-  left: 50%;
-  top: 56vh;
-  width: min(980px, calc(100vw - 96px));
-  max-height: 38vh;
-  transform: translateX(-50%);
-  overflow-y: auto;
-  padding: 10px 6px 48px;
-  pointer-events: none;
-  color: rgba(255,255,255,0.82);
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.35) transparent;
-}
-#paleBlueFinal.pbd-open #paleBlueQuotePanel { pointer-events: auto; }
-
-#paleBlueQuotePanel h2 {
-  margin: 0 0 10px;
-  font-family: "FuturaCustom", "KoPubDotumCustom", sans-serif;
-  font-size: 36px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: rgba(210,230,255,0.94);
-}
-
-#paleBlueQuotePanel .author {
-  margin-bottom: 28px;
-  font-family: "KoPubDotumCustom", sans-serif;
-  font-size: 13px;
-  color: rgba(255,255,255,0.58);
-}
-
-#paleBlueQuotePanel p {
-  margin: 0 0 22px;
-  font-family: "KoPubDotumCustom", sans-serif;
-  font-size: 15px;
-  line-height: 1.95;
-  word-break: keep-all;
-}
-
-#paleBlueQuotePanel .sourceBlock {
-  margin-top: 36px;
-  padding-top: 22px;
-  border-top: 1px solid rgba(255,255,255,0.24);
-  color: rgba(255,255,255,0.6);
-  font-size: 12px;
-  line-height: 1.8;
-}
-
-#paleBlueQuotePanel .sourceBlock a {
-  color: rgba(190,220,255,0.86);
-  text-decoration: none;
-}
-
-@media (max-width: 700px) {
-  .intro {
-    left: 28px;
-    top: 42%;
-    width: calc(100vw - 56px);
+@media (max-width: 760px) {
+  #scrollSpace {
+    height: 104000px;
   }
 
-  .intro h1 { font-size: 48px; }
-  .intro p { font-size: 14px; }
+  .caption {
+    bottom: 11vh;
+    width: calc(100vw - 44px);
+  }
+
+  .caption p {
+    font-size: 13px;
+    line-height: 1.75;
+  }
 
   #readout {
-    font-size: 12px;
-    bottom: 98px;
+    right: 18px;
+    top: 18px;
+    font-size: 11px;
   }
 
-  #unitButtons {
-    bottom: 124px;
-    gap: 4px;
+  #progressWrap {
+    left: 18px;
+    top: 18px;
+    width: min(240px, calc(100vw - 36px));
   }
 
-  #bodyNav {
-    max-width: calc(100vw - 20px);
-    overflow-x: auto;
-    scrollbar-width: none;
+  #rulerUnitToggle {
+    width: 132px;
   }
 
-  #bodyNav::-webkit-scrollbar { display: none; }
+  #scrollHint {
+    bottom: 26px;
+    font-size: 11px;
+  }
+
+  #pbdPhoto .pbdVideoWrap {
+    top: 59vh;
+    width: calc(100vw - 44px);
+  }
+
+  #skipButton {
+    right: 16px;
+    bottom: 70px;
+    font-size: 10px;
+    padding: 7px 11px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div id="viewport">
-  <div id="progress"></div>
+<div id="scrollSpace"></div>
 
-  <div id="space">
-    <section class="intro">
-      <h1>
-        THE PALE DOTS.
-      </h1>
-
-      <p>
-        달을 1픽셀 크기로 줄여보았습니다.<br>
-        모든 천체의 크기와 천체 간 거리 비율은 그대로입니다.
-        <br>
-        우리는 아직 태양계를 직접 탐험하기엔 너무 일찍 태어났습니다.
-        <br>
-        다만, 우리는 스크롤을 내리면서 태양계의 크기를 상상하기엔 딱 좋은 시기에 태어났죠.
-        <br>
-        태양계를 탐험하는 탐험자(Voyager)로, 당신을 초대합니다.
-      </p>
-    </section>
-
-    <section class="control-guide">
-
-      <div class="eyebrow">HOW TO TRAVEL</div>
-
-      <p>가로로 드래그하거나, 마우스 휠을 내려 오른쪽으로 이동합니다.</p>
-
-      <p>화면 아래의 눈금은 태양 중심으로부터의 거리를 나타냅니다.</p>
-
-      <p>아래 버튼으로 AU, 광분, km 단위를 바꿀 수 있습니다. 참고로 점 하나 당 3,500 km랍니다.
-      </p>
-
-      <p>오른쪽 아래의 빛 아이콘을 누르면, 광속으로 이동하는 속도를 체감할 수 있습니다.</p>
-
-      <div class="hint">
-
-        행성 이름 버튼을 누르면 해당 천체 근처로 이동합니다.<br>
-
-        하지만 직접 스크롤하는 편이 더 멀게 느껴집니다.
-
-      </div>
-
-    </section>
-  </div>
+<div id="stage">
+  <canvas id="spaceCanvas"></canvas>
+  <div id="grain"></div>
 </div>
 
-<div id="bodyNav"></div>
+<div id="pbdPhoto">
 
-<div id="unitButtons">
-  <button data-unit="au" class="active">AU</button>
-  <button data-unit="light">광분</button>
-  <button data-unit="km">km</button>
-</div>
+  <div class="imageWrap">
 
-<div id="readout">0.000 AU</div>
-<div id="positionPointer"></div>
-
-<div id="paleBlueFinal">
-  <div id="paleBlueFinalImageWrap">
-    <img src="./PIA00452.jpg" alt="Voyager 1 Pale Blue Dot photograph" />
-    <!--div id="paleBlueEarthLabel">지구 · 창백한 푸른 점</div-->
-  </div>
-
-  <div id="paleBlueSource">
-    <strong>PALE BLUE DOT</strong>
-    Voyager 1 · 1990 · 약 40.5 AU<br>
-    이미지 출처: NASA Science · Voyager 1’s Pale Blue Dot
-  </div>
-
-  <section id="paleBlueQuotePanel" aria-label="칼 세이건 창백한 푸른 점 인용문 번역">
-    <h2>창백한 푸른 점</h2>
-    <div class="author">칼 세이건, 『창백한 푸른 점』 중에서</div>
-
-    <p> 이 먼 시점에서 보면, 지구는 특별히 눈에 띄지 않을지도 모릅니다. 그러나 우리에게는 다릅니다. 저 점을 다시 보십시오. 그것이 여기입니다. 그것이 집입니다. 그것이 우리입니다. 그 위에서 당신이 사랑하는 모든 사람, 당신이 아는 모든 사람, 당신이 들어본 모든 사람, 지금까지 존재했던 모든 인간이 삶을 살아냈습니다.</p>
-
-    <p> 우리의 기쁨과 고통의 총합, 수천 개의 자신만만한 종교와 이념과 경제 이론들, 모든 사냥꾼과 채집자, 모든 영웅과 겁쟁이, 모든 문명의 창조자와 파괴자, 모든 왕과 농부, 사랑에 빠진 모든 젊은 연인, 모든 어머니와 아버지, 희망에 찬 아이, 발명가와 탐험가, 모든 도덕의 교사, 모든 부패한 정치가, 모든 “슈퍼스타”, 모든 “최고 지도자”, 우리 종의 역사 속 모든 성인과 죄인이 그곳에 살았습니다. 햇빛 한 줄기 속에 떠 있는 먼지 한 알갱이 위에서.</p>
-
-    <p> 지구는 거대한 우주라는 무대에서 아주 작은 무대입니다. 수많은 장군과 황제들이 영광과 승리 속에서 저 점의 일부를 잠시 지배하는 주인이 되고자 흘리게 한 피의 강을 생각해 보십시오. 이 픽셀의 한 구석에 사는 사람들이, 거의 구별되지 않는 다른 구석의 사람들에게 가한 끝없는 잔혹함을 생각해 보십시오. 그들의 오해가 얼마나 잦았는지, 서로를 죽이려는 열망이 얼마나 강했는지, 그들의 증오가 얼마나 뜨거웠는지를 생각해 보십시오.</p>
-
-    <p> 우리의 허세, 상상 속의 자기중요감, 우주에서 우리가 어떤 특권적 위치에 있다는 착각은 이 창백한 빛의 점 앞에서 도전받습니다. 우리의 행성은 거대하게 감싸는 우주의 어둠 속에 외롭게 놓인 작은 점입니다. 우리의 무지 속에서, 이 광대함 속에서, 우리 자신으로부터 우리를 구해 주기 위해 다른 곳에서 도움이 올 것이라는 암시는 전혀 없습니다.</p>
-
-    <p> 지구는 지금까지 생명이 존재한다고 알려진 유일한 세계입니다. 적어도 가까운 미래에는, 우리 종이 이주할 수 있는 다른 곳은 없습니다. 방문은 가능할지 모릅니다. 그러나 정착은 아직 아닙니다. 좋든 싫든, 지금 이 순간 지구는 우리가 버텨 서야 할 자리입니다.</p>
-
-    <p> 천문학은 겸손을 배우고 인격을 세우는 경험이라고들 말합니다. 우리의 자만이 얼마나 어리석은지를 보여 주는 데, 이 멀리서 찍힌 작은 세계의 이미지보다 더 나은 증거는 없을지도 모릅니다. 제게 이 이미지는 우리가 서로를 더 친절하게 대하고, 우리가 지금까지 알아 온 유일한 집인 이 창백한 푸른 점을 보존하고 아껴야 할 책임을 일깨워 줍니다.</p>
-
-    <div class="sourceBlock">
-      출처: NASA Science, “Voyager 1’s Pale Blue Dot”<br>
-      <a href="https://science.nasa.gov/mission/voyager/voyager-1s-pale-blue-dot/" target="_blank" rel="noopener noreferrer">https://science.nasa.gov/mission/voyager/voyager-1s-pale-blue-dot/</a>
+    <img src="./PIA00452.jpg" alt="Voyager 1 Pale Blue Dot photograph">
+    <div class="photoCredit">
+      Image credit: NASA/JPL-Caltech, Voyager 1 “Pale Blue Dot”, 1990.
     </div>
-  </section>
+    <!--div id="earthLabel">지구 · 작은 푸른 점</div-->
+  </div>
+
+  <div class="pbdVideoWrap">
+    <iframe
+      src="https://www.youtube.com/embed/CkgMEbUBPWI?si=lYHGR3di6jPM9amG"
+      title="Pale Blue Dot video"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      referrerpolicy="strict-origin-when-cross-origin"
+      allowfullscreen>
+    </iframe>
+  </div>
 </div>
 
-<div id="centerLine"></div>
-<div id="sunReturnStar"></div>
-<div id="ruler"></div>
+<div id="ui">
+  <section id="capIntro" class="caption visible">
+    <div class="eyebrow">TEXTBOOK SOLAR SYSTEM</div>
+    <h1>우리는 태양계를<br>이렇게 배운다.</h1>
+    <p>행성들은 한 화면 안에 가지런히 놓입니다. 이해하기 쉽지만, 실제 거리는 거의 사라진 그림입니다.</p>
+  </section>
 
-<button id="lightSpeedButton" aria-label="광속 이동 체험" title="광속 이동 체험">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M3 12h12" />
-    <path d="M10 6l6 6-6 6" />
-    <path d="M2 7h5" opacity="0.55" />
-    <path d="M1 17h7" opacity="0.55" />
-    <path d="M18 4v3" opacity="0.8" />
-    <path d="M18 17v3" opacity="0.8" />
-  </svg>
-</button>
+  <section id="capCorrection" class="caption">
+    <div class="eyebrow">DISTANCE RESTORED</div>
+    <h1>그림이<br>무너집니다.</h1>
+    <p>태양은 커지고, 행성들은 작아지며, 서로 멀어집니다. 크기와 거리를 함께 맞추면 태양계는 거의 빈 공간이 됩니다.</p>
+  </section>
+
+  <section id="capToEarth" class="caption">
+    <div class="eyebrow">TO THE THIRD PLANET</div>
+    <h1>지구까지<br>직접 내려갑니다.</h1>
+    <p>지구는 태양에서 세 번째 행성입니다. 그러나 그 사이의 대부분은 아무것도 없는 공간입니다.</p>
+  </section>
+
+  <section id="capEarth" class="caption">
+    <div class="eyebrow">ARRIVAL</div>
+    <h1>도착했습니다.</h1>
+    <p>우리가 아는 거의 모든 이야기는 이 작은 행성에서 시작되었습니다. 이제 더 스크롤하면, 우리가 보낸 탐사선이 떠납니다.</p>
+  </section>
+
+  <section id="capLaunch" class="caption">
+    <div class="eyebrow">LAUNCH</div>
+    <h1>이제 이동하는 것은<br>당신이 아닙니다.</h1>
+    <p>지구에서 출발한 작은 탐사선이, 우리가 살던 세계를 뒤로하고 바깥으로 향합니다.</p>
+  </section>
+
+  <section id="capScaleBack" class="caption">
+    <div class="eyebrow">SCALE RETURNS</div>
+    <h1>다시<br>작아집니다.</h1>
+    <p>발사 장면이 끝나면, 지구는 다시 실제 비례 속의 작은 행성으로 돌아갑니다. 이제 실제 거리 비례를 유지한 채 보이저의 여정이 이어집니다.</p>
+  </section>
+
+  <section id="capVoyager" class="caption">
+    <div class="eyebrow">VOYAGER'S JOURNEY</div>
+    <h1>보이저의<br>여정입니다.</h1>
+    <p>목성을 지나고, 토성을 지나고, 해왕성의 거리마저 지나 탐사선은 태양계 바깥을 향해 나아갑니다.</p>
+  </section>
+
+  <section id="capNeptune" class="caption">
+    <div class="eyebrow">NEPTUNE</div>
+    <h1>마지막 행성의<br>거리.</h1>
+    <p>해왕성은 태양에서 약 30 AU 떨어져 있습니다. 여기까지 와도, 보이저가 지구를 돌아본 곳은 아직 더 멉니다.</p>
+  </section>
+
+  <section id="capLookBack" class="caption">
+    <div class="eyebrow">40.5 AU</div>
+    <h1>이곳에서<br>뒤돌아봅니다.</h1>
+    <p>1990년 2월 14일, 보이저 1호는 약 40.5 AU의 거리에서 안쪽 태양계를 바라보았습니다.</p>
+  </section>
+
+  <div id="titleCard">
+    <div id="titleCardInner">
+      <div class="title">THE<br>PALE DOTS</div>
+      <div class="sub">지구에서 출발한 시선이<br>지구를 하나의 점으로 되돌려 놓습니다.</div>
+    </div>
+  </div>
+
+  <div id="readout">0.00 AU<br>태양 중심 기준</div>
+
+  <div id="progressWrap">
+    <div id="progressLabel">교과서적 태양계</div>
+    <div id="progressBar">
+      <div id="progressFill"></div>
+    </div>
+    <div id="rulerUnitToggle" aria-label="눈금자 단위">
+      <button type="button" class="active" data-ruler-unit="au">AU</button>
+      <button type="button" data-ruler-unit="lightMinute">광분</button>
+      <button type="button" data-ruler-unit="km">km</button>
+    </div>
+  </div>
+
+  <div id="scrollHint">스크롤하여 아래로 내려가세요</div>
+</div>
+
+<button id="skipButton">엔딩으로 이동</button>
 
 <script>
+const canvas = document.getElementById("spaceCanvas");
+const ctx = canvas.getContext("2d");
+
+const captions = {
+  intro: document.getElementById("capIntro"),
+  correction: document.getElementById("capCorrection"),
+  toEarth: document.getElementById("capToEarth"),
+  earth: document.getElementById("capEarth"),
+  launch: document.getElementById("capLaunch"),
+  scaleBack: document.getElementById("capScaleBack"),
+  voyager: document.getElementById("capVoyager"),
+  neptune: document.getElementById("capNeptune"),
+  lookBack: document.getElementById("capLookBack")
+};
+
+const titleCard = document.getElementById("titleCard");
+const readout = document.getElementById("readout");
+const progressFill = document.getElementById("progressFill");
+const progressLabel = document.getElementById("progressLabel");
+const skipButton = document.getElementById("skipButton");
+const rulerUnitButtons = Array.from(document.querySelectorAll("[data-ruler-unit]"));
+
+const pbdVideoWrap = document.querySelector("#pbdPhoto .pbdVideoWrap");
+
 const MOON_DIAMETER_KM = 3474.8;
 const AU_KM = 149597870.7;
 const LIGHT_MINUTE_KM = 299792.458 * 60;
-const OFFSET = 3600;
-const MAX_SCROLL_DISTANCE_KM = AU_KM * 40.5;
-
-let currentUnit = "au";
-let postVoyagerProgress = 0;
-let postVoyagerVirtualScroll = 0;
-const POST_VOYAGER_SCROLL_LENGTH = 5200;
+const LIGHT_MINUTES_PER_AU = AU_KM / LIGHT_MINUTE_KM;
+const REAL_PX_PER_AU = AU_KM / MOON_DIAMETER_KM;
 
 const bodies = [
-  { name: "SUN", ko: "태양", key: "sun", color: "#ffd21f", diameter: 1392700, distance: 0, sub: "가장 가까운 별, 태양" },
-  { name: "MERCURY", ko: "수성", key: "mercury", color: "#8f8a83", diameter: 4879, distance: 57900000, sub: "수성, 일반상대론의 열쇠" },
-  { name: "VENUS", ko: "금성", key: "venus", color: "#e6c56d", diameter: 12104, distance: 108200000, sub: "샛별, 개밥바라기, 금성" },
-  { name: "EARTH", ko: "지구", key: "earth", color: "#00e5ff", diameter: 12742, distance: 149600000, sub: "우리의 유일한 집, 지구" },
-  { name: "MOON", ko: "달", key: "moon", color: "#ffffff", diameter: 3474.8, distance: 149984400, sub: "점 단 하나! 달." },
-  { name: "MARS", ko: "화성", key: "mars", color: "#c95f3f", diameter: 6779, distance: 227900000, sub: "붉은 철의 사막, 화성" },
-  { name: "JUPITER", ko: "목성", key: "jupiter", color: "#d59b62", diameter: 139820, distance: 778500000, sub: "거인, 목성" },
-  { name: "SATURN", ko: "토성", key: "saturn", color: "#d8bd79", diameter: 116460, distance: 1433500000, sub: "아름다운 고리의, 토성" },
-  { name: "URANUS", ko: "천왕성", key: "uranus", color: "#7fd7d9", diameter: 50724, distance: 2872500000, sub: "누운뱅이, 천왕성" },
-  { name: "NEPTUNE", ko: "해왕성", key: "neptune", color: "#4169e1", diameter: 49244, distance: 4495100000, sub: "쪽빛 끝자락, 해왕성" }
+  { name: "SUN", ko: "태양", au: 0, diameterKm: 1392700, color: "#ffd21f" },
+  { name: "MERCURY", ko: "수성", au: 0.387, diameterKm: 4879, color: "#9b9489" },
+  { name: "VENUS", ko: "금성", au: 0.723, diameterKm: 12104, color: "#e3c06a" },
+  { name: "EARTH", ko: "지구", au: 1.000, diameterKm: 12742, color: "#44c7ff" },
+  { name: "MARS", ko: "화성", au: 1.524, diameterKm: 6779, color: "#c86545" },
+  { name: "JUPITER", ko: "목성", au: 5.203, diameterKm: 139820, color: "#d6a06a" },
+  { name: "SATURN", ko: "토성", au: 9.537, diameterKm: 116460, color: "#d8bd79" },
+  { name: "URANUS", ko: "천왕성", au: 19.191, diameterKm: 50724, color: "#8adfe0" },
+  { name: "NEPTUNE", ko: "해왕성", au: 30.069, diameterKm: 49244, color: "#5275ff" },
+  { name: "PALE BLUE DOT", ko: "40.5 AU", au: 40.5, diameterKm: 3474.8, color: "#b9dcff" }
 ];
 
-const specialMarkers = [
-  {
-    title: "PALE BLUE DOT",
-    subtitle: "Voyager 1 · 1990",
-    distance: AU_KM * 40.5,
-    color: "rgba(180,220,255,0.95)",
-    description: "보이저 1호가 지구를 촬영한 위치"
-  }
-];
+let width = 0;
+let height = 0;
+let dpr = 1;
+let stars = [];
+let scrollMax = 1;
+let scrollProgress = 0;
+let smoothProgress = 0;
+let rulerUnit = "au";
 
-const messages = [
-  { x: 9000, title: "BEGIN", text: "태양계의 여정에 오신 것을 환영합니다. 이제 곧 첫번째 행성에 도착합니다." },
-  { x: 22000, title: "EMPTY", text: "빈 공간이 좀 많죠? 태양계는 대부분 이런 식으로 존재한답니다." },
-  { x: 40000, title: "WELCOME", text: "여행자분들에게- 우리의 평온한 안식처에서 쉬다 가시기 바랍니다." },
-  { x: 68000, title: "SCALE", text: "너무 먼 거리, 또는 너무 큰 크기는 잘 상상되지 않는다고 합니다." },
-  { x: 96000, title: "WAIT", text: "이제 슬슬 다음 행성이 나올것만 같은데, 왜 안나오죠? 더 가봐야겠군요." },
-  { x: 135000, title: "WHAT WE JUST PASSED", text: "안심하십시오. 방금 지나친 것은 화성과 목성 사이의 소행성 지대입니다." },
-  { x: 185000, title: "SILENCE", text: "천체와 천체 사이는 서로 대화하기엔 좀 많이 멀죠?" },
-  { x: 245000, title: "other name: ZEUS", text: "목성의 영어이름은 로마 신화에서 제우스와 동일시되는 신의 이름이랍니다." },
-  { x: 330000, title: "EMPTY", text: "빈 공간이 좀 많이 많죠? 태양계는 정말 대부분 이런식입니다..." },
-  { x: 430000, title: "THE RING", text: "토성의 고리는 대부분 얼음 결정 등으로 이루어져 있답니다." },
-  { x: 560000, title: "PALE BLUE", text: "우리가 사는 세계는 크기로 특별하지 않습니다. 그럼에도 그곳이 우리의 전부입니다. 이제 말을 줄이지요..." },
-  { x: 760000, title: "FAR, FAR AWAY...", text: "우리가 행성 몇개를 지나쳐왔었죠..?" },
-  { x: 980000, title: "AFTER", text: "여기까지 왔어도 우주는 거의 시작도 하지 않았답니다(두둥)." },
-  { x: 1295000/*1335000*/, title: "BEYOND NEPTUNE", text: "모든 행성을 모두 보았습니다. 이 뒤에는 무엇이 있을까요?" },
-  { x: 1435000, title: "OUTWARD", text: "이제부터는 행성의 질서보다 탐사선의 고독이 더 선명해지는 것 같습니다..." },
-  { x: 1535000, title: "THE SIGNAL", text: "보이저의 신호는 빛의 속도로 옴에도 몇 시간 뒤에야 도착합니다." },
-  { x: 1635000, title: "LOOK BACK", text: "여기쯤에서 뒤돌아보면 지구는 어떻게 보일까요?." },
-  { x: 1705000, title: "CAMERA", text: "만일 여기서 지구를 바라본다면 태양빛때문에 카메라가 망가질 수 있습니다. 그럼에도 사진을 찍으시겠습니까?" }
-];
+const eventScroll = {
+  intro: 5200,
+  correction: 5200,
+  earthHold: 4200,
+  launch: 5200,
+  title: 4200,
+  scaleBack: 4200,
+  final: 9000,
+  finalLead: 3200
+};
 
-const viewport = document.getElementById("viewport");
-const space = document.getElementById("space");
-const readout = document.getElementById("readout");
-const progress = document.getElementById("progress");
-const ruler = document.getElementById("ruler");
-const bodyNav = document.getElementById("bodyNav");
-const lightSpeedButton = document.getElementById("lightSpeedButton");
-const root = document.documentElement;
+const timeline = {};
+let finalSceneStart = 0.985;
 
-let minorStepPx = 10;
-let majorStepPx = 50;
-
-function kmToPx(km) {
-  return km / MOON_DIAMETER_KM;
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
 }
 
-function diameterToPx(km) {
-  return Math.max(km / MOON_DIAMETER_KM, 1);
+function mix(a, b, t) {
+  return a + (b - a) * t;
 }
 
-function formatKm(km) {
-  return `${Math.round(km).toLocaleString("ko-KR")} km`;
+function smoothstep(a, b, x) {
+  const t = clamp((x - a) / (b - a), 0, 1);
+  return t * t * (3 - 2 * t);
 }
 
-function formatAU(km) {
-  return `${(km / AU_KM).toFixed(3)} AU`;
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3);
 }
 
-function formatLightMinute(km) {
-  return `${(km / LIGHT_MINUTE_KM).toFixed(2)} 광분`;
+function easeInOutCubic(t) {
+  return t < 0.5
+    ? 4 * t * t * t
+    : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-function formatDistanceByUnit(km) {
-  if (currentUnit === "au") return formatAU(km);
-  if (currentUnit === "light") return formatLightMinute(km);
-  return formatKm(km);
+function actualDiameterPx(body) {
+  return body.diameterKm / MOON_DIAMETER_KM;
 }
 
-function syncSpaceWidthToMaxDistance() {
-  const maxDistancePx = kmToPx(MAX_SCROLL_DISTANCE_KM);
-  space.style.width = `${OFFSET + maxDistancePx + viewport.clientWidth / 2}px`;
+function actualRadiusPx(body) {
+  return actualDiameterPx(body) / 2;
 }
 
-function applyRulerScale() {
-  const pxPerLightMinute = LIGHT_MINUTE_KM / MOON_DIAMETER_KM;
-  const pxPerAU = AU_KM / MOON_DIAMETER_KM;
-
-  if (currentUnit === "km") {
-    minorStepPx = 10;
-    majorStepPx = 50;
-  }
-
-  if (currentUnit === "light") {
-    minorStepPx = pxPerLightMinute * 0.01;
-    majorStepPx = pxPerLightMinute * 0.05;
-  }
-
-  if (currentUnit === "au") {
-    minorStepPx = pxPerAU * 0.01;
-    majorStepPx = pxPerAU * 0.05;
-  }
-
-  renderRulerTicks();
+function visibleRadius(body) {
+  return actualRadiusPx(body);
 }
 
-function renderRulerTicks() {
-  const scrollX = viewport.scrollLeft;
-  const viewportWidth = viewport.clientWidth;
-
-  ruler.innerHTML = "";
-
-  const spaceStart = scrollX;
-  const spaceEnd = scrollX + viewportWidth;
-  const zero = OFFSET;
-
-  const minorStartIndex = Math.max(0, Math.floor((spaceStart - zero) / minorStepPx) - 2);
-  const minorEndIndex = Math.ceil((spaceEnd - zero) / minorStepPx) + 2;
-
-  for (let i = minorStartIndex; i <= minorEndIndex; i++) {
-    const spaceX = zero + i * minorStepPx;
-    const screenX = spaceX - scrollX;
-
-    if (screenX < -4 || screenX > viewportWidth + 4) continue;
-
-    const tick = document.createElement("div");
-    tick.className = "tick minor";
-    tick.style.left = `${screenX}px`;
-    ruler.appendChild(tick);
-  }
-
-  const majorStartIndex = Math.max(0, Math.floor((spaceStart - zero) / majorStepPx) - 2);
-  const majorEndIndex = Math.ceil((spaceEnd - zero) / majorStepPx) + 2;
-
-  for (let i = majorStartIndex; i <= majorEndIndex; i++) {
-    const spaceX = zero + i * majorStepPx;
-    const screenX = spaceX - scrollX;
-
-    if (screenX < -4 || screenX > viewportWidth + 4) continue;
-
-    const tick = document.createElement("div");
-    tick.className = "tick major";
-    tick.style.left = `${screenX}px`;
-    ruler.appendChild(tick);
-  }
+function formatAU(au) {
+  return `${au.toFixed(2)} AU`;
 }
 
-function addBody(body) {
-  const x = kmToPx(body.distance) + OFFSET;
-  const d = diameterToPx(body.diameter);
-  const earthPx = diameterToPx(12742);
-  const neptunePx = diameterToPx(49244);
-  const jupiterPx = diameterToPx(139820);
-
-  const arrowEndGap = earthPx * 3;
-  const labelGap = neptunePx;
-  let arrowLength = Math.max(22, neptunePx * 1.2);
-
-  const cluster = document.createElement("div");
-  cluster.className = "body-cluster";
-  cluster.style.left = `${x}px`;
-
-  const dot = document.createElement("div");
-  dot.className = "dot";
-  dot.style.width = `${d}px`;
-  dot.style.height = `${d}px`;
-  dot.style.background = body.color;
-
-  let ring = null;
-
-  if (body.key === "saturn" || body.key === "uranus") {
-    ring = document.createElement("div");
-    ring.className = body.key === "saturn"
-      ? "ring saturn-ring"
-      : "ring uranus-ring";
+function formatRulerValue(au) {
+  if (rulerUnit === "km") {
+    const km = au * AU_KM;
+    return `${Math.round(km).toLocaleString("en-US")} km`;
   }
 
-  const name = document.createElement("div");
-  name.className = "body-name";
-  name.textContent = body.name;
-
-  const sub = document.createElement("div");
-  sub.className = "body-sub";
-  sub.textContent = body.sub;
-
-  const arrow = document.createElement("div");
-  arrow.className = body.key === "moon" ? "arrow up" : "arrow down";
-
-  const card = document.createElement("div");
-  card.className = "info-card";
-  card.innerHTML =
-    `${body.ko}<br>` +
-    `${formatAU(body.distance)} · ${formatLightMinute(body.distance)}<br>` +
-    `${formatKm(body.distance)} · ${d.toFixed(d < 10 ? 2 : 1)} px`;
-
-  const dotX = 50;
-  const dotCenterY = body.key === "sun" ? 350 : 260;
-  const bodyTopY = dotCenterY - d / 2;
-  const bodyBottomY = dotCenterY + d / 2;
-
-  dot.style.left = `${dotX}%`;
-  dot.style.top = `${dotCenterY}px`;
-  if (ring) {
-    ring.style.left = `${dotX}%`;
-    ring.style.top = `${dotCenterY}px`;
+  if (rulerUnit === "lightMinute") {
+    return `${(au * LIGHT_MINUTES_PER_AU).toFixed(2)} 광분`;
   }
 
-  let arrowStartY;
-  let arrowEndY;
-
-  if (body.key === "moon") {
-    arrowLength += jupiterPx * 1.5;
-    arrowEndY = bodyBottomY + arrowEndGap;
-    arrowStartY = arrowEndY + arrowLength;
-  } else {
-    arrowEndY = bodyTopY - arrowEndGap;
-    arrowStartY = arrowEndY - arrowLength;
-  }
-
-  arrow.style.left = `${dotX}%`;
-  arrow.style.top = `${Math.min(arrowStartY, arrowEndY)}px`;
-  arrow.style.height = `${Math.abs(arrowEndY - arrowStartY)}px`;
-
-  const nameSize = body.key === "sun" ? 64 : body.key === "moon" ? 42 : 54;
-  const subSize = body.key === "moon" ? 13 : 13;
-  const groupGap = 8;
-  const groupHeight = nameSize + groupGap + subSize;
-
-  let nameTop;
-
-  if (body.key === "moon") {
-    nameTop = arrowStartY + labelGap;
-  } else {
-    nameTop = arrowStartY - labelGap - groupHeight;
-    if (nameTop < 8) nameTop = arrowStartY + labelGap;
-  }
-
-  name.style.left = `${dotX}%`;
-  name.style.top = `${nameTop}px`;
-  name.style.transform = "translateX(-50%)";
-  name.style.color = body.color;
-  name.style.fontSize = `${nameSize}px`;
-
-  sub.style.left = `${dotX}%`;
-  sub.style.top = `${nameTop + nameSize + groupGap}px`;
-  sub.style.transform = "translateX(-50%)";
-
-  card.style.left = `${dotX}%`;
-  card.style.top = body.key === "moon"
-    ? `${nameTop + nameSize + groupGap + subSize + 20 + earthPx * 3}px`
-    : `${dotCenterY + d / 2 + 28}px`;
-  card.style.transform = "translateX(-50%)";
-
-  if (ring) cluster.appendChild(ring);
-  cluster.appendChild(dot);
-  cluster.appendChild(arrow);
-  cluster.appendChild(name);
-  cluster.appendChild(sub);
-  cluster.appendChild(card);
-  space.appendChild(cluster);
+  return `${au.toFixed(2)} AU`;
 }
 
-function addAsteroidBelt() {
-  const innerAU = 2.1;
-  const outerAU = 3.3;
+function rulerUnitLabel() {
+  if (rulerUnit === "km") return "km";
+  if (rulerUnit === "lightMinute") return "광분";
+  return "AU";
+}
 
-  const innerX = kmToPx(innerAU * AU_KM) + OFFSET;
-  const outerX = kmToPx(outerAU * AU_KM) + OFFSET;
-  const width = outerX - innerX;
+function rulerTickConfig() {
+  let majorStepAU = 0.01;
 
-  const belt = document.createElement("div");
-  belt.className = "asteroid-belt";
-  belt.style.left = `${innerX}px`;
-  belt.style.width = `${width}px`;
+  if (rulerUnit === "lightMinute") {
+    majorStepAU = 0.1 / LIGHT_MINUTES_PER_AU;
+  } else if (rulerUnit === "km") {
+    majorStepAU = 1000000 / AU_KM;
+  }
 
-  const count = 360;
+  return {
+    majorStepAU,
+    midStepAU: majorStepAU / 2,
+    minorStepAU: majorStepAU / 10
+  };
+}
+
+function planetAxisX() {
+  return width * 0.5;
+}
+
+function labelRightEdgeX() {
+  return width - Math.max(98, Math.min(132, width * 0.09));
+}
+
+function labelLeftLimit(body, x, r) {
+  return x + Math.max(34, objectRightExtent(body, r) + 28);
+}
+
+function rebuildTimeline() {
+  const introEndPx = eventScroll.intro;
+  const correctionEndPx = introEndPx + eventScroll.correction;
+  const earthTravelEndPx = correctionEndPx + REAL_PX_PER_AU;
+  const earthHoldEndPx = earthTravelEndPx + eventScroll.earthHold;
+  const launchEndPx = earthHoldEndPx + eventScroll.launch;
+  const titleEndPx = launchEndPx + eventScroll.title;
+  const scaleBackEndPx = titleEndPx + eventScroll.scaleBack;
+  const voyagerEndPx = scaleBackEndPx + (40.5 - 1) * REAL_PX_PER_AU;
+  const finalEndPx = voyagerEndPx + eventScroll.final;
+
+  Object.assign(timeline, {
+    introEnd: introEndPx / finalEndPx,
+    correctionEnd: correctionEndPx / finalEndPx,
+    earthTravelEnd: earthTravelEndPx / finalEndPx,
+    earthHoldEnd: earthHoldEndPx / finalEndPx,
+    launchEnd: launchEndPx / finalEndPx,
+    titleEnd: titleEndPx / finalEndPx,
+    scaleBackEnd: scaleBackEndPx / finalEndPx,
+    voyagerEnd: voyagerEndPx / finalEndPx,
+    finalEnd: 1
+  });
+
+  finalSceneStart = (finalEndPx - eventScroll.finalLead) / finalEndPx;
+  return finalEndPx;
+}
+
+function scaleSpaceHeight() {
+  const scrollSpace = document.getElementById("scrollSpace");
+  const totalScroll = rebuildTimeline();
+  const preferred = Math.ceil(totalScroll + window.innerHeight);
+  scrollSpace.style.height = `${preferred}px`;
+  scrollMax = Math.max(1, scrollSpace.offsetHeight - window.innerHeight);
+}
+
+function resize() {
+  dpr = Math.min(2, window.devicePixelRatio || 1);
+  width = window.innerWidth;
+  height = window.innerHeight;
+
+  canvas.width = Math.floor(width * dpr);
+  canvas.height = Math.floor(height * dpr);
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  makeStars();
+  scaleSpaceHeight();
+}
+
+function makeStars() {
+  stars = [];
+  const count = Math.floor((width * height) / 6500);
 
   for (let i = 0; i < count; i++) {
-    const dot = document.createElement("div");
-    dot.className = "asteroid-dot";
+    stars.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      r: Math.random() > 0.94 ? 1.2 : 0.62,
+      a: 0.16 + Math.random() * 0.76,
+      parallax: 0.08 + Math.random() * 0.32
+    });
+  }
+}
 
-    const x = Math.random() * width;
-    const y = 38 + Math.random() * 76;
-    const sizeRand = Math.random();
-    const size = sizeRand > 0.985 ? 3 : sizeRand > 0.94 ? 2 : 1;
+function cameraAUFromProgress(p) {
+  if (p < timeline.correctionEnd) return 0;
 
-    dot.style.left = `${x}px`;
-    dot.style.top = `${y}px`;
-    dot.style.width = `${size}px`;
-    dot.style.height = `${size}px`;
-    dot.style.opacity = `${0.22 + Math.random() * 0.68}`;
-
-    belt.appendChild(dot);
+  if (p < timeline.earthTravelEnd) {
+    const t = clamp((p - timeline.correctionEnd) / (timeline.earthTravelEnd - timeline.correctionEnd), 0, 1);
+    return mix(0, 1, t);
   }
 
-  const label = document.createElement("div");
-  label.className = "asteroid-label";
-  label.textContent = "ASTEROID BELT";
+  if (p < timeline.scaleBackEnd) return 1;
 
-  const sub = document.createElement("div");
-  sub.className = "asteroid-sub";
-  sub.textContent = "화성과 목성 사이 · 약 2.1–3.3 AU";
+  if (p < timeline.voyagerEnd) {
+    const t = clamp((p - timeline.scaleBackEnd) / (timeline.voyagerEnd - timeline.scaleBackEnd), 0, 1);
+    return mix(1, 40.5, t);
+  }
 
-  belt.appendChild(label);
-  belt.appendChild(sub);
-  space.appendChild(belt);
+  return 40.5;
 }
 
-function addSpecialMarker(marker) {
-  const markerX = kmToPx(marker.distance) + OFFSET;
-
-  const wrap = document.createElement("div");
-  wrap.className = "body-cluster pale-blue-marker";
-  wrap.style.left = `${markerX}px`;
-  wrap.style.top = "52%";
-
-  const line = document.createElement("div");
-  line.className = "arrow down";
-  line.style.left = "50%";
-  line.style.top = "120px";
-  line.style.height = "140px";
-  line.style.background = marker.color;
-
-  const point = document.createElement("div");
-  point.className = "pale-blue-point";
-  point.style.position = "absolute";
-  point.style.left = "50%";
-  point.style.top = "262px";
-  point.style.width = "3px";
-  point.style.height = "3px";
-  point.style.borderRadius = "50%";
-  point.style.background = marker.color;
-  point.style.transform = "translate(-50%, -50%)";
-  point.style.boxShadow = "0 0 12px rgba(180,220,255,0.85)";
-
-  const title = document.createElement("div");
-  title.className = "body-name";
-  title.textContent = marker.title;
-  title.style.left = "50%";
-  title.style.top = "0px";
-  title.style.transform = "translateX(-50%)";
-  title.style.fontSize = "54px";
-  title.style.color = marker.color;
-
-  const sub = document.createElement("div");
-  sub.className = "body-sub";
-  sub.textContent = marker.subtitle;
-  sub.style.left = "50%";
-  sub.style.top = "72px";
-  sub.style.transform = "translateX(-50%)";
-
-  const desc = document.createElement("div");
-  desc.className = "info-card";
-  desc.style.opacity = "1";
-  desc.style.left = "50%";
-  desc.style.top = "286px";
-  desc.style.transform = "translateX(-50%)";
-  desc.innerHTML = `${marker.description}<br>${formatAU(marker.distance)} · ${formatLightMinute(marker.distance)}`;
-
-  wrap.appendChild(title);
-  wrap.appendChild(sub);
-  wrap.appendChild(line);
-  wrap.appendChild(point);
-  wrap.appendChild(desc);
-
-  space.appendChild(wrap);
+function visualPxPerAU(p) {
+  return REAL_PX_PER_AU;
 }
 
-bodies.forEach(addBody);
-addAsteroidBelt();
-specialMarkers.forEach(addSpecialMarker);
+function drawStars(driftAU = 0, alpha = 1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
 
-bodies.forEach(body => {
-  const button = document.createElement("button");
-  button.textContent = body.ko;
+  for (const s of stars) {
+    let y = s.y - driftAU * 18 * s.parallax;
+    y = ((y % height) + height) % height;
+
+    ctx.beginPath();
+    ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+    ctx.arc(s.x, y, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawGlow(x, y, r, color, alpha = 1) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, color);
+  g.addColorStop(0.32, color.replace("1)", "0.38)"));
+  g.addColorStop(1, color.replace("1)", "0)"));
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function label(text, x, y, size = 11, alpha = 0.7, align = "center") {
+  ctx.save();
+  ctx.font = `${size}px FuturaCustom, KoPubDotumCustom, sans-serif`;
+  ctx.textAlign = align;
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+function textWidthFor(fontSize, text) {
+  ctx.save();
+  ctx.font = `${fontSize}px FuturaCustom, KoPubDotumCustom, sans-serif`;
+  const w = ctx.measureText(text).width;
+  ctx.restore();
+  return w;
+}
+
+function objectRightExtent(body, r) {
+  if (body.name === "SATURN") return r * 2.55;
+  if (body.name === "URANUS") return r * 2.05;
+  return Math.max(r, 1.5);
+}
+
+function computePlanetLabelSizes(body, x, r, scale = 1) {
+  const rightX = labelRightEdgeX();
+  const leftLimit = labelLeftLimit(body, x, r);
+  const availableWidth = Math.max(24, rightX - leftLimit);
+
+  let mainSize = body.name === "SUN"
+    ? 86
+    : body.name === "EARTH"
+      ? 78
+      : body.name === "JUPITER" || body.name === "SATURN"
+        ? 72
+        : body.name === "URANUS" || body.name === "NEPTUNE"
+          ? 66
+          : 60;
+
+  mainSize *= scale;
+
+  const nameWidth = textWidthFor(mainSize, body.name);
+  if (nameWidth > availableWidth) {
+    mainSize *= availableWidth / nameWidth;
+  }
+
+  mainSize = Math.max(width < 760 ? 20 : 38, mainSize);
+  const subSize = Math.max(width < 760 ? 12 : 16, mainSize * 0.26);
+
+  return { mainSize, subSize, rightX };
+}
+
+function planetNameLabel(body, x, y, r, alpha = 1, scale = 1) {
+  if (body.name === "PALE BLUE DOT") return;
+  if (y < -300 || y > height + 300) return;
+
+  const { mainSize, subSize, rightX } = computePlanetLabelSizes(body, x, r, scale);
+  const nameWidth = textWidthFor(mainSize, body.name);
+  const labelLeftX = rightX - nameWidth;
+  const arrowStartX = labelLeftX - 10;
+  const arrowEndX = x + objectRightExtent(body, r) + 5;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+
+  if (body.name !== "SUN" && arrowStartX > arrowEndX + 12) {
+    const arrowHead = 7;
+
+    ctx.save();
+    ctx.globalAlpha = 0.84 * alpha;
+    ctx.strokeStyle = "rgba(255,255,255,0.92)";
+    ctx.lineWidth = 1.25;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    ctx.beginPath();
+    ctx.moveTo(arrowStartX, y);
+    ctx.lineTo(arrowEndX, y);
+    ctx.moveTo(arrowEndX, y);
+    ctx.lineTo(arrowEndX + arrowHead, y - arrowHead * 0.72);
+    ctx.moveTo(arrowEndX, y);
+    ctx.lineTo(arrowEndX + arrowHead, y + arrowHead * 0.72);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.font = `${mainSize}px FuturaCustom, KoPubDotumCustom, sans-serif`;
+  ctx.fillStyle = body.color;
+  ctx.fillText(body.name, rightX, y - mainSize * 0.11);
+
+  ctx.font = `${subSize}px KoPubDotumCustom, sans-serif`;
+  ctx.fillStyle = body.color;
+  ctx.fillText(`${body.ko} · ${body.au.toFixed(3)} AU`, rightX, y + mainSize * 0.5);
+
+  ctx.restore();
+}
+
+function drawPlanet(body, x, y, r, alpha = 1, showLabel = true, labelScale = 1) {
+  if (y < -900 || y > height + 900 || x < -900 || x > width + 900) return;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  if (body.name === "SUN") {
+    drawGlow(x, y, r * 4.8, "rgba(255,210,40,1)", 0.52 * alpha);
+  }
+
+  if (body.name === "SATURN") {
+    ctx.save();
+    ctx.lineWidth = Math.max(1, r * 0.08);
+    ctx.strokeStyle = `rgba(235,216,158,${0.72 * alpha})`;
+    ctx.beginPath();
+    ctx.ellipse(x, y, r * 2.55, r * 0.66, -0.24, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = `rgba(255,238,182,${0.46 * alpha})`;
+    ctx.beginPath();
+    ctx.ellipse(x, y, r * 2.18, r * 0.51, -0.24, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = `rgba(146,116,78,${0.48 * alpha})`;
+    ctx.beginPath();
+    ctx.ellipse(x, y, r * 1.62, r * 0.37, -0.24, Math.PI * 0.04, Math.PI * 0.96);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  if (body.name === "URANUS") {
+    const uranusRingAngle = 0.08 + Math.PI / 2;
+
+    ctx.save();
+    ctx.strokeStyle = `rgba(198,245,246,${0.42 * alpha})`;
+    ctx.lineWidth = Math.max(0.7, r * 0.055);
+    ctx.beginPath();
+    ctx.ellipse(x, y, r * 2.05, r * 0.18, uranusRingAngle, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(135,220,224,${0.28 * alpha})`;
+    ctx.beginPath();
+    ctx.ellipse(x, y, r * 1.68, r * 0.13, uranusRingAngle, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.beginPath();
+  ctx.fillStyle = body.color;
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (body.name === "SATURN") {
+    ctx.save();
+    ctx.strokeStyle = `rgba(255,238,182,${0.78 * alpha})`;
+    ctx.lineWidth = Math.max(1, r * 0.08);
+    ctx.beginPath();
+    ctx.ellipse(x, y, r * 2.55, r * 0.66, -0.24, Math.PI * 1.02, Math.PI * 1.98);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.restore();
+
+  if (showLabel) {
+    planetNameLabel(body, x, y, r, alpha, labelScale);
+  }
+}
+
+function pulseSinSquared(speed = 0.0028) {
+  const s = Math.sin(performance.now() * speed);
+  return s * s;
+}
+
+function drawVoyager(x, y, scale = 1, alpha = 1, angle = -0.6) {
+  const pulse = pulseSinSquared();
+  const pulseScale = scale * (0.82 + 0.36 * pulse);
+  const pulseAlpha = alpha * (0.62 + 0.38 * pulse);
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(pulseScale, pulseScale);
+  ctx.globalAlpha = pulseAlpha;
+
+  ctx.strokeStyle = "rgba(205,232,255,0.96)";
+  ctx.lineWidth = 1.45;
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(-22, -22);
+  ctx.lineTo(22, 22);
+  ctx.moveTo(22, -22);
+  ctx.lineTo(-22, 22);
+  ctx.stroke();
+
+  ctx.save();
+  ctx.globalAlpha = 0.24 + 0.42 * pulse;
+  ctx.strokeStyle = "rgba(140,210,255,0.88)";
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.moveTo(-6, -6);
+  ctx.lineTo(6, 6);
+  ctx.moveTo(6, -6);
+  ctx.lineTo(-6, 6);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.restore();
+}
+
+function textbookY(index, total) {
+  const top = height * 0.18;
+  const bottom = height * 0.70;
+  return top + (bottom - top) * (index / (total - 1));
+}
+
+function drawTextbookScene(p) {
+  const x = planetAxisX();
+  const yCenter = height * 0.46;
+  const total = bodies.length - 2;
+  const transitionT = smoothstep(timeline.introEnd, timeline.correctionEnd, p);
+  const eased = easeInOutCubic(transitionT);
+  const pxPerAU = visualPxPerAU(p);
+
+  const sun = bodies[0];
+  const textbookSunR = width < 760 ? 34 : 42;
+  const realSunR = actualRadiusPx(sun);
+  const sunR = mix(textbookSunR, realSunR, eased);
+  const sunY = mix(textbookY(0, total), yCenter, eased);
+
+  drawPlanet(sun, x, sunY, sunR, 1, true, mix(0.75, 1, eased));
+
+  for (let i = 1; i < bodies.length - 1; i++) {
+    const body = bodies[i];
+
+    const textbookR = body.name === "JUPITER"
+      ? 18
+      : body.name === "SATURN"
+        ? 16
+        : body.name === "URANUS" || body.name === "NEPTUNE"
+          ? 11
+          : body.name === "EARTH" || body.name === "VENUS"
+            ? 8
+            : 5;
+
+    const ty = textbookY(i, total);
+    const realY = yCenter + body.au * pxPerAU;
+    const y = mix(ty, realY, eased);
+    const r = mix(textbookR, visibleRadius(body), eased);
+    const alpha = y > height + 120 ? 0 : 1;
+
+    drawPlanet(body, x, y, r, alpha, transitionT < 0.88, mix(0.85, 1, eased));
+  }
+
+  if (transitionT < 0.85) {
+    ctx.save();
+    ctx.strokeStyle = `rgba(255,255,255,${0.18 * (1 - transitionT)})`;
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i < total - 1; i++) {
+      const y1 = textbookY(i, total);
+      const y2 = textbookY(i + 1, total);
+      ctx.beginPath();
+      ctx.moveTo(x, y1 + 16);
+      ctx.lineTo(x, y2 - 16);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+}
+
+function drawScaleTicks(cameraAU, maxAU, pxPerAU, x = planetAxisX(), yCenter = height * 0.46) {
+  const step = cameraAU < 2 ? 0.05 : 1;
+  const majorEvery = cameraAU < 2 ? 0.1 : 5;
+
+  const startAU = Math.max(0, cameraAU - height / pxPerAU - 0.2);
+  const endAU = Math.min(maxAU, cameraAU + height / pxPerAU + 0.2);
+
+  const startIndex = Math.floor(startAU / step);
+  const endIndex = Math.ceil(endAU / step);
+
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,0.11)";
+  ctx.lineWidth = 1;
+
+  for (let i = startIndex; i <= endIndex; i++) {
+    const au = i * step;
+    const y = yCenter + (au - cameraAU) * pxPerAU;
+    if (y < -50 || y > height + 50) continue;
+
+    const major = Math.abs((au / majorEvery) - Math.round(au / majorEvery)) < 0.0001;
+
+    ctx.beginPath();
+    ctx.moveTo(x - (major ? 34 : 18), y);
+    ctx.lineTo(x + (major ? 34 : 18), y);
+    ctx.stroke();
+
+    if (major) {
+      label(`${au.toFixed(cameraAU < 2 ? 1 : 0)} AU`, x + 48, y, 10, 0.34, "left");
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawLeftRuler(cameraAU, maxAU, pxPerAU, yCenter = height * 0.46) {
+  const { minorStepAU } = rulerTickConfig();
+  const x = Math.max(30, Math.min(46, width * 0.035));
+  const top = Math.max(86, height * 0.12);
+  const bottom = height - Math.max(78, height * 0.11);
+  const bodyWidth = 16;
+
+  const startAU = Math.max(0, cameraAU + (top - yCenter) / pxPerAU - minorStepAU);
+  const endAU = Math.min(maxAU, cameraAU + (bottom - yCenter) / pxPerAU + minorStepAU);
+  const startIndex = Math.floor(startAU / minorStepAU);
+  const endIndex = Math.ceil(endAU / minorStepAU);
+
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,0.09)";
+  ctx.fillRect(x - bodyWidth, top, bodyWidth, bottom - top);
+
+  ctx.strokeStyle = "rgba(255,255,255,0.72)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.rect(x - bodyWidth, top, bodyWidth, bottom - top);
+  ctx.stroke();
+
+  label(rulerUnitLabel(), x + 4, top - 22, 13, 0.9, "left");
+
+  for (let i = startIndex; i <= endIndex; i++) {
+    const au = i * minorStepAU;
+    const y = yCenter + (au - cameraAU) * pxPerAU;
+    if (y < top || y > bottom) continue;
+
+    const majorTick = i % 10 === 0;
+    const midTick = i % 5 === 0;
+    const tick = majorTick ? bodyWidth : midTick ? bodyWidth * 0.68 : bodyWidth * 0.4;
+    const tickAlpha = majorTick ? 0.96 : midTick ? 0.74 : 0.5;
+
+    ctx.strokeStyle = `rgba(255,255,255,${tickAlpha})`;
+    ctx.lineWidth = majorTick ? 1.15 : 1;
+    ctx.beginPath();
+    ctx.moveTo(x - tick, y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+  }
+
+  const markerY = clamp(yCenter, top, bottom);
+  const earthMarkerOffset = actualDiameterPx(bodies.find(body => body.name === "EARTH"));
+  const markerX = x + earthMarkerOffset;
+
+  ctx.fillStyle = "rgba(255,255,255,0.96)";
+  ctx.strokeStyle = "rgba(0,0,0,0.58)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(markerX, markerY);
+  ctx.lineTo(markerX + 14, markerY - 7);
+  ctx.lineTo(markerX + 14, markerY + 7);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  label(formatRulerValue(cameraAU), markerX + 20, markerY, 14, 0.96, "left");
+
+  ctx.restore();
+}
+
+function drawActualJourney(cameraAU, maxAU = 40.5, showVoyager = false, p = smoothProgress) {
+  const x = planetAxisX();
+  const yCenter = height * 0.46;
+  const pxPerAU = visualPxPerAU(p);
+
+  drawScaleTicks(cameraAU, maxAU, pxPerAU, x, yCenter);
+  drawLeftRuler(cameraAU, maxAU, pxPerAU, yCenter);
+
+  for (const body of bodies) {
+    if (body.au > maxAU) continue;
+
+    const y = yCenter + (body.au - cameraAU) * pxPerAU;
+
+    if (body.name === "PALE BLUE DOT") {
+      const a = smoothstep(39.2, 40.5, cameraAU);
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.strokeStyle = "rgba(185,220,255,0.52)";
+      ctx.beginPath();
+      ctx.moveTo(x - 38, y);
+      ctx.lineTo(x + 38, y);
+      ctx.stroke();
+      drawPlanet(body, x, y, actualRadiusPx(body), 1, false);
+      label("40.5 AU", labelRightEdgeX(), y, width < 760 ? 34 : 58, 0.86, "right");
+      ctx.restore();
+    } else {
+      const r = visibleRadius(body);
+
+      const labelVisible = Math.abs(body.au - cameraAU) < 0.16 || body.name === "SUN";
+      const alpha = body.au < cameraAU - 0.18 ? 0.12 : 1;
+
+      drawPlanet(body, x, y, r, alpha, labelVisible, 1);
+    }
+  }
+
+  if (showVoyager) {
+    const shipX = width * 0.5;
+    const shipY = yCenter;// - 58;
+
+    drawVoyager(shipX, shipY, 0.42, 0.88, -Math.PI / 2);
+
+    ctx.save();
+    ctx.globalAlpha = 0.42;
+    ctx.strokeStyle = "rgba(150,210,255,0.26)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(shipX, shipY + 20);
+    ctx.lineTo(shipX, height + 80);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function drawEarthHold(p) {
+  const t = smoothstep(timeline.earthTravelEnd, timeline.earthHoldEnd, p);
+  const x = planetAxisX();
+  const y = height * 0.46;
+  const earth = bodies.find(b => b.name === "EARTH");
+
+  const r = visibleRadius(earth);
+
+  drawLeftRuler(1, 1.05, visualPxPerAU(p), y);
+  drawPlanet(earth, x, y, r, 0.95, true, 1);
+}
+
+function drawLaunch(p) {
+  const t = smoothstep(timeline.earthHoldEnd, timeline.launchEnd, p);
+  const earth = bodies.find(b => b.name === "EARTH");
+  const earthX = planetAxisX();
+  const earthY = height * 0.56;
+  const yCenter = height * 0.46;
+  const earthR = visibleRadius(earth);
+
+  drawLeftRuler(1, 1.05, visualPxPerAU(p), yCenter);
+  drawPlanet(earth, earthX, earthY, earthR, 0.9, true, 1);
+
+  const shipX = mix(earthX, width * 0.58, easeOutCubic(t));
+  const shipY = mix(earthY -28, height * 0.24, easeInOutCubic(t));
+
+  ctx.save();
+  ctx.strokeStyle = `rgba(150,210,255,${0.2 + 0.62 * t})`;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(earthX, earthY - Math.max(earthR, 2));
+  ctx.quadraticCurveTo(width * 0.54, height * 0.38, shipX, shipY);
+  ctx.stroke();
+  ctx.restore();
+
+  drawVoyager(shipX, shipY, mix(0.48, 0.72, t), smoothstep(0.06, 0.26, t), Math.PI / 4);
+}
+
+function drawScaleBack(p) {
+  const t = smoothstep(timeline.titleEnd, timeline.scaleBackEnd, p);
+  const eased = easeInOutCubic(t);
+
+  const earth = bodies.find(b => b.name === "EARTH");
+  const x = planetAxisX();
+  const yCenter = height * 0.46;
+
+  const earthY = mix(height * 0.56, yCenter, eased);
+  const earthR = visibleRadius(earth);
+
+  drawScaleTicks(1, 1.05, visualPxPerAU(p), x, yCenter);
+  drawLeftRuler(1, 1.05, visualPxPerAU(p), yCenter);
+  drawPlanet(earth, x, earthY, earthR, 0.95, true, 1);
+
+  const shipX = mix(width * 0.58, width * 0.5, eased);
+  const shipY = mix(height * 0.24, yCenter/* - 58*/, eased);
+
+  drawVoyager(shipX, shipY, mix(0.72, 0.42, eased), 0.88, Math.PI / 4);
+}
+
+function cameraAUFromProgress(p) {
+  if (p < timeline.correctionEnd) return 0;
+
+  if (p < timeline.earthTravelEnd) {
+    const t = clamp((p - timeline.correctionEnd) / (timeline.earthTravelEnd - timeline.correctionEnd), 0, 1);
+    return mix(0, 1, t);
+  }
+
+  if (p < timeline.scaleBackEnd) return 1;
+
+  if (p < timeline.voyagerEnd) {
+    const t = clamp((p - timeline.scaleBackEnd) / (timeline.voyagerEnd - timeline.scaleBackEnd), 0, 1);
+    return mix(1, 40.5, t);
+  }
+
+  return 40.5;
+}
+
+function drawPaleBlueTransition(p) {
+  const t = smoothstep(timeline.voyagerEnd, timeline.finalEnd, p);
+
+  if (t <= 0) return;
+
+  ctx.save();
+  ctx.globalAlpha = t * 0.86;
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, width, height);
+  ctx.restore();
+
+  const photoOpacity = smoothstep(0.35, 0.82, t);
+  document.documentElement.style.setProperty("--pbd-opacity", photoOpacity.toFixed(4));
+
+  if (pbdVideoWrap) {
+    const videoOpacity = smoothstep(0.62, 0.92, t);
+    pbdVideoWrap.style.opacity = videoOpacity.toFixed(4);
+    pbdVideoWrap.style.pointerEvents = videoOpacity > 0.8 ? "auto" : "none";
+  }
+}
+
+function updateCaptions(p) {
+  Object.values(captions).forEach(el => el.classList.remove("visible"));
+  titleCard.style.opacity = "0";
+
+  let labelText = "교과서적 태양계";
+  const au = cameraAUFromProgress(p);
+
+  if (p < timeline.introEnd) {
+    captions.intro.classList.add("visible");
+    labelText = "교과서적 태양계";
+  } else if (p < timeline.correctionEnd) {
+    captions.correction.classList.add("visible");
+    labelText = "실제 거리로 펼치기";
+  } else if (p < timeline.earthTravelEnd) {
+    captions.toEarth.classList.add("visible");
+    labelText = "지구까지 이동";
+  } else if (p < timeline.earthHoldEnd) {
+    captions.earth.classList.add("visible");
+    labelText = "지구 도착";
+  } else if (p < timeline.launchEnd) {
+    captions.launch.classList.add("visible");
+    labelText = "보이저 발사";
+  } else if (p < timeline.titleEnd) {
+    const t = smoothstep(timeline.launchEnd, timeline.titleEnd, p);
+    titleCard.style.opacity = String(Math.sin(t * Math.PI));
+    labelText = "THE PALE DOTS";
+  } else if (p < timeline.scaleBackEnd) {
+    captions.scaleBack.classList.add("visible");
+    labelText = "실제 비례로 복귀";
+  } else if (au < 30.069) {
+    captions.voyager.classList.add("visible");
+    labelText = "보이저의 여정";
+  } else if (au < 40.5) {
+    captions.neptune.classList.add("visible");
+    labelText = "해왕성 너머";
+  } else if (p < finalSceneStart) {
+    captions.lookBack.classList.add("visible");
+    labelText = "40.5 AU";
+  } else {
+    labelText = "Pale Blue Dot";
+  }
+
+  progressLabel.textContent = labelText;
+  progressFill.style.width = `${clamp(p, 0, 1) * 100}%`;
+}
+
+function updateReadout(p) {
+  const au = cameraAUFromProgress(p);
+  readout.innerHTML = `${formatAU(au)}<br>태양 중심 기준`;
+}
+
+function render() {
+  scrollProgress = clamp(window.scrollY / scrollMax, 0, 1);
+  const progressDelta = Math.abs(scrollProgress - smoothProgress);
+  const followSpeed = progressDelta > 0.012 ? 0.28 : 0.14;
+  smoothProgress += (scrollProgress - smoothProgress) * followSpeed;
+  if (Math.abs(scrollProgress - smoothProgress) < 0.00008) {
+    smoothProgress = scrollProgress;
+  }
+
+  ctx.clearRect(0, 0, width, height);
+
+  const cameraAU = cameraAUFromProgress(smoothProgress);
+  drawStars(cameraAU, 0.95);
+
+  if (smoothProgress < timeline.correctionEnd) {
+    drawTextbookScene(smoothProgress);
+  } else if (smoothProgress < timeline.earthTravelEnd) {
+    drawActualJourney(cameraAU, 1.05, false, smoothProgress);
+  } else if (smoothProgress < timeline.earthHoldEnd) {
+    drawEarthHold(smoothProgress);
+  } else if (smoothProgress < timeline.launchEnd) {
+    drawLaunch(smoothProgress);
+  } else if (smoothProgress < timeline.titleEnd) {
+    drawLaunch(timeline.launchEnd);
+  } else if (smoothProgress < timeline.scaleBackEnd) {
+    drawScaleBack(smoothProgress);
+  } else {
+    drawActualJourney(cameraAU, 40.5, true, smoothProgress);
+  }
+
+  drawPaleBlueTransition(smoothProgress);
+
+  if (smoothProgress < timeline.voyagerEnd) {
+    document.documentElement.style.setProperty("--pbd-opacity", "0");
+
+    if (pbdVideoWrap) {
+      pbdVideoWrap.style.opacity = "0";
+      pbdVideoWrap.style.pointerEvents = "none";
+    }
+  }
+
+  updateCaptions(smoothProgress);
+  updateReadout(smoothProgress);
+
+  requestAnimationFrame(render);
+}
+
+skipButton.addEventListener("click", () => {
+  window.scrollTo({ top: scrollMax, behavior: "smooth" });
+});
+
+rulerUnitButtons.forEach(button => {
   button.addEventListener("click", () => {
-    const targetX = kmToPx(body.distance) + OFFSET - viewport.clientWidth / 2;
-    viewport.scrollTo({
-      left: Math.max(0, targetX),
-      behavior: "smooth"
+    rulerUnit = button.dataset.rulerUnit;
+
+    rulerUnitButtons.forEach(item => {
+      item.classList.toggle("active", item === button);
     });
   });
-  bodyNav.appendChild(button);
 });
 
-messages.forEach(m => {
-  const div = document.createElement("div");
-  div.className = "message";
-  div.style.left = `${m.x + OFFSET}px`;
-  div.innerHTML = `<strong>${m.title}</strong>${m.text}`;
-  space.appendChild(div);
-});
+window.addEventListener("resize", resize);
 
-document.querySelectorAll("#unitButtons button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll("#unitButtons button").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    currentUnit = btn.dataset.unit;
-    applyRulerScale();
-    updateReadout();
-  });
-});
-
-let isDown = false;
-let startX = 0;
-let savedScrollLeft = 0;
-let lastPointerX = 0;
-let lastPointerTime = 0;
-let inertialVelocity = 0;
-let inertiaFrame = null;
-let lightSpeedFrame = null;
-let isLightSpeedRunning = false;
-let lastLightTimestamp = 0;
-
-function setPostVoyagerProgress(value) {
-  postVoyagerProgress = Math.max(0, Math.min(1, value));
-  root.style.setProperty("--post-voyager-progress", postVoyagerProgress.toFixed(4));
-
-  const targetX = viewport.clientWidth / 2;
-  const startX = -160;
-
-  const voyagerFadeEnd = 0.42;
-  const voyagerFadeT = Math.max(0, Math.min(1, postVoyagerProgress / voyagerFadeEnd));
-  const voyagerOpacity = 1 - voyagerFadeT;
-
-  const sunArrivalEnd = 0.72;
-  const arrivalT = Math.min(1, postVoyagerProgress / sunArrivalEnd);
-  const easedArrival = 1 - Math.pow(1 - arrivalT, 3);
-  const sunX = startX + (targetX - startX) * easedArrival;
-
-  const sunFadeStart = 0.78;
-  const sunFadeEnd = 0.94;
-  const sunFadeT = Math.max(0, Math.min(1, (postVoyagerProgress - sunFadeStart) / (sunFadeEnd - sunFadeStart)));
-  const sunOpacity = postVoyagerProgress <= sunFadeStart
-    ? Math.min(1, arrivalT * 1.25)
-    : 1 - sunFadeT;
-
-  const pbdOpacity = sunFadeT;
-
-  root.style.setProperty("--voyager-marker-opacity", voyagerOpacity.toFixed(4));
-  root.style.setProperty("--sun-return-x", `${sunX.toFixed(3)}px`);
-  root.style.setProperty("--sun-return-opacity", sunOpacity.toFixed(4));
-  root.style.setProperty("--pbd-opacity", pbdOpacity.toFixed(4));
-
-  const paleBlueFinal = document.getElementById("paleBlueFinal");
-
-  if (pbdOpacity > 0.96) {
-    paleBlueFinal.classList.add("pbd-open");
-  } else {
-    paleBlueFinal.classList.remove("pbd-open");
-  }
-}
-
-function setPostVoyagerVirtualScroll(value) {
-  postVoyagerVirtualScroll = Math.max(0, Math.min(POST_VOYAGER_SCROLL_LENGTH, value));
-  setPostVoyagerProgress(postVoyagerVirtualScroll / POST_VOYAGER_SCROLL_LENGTH);
-}
-
-function stopInertia() {
-  if (inertiaFrame !== null) {
-    cancelAnimationFrame(inertiaFrame);
-    inertiaFrame = null;
-  }
-}
-
-function startInertia() {
-  stopInertia();
-
-  const maxScroll = viewport.scrollWidth - viewport.clientWidth;
-  if (postVoyagerProgress > 0 || viewport.scrollLeft >= maxScroll - 2) {
-    inertialVelocity = 0;
-    return;
-  }
-
-  let velocity = inertialVelocity * 16.67;
-  if (Math.abs(velocity) < 0.08) return;
-
-  function step() {
-    const maxScroll = viewport.scrollWidth - viewport.clientWidth;
-    const nextScroll = viewport.scrollLeft + velocity;
-  
-    if (nextScroll > maxScroll) {
-      viewport.scrollLeft = maxScroll;
-      setPostVoyagerVirtualScroll(postVoyagerVirtualScroll + (nextScroll - maxScroll));
-    } else if (nextScroll < 0) {
-      viewport.scrollLeft = 0;
-  
-      if (postVoyagerProgress > 0) {
-        setPostVoyagerVirtualScroll(0);
-      }
-    } else {
-      if (postVoyagerProgress > 0) {
-        setPostVoyagerVirtualScroll(0);
-      }
-  
-      viewport.scrollLeft = nextScroll;
-    }
-  
-    const friction = "ontouchstart" in window ? MOBILE_INERTIA_FRICTION : 0.94;
-    velocity *= friction;
-  
-    if (Math.abs(velocity) < 0.08 || postVoyagerProgress >= 1) {
-      inertiaFrame = null;
-      return;
-    }
-  
-    inertiaFrame = requestAnimationFrame(step);
-  }
-
-  inertiaFrame = requestAnimationFrame(step);
-}
-
-function stopLightSpeedTravel() {
-  isLightSpeedRunning = false;
-  lightSpeedButton.classList.remove("active");
-
-  if (lightSpeedFrame !== null) {
-    cancelAnimationFrame(lightSpeedFrame);
-    lightSpeedFrame = null;
-  }
-}
-
-function startLightSpeedTravel() {
-  stopInertia();
-  isLightSpeedRunning = true;
-  lightSpeedButton.classList.add("active");
-  lastLightTimestamp = performance.now();
-
-  function step(now) {
-    if (!isLightSpeedRunning) return;
-
-    const dt = Math.max(0, now - lastLightTimestamp) / 1000;
-    lastLightTimestamp = now;
-
-    const lightSpeedPxPerSecond = 299792.458 / MOON_DIAMETER_KM;
-    viewport.scrollLeft += lightSpeedPxPerSecond * dt;
-
-    const maxScroll = viewport.scrollWidth - viewport.clientWidth;
-    if (viewport.scrollLeft >= maxScroll) {
-      stopLightSpeedTravel();
-      return;
-    }
-
-    lightSpeedFrame = requestAnimationFrame(step);
-  }
-
-  lightSpeedFrame = requestAnimationFrame(step);
-}
-
-lightSpeedButton.addEventListener("click", () => {
-  if (isLightSpeedRunning) stopLightSpeedTravel();
-  else startLightSpeedTravel();
-});
-
-viewport.addEventListener("mousedown", e => {
-  stopLightSpeedTravel();
-  stopInertia();
-
-  isDown = true;
-  startX = e.pageX;
-  savedScrollLeft = viewport.scrollLeft;
-  lastPointerX = e.pageX;
-  lastPointerTime = performance.now();
-  inertialVelocity = 0;
-});
-
-viewport.addEventListener("mouseup", () => {
-  if (!isDown) return;
-  isDown = false;
-  startInertia();
-});
-
-viewport.addEventListener("mouseleave", () => {
-  if (!isDown) return;
-  isDown = false;
-  startInertia();
-});
-
-viewport.addEventListener("mousemove", e => {
-  if (!isDown) return;
-  e.preventDefault();
-
-  const now = performance.now();
-  const dx = e.pageX - lastPointerX;
-  const dt = Math.max(1, now - lastPointerTime);
-
-  inertialVelocity = -dx / dt;
-  lastPointerX = e.pageX;
-  lastPointerTime = now;
-
-  const walk = (touchStartX - t.clientX) * MOBILE_SCROLL_GAIN;
-  const maxScroll = viewport.scrollWidth - viewport.clientWidth;
-  const nextScroll = savedScrollLeft + walk;
-
-  if (nextScroll > maxScroll) {
-    stopInertia();
-    inertialVelocity = 0;
-    viewport.scrollLeft = maxScroll;
-    setPostVoyagerVirtualScroll(postVoyagerVirtualScroll + (nextScroll - maxScroll));
-  } else if (nextScroll < 0) {
-    viewport.scrollLeft = 0;
-  } else {
-    if (postVoyagerProgress > 0) setPostVoyagerVirtualScroll(0);
-    viewport.scrollLeft = nextScroll;
-  }
-});
-
-const MOBILE_SCROLL_GAIN = 2.35;
-const MOBILE_INERTIA_GAIN = 2.25;
-const MOBILE_INERTIA_FRICTION = 0.955;
-let touchActive = false;
-let touchStartX = 0;
-let touchStartY = 0;
-let touchSavedScrollLeft = 0;
-let touchLastX = 0;
-let touchLastY = 0;
-let touchLastTime = 0;
-let touchIntent = null;
-
-viewport.addEventListener("touchstart", e => {
-  if (e.touches.length !== 1) return;
-
-  stopLightSpeedTravel();
-  stopInertia();
-
-  const t = e.touches[0];
-
-  touchActive = true;
-  touchStartX = t.clientX;
-  touchStartY = t.clientY;
-  touchSavedScrollLeft = viewport.scrollLeft;
-  touchLastX = t.clientX;
-  touchLastY = t.clientY;
-  touchLastTime = performance.now();
-  touchIntent = null;
-  inertialVelocity = 0;
-}, { passive: true });
-
-viewport.addEventListener("touchmove", e => {
-  if (!touchActive || e.touches.length !== 1) return;
-
-  const t = e.touches[0];
-  const dxFromStart = t.clientX - touchStartX;
-  const dyFromStart = t.clientY - touchStartY;
-
-  if (touchIntent === null) {
-    if (Math.abs(dxFromStart) < 4 && Math.abs(dyFromStart) < 4) return;
-    touchIntent = Math.abs(dxFromStart) >= Math.abs(dyFromStart) ? "horizontal" : "vertical";
-  }
-
-  if (touchIntent !== "horizontal") return;
-
-  e.preventDefault();
-
-  const now = performance.now();
-  const dx = t.clientX - touchLastX;
-  const dt = Math.max(1, now - touchLastTime);
-
-  inertialVelocity = -(dx / dt) * MOBILE_INERTIA_GAIN;
-  touchLastX = t.clientX;
-  touchLastY = t.clientY;
-  touchLastTime = now;
-
-  const walk = (touchStartX - t.clientX) * MOBILE_SCROLL_GAIN;
-  const maxScroll = viewport.scrollWidth - viewport.clientWidth;
-  const nextScroll = touchSavedScrollLeft + walk;
-
-  if (nextScroll > maxScroll) {
-    viewport.scrollLeft = maxScroll;
-    setPostVoyagerVirtualScroll(postVoyagerVirtualScroll + (nextScroll - maxScroll));
-  } else if (nextScroll < 0) {
-    viewport.scrollLeft = 0;
-
-    if (postVoyagerProgress > 0) {
-      setPostVoyagerVirtualScroll(0);
-    }
-  } else {
-    if (postVoyagerProgress > 0) {
-      setPostVoyagerVirtualScroll(0);
-    }
-
-    viewport.scrollLeft = nextScroll;
-  }
-
-  updateReadout();
-}, { passive: false });
-
-viewport.addEventListener("touchend", () => {
-  if (!touchActive) return;
-
-  touchActive = false;
-
-  if (touchIntent === "horizontal") {
-    startInertia();
-  }
-
-  touchIntent = null;
-}, { passive: true });
-
-viewport.addEventListener("touchcancel", () => {
-  touchActive = false;
-  touchIntent = null;
-}, { passive: true });
-
-viewport.addEventListener("wheel", e => {
-  const maxScroll = viewport.scrollWidth - viewport.clientWidth;
-  const dominantDelta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-  const atRightEdge = viewport.scrollLeft >= maxScroll - 2;
-  const inPostVoyager = postVoyagerProgress > 0;
-
-  e.preventDefault();
-  stopInertia();
-  inertialVelocity = 0;
-
-  if ((atRightEdge && dominantDelta > 0) || inPostVoyager) {
-    setPostVoyagerVirtualScroll(postVoyagerVirtualScroll + dominantDelta);
-    viewport.scrollLeft = maxScroll;
-  } else {
-    const nextScroll = viewport.scrollLeft + dominantDelta;
-    viewport.scrollLeft = Math.max(0, Math.min(maxScroll, nextScroll));
-  }
-
-  updateReadout();
-}, { passive: false });
-
-function updateReadout() {
-  const maxScrollForPostVoyager = viewport.scrollWidth - viewport.clientWidth;
-  if (viewport.scrollLeft < maxScrollForPostVoyager - 4 && postVoyagerProgress > 0) {
-    setPostVoyagerVirtualScroll(0);
-  }
-
-  const scrollX = viewport.scrollLeft;
-  const maxScroll = viewport.scrollWidth - viewport.clientWidth;
-  const ratio = maxScroll > 0 ? scrollX / maxScroll : 0;
-
-  progress.style.width = `${Math.max(0, Math.min(1, ratio)) * 100}%`;
-
-  const centerPx = scrollX + viewport.clientWidth / 2;
-  const pxFromSun = centerPx - OFFSET;
-  const km = Math.max(0, Math.round(pxFromSun * MOON_DIAMETER_KM));
-
-  readout.textContent = formatDistanceByUnit(km);
-
-  renderRulerTicks();
-  setPostVoyagerProgress(postVoyagerProgress);
-}
-
-window.addEventListener("resize", () => {
-  syncSpaceWidthToMaxDistance();
-  updateReadout();
-});
-
-viewport.addEventListener("scroll", updateReadout, { passive: true });
-
-syncSpaceWidthToMaxDistance();
-applyRulerScale();
-updateReadout();
-
-/*requestAnimationFrame(() => {
-  viewport.scrollLeft = Math.max(0, kmToPx(specialMarkers[0].distance) + OFFSET - viewport.clientWidth / 2);
-  updateReadout();
-});*/
+resize();
+render();
 </script>
-
 </body>
 </html>
