@@ -105,7 +105,8 @@
     import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
     const app = document.getElementById("app");
-    const getRenderPixelRatio = () => Math.min(devicePixelRatio || 1, innerWidth < 760 ? 1.0 : 1.15);
+    let diskPixelRatioBias = 1;
+    const getRenderPixelRatio = () => Math.min(devicePixelRatio || 1, innerWidth < 760 ? 1.0 : 1.15) * diskPixelRatioBias;
     const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "default" });
     renderer.setPixelRatio(getRenderPixelRatio());
     renderer.setSize(innerWidth, innerHeight);
@@ -352,13 +353,6 @@
           const float R_OUT = 11.4;
           const float PHOTON_GAP = 0.72;
 
-          float hash(float n){ return fract(sin(n) * 43758.5453123); }
-          float noise(vec2 p){
-            vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
-            float a=hash(i.x+i.y*57.0), b=hash(i.x+1.0+i.y*57.0), c=hash(i.x+(i.y+1.0)*57.0), d=hash(i.x+1.0+(i.y+1.0)*57.0);
-            return mix(mix(a,b,f.x), mix(c,d,f.x), f.y);
-          }
-
           vec4 sampleDisk(vec3 p, vec3 rd, float order, float attenuation){
             float r = length(p.xz);
             float phi = atan(p.z, p.x);
@@ -371,30 +365,23 @@
             float photonDiskWindow = smoothstep(rPhoton - 2.2*wPhoton, rPhoton - 0.45*wPhoton, r) * (1.0 - smoothstep(rPhoton + 0.45*wPhoton, rPhoton + 2.2*wPhoton, r));
 
             float cleanGap = 1.0 - smoothstep(rPhoton + 2.2*wPhoton, rPhoton + PHOTON_GAP, r) * (1.0 - smoothstep(mainInner, mainInner + 0.18, r));
-            float radialWindow = mainDiskWindow;
             float omega = 2.8 / pow(max(r, 2.7), 1.5);
 
             float ringPhase = r;
             float wideRings = 0.0;
             wideRings += 0.72 * exp(-pow(sin(ringPhase * 2.35 + 0.15) / 0.31, 2.0));
             wideRings += 0.54 * exp(-pow(sin(ringPhase * 3.15 + 1.20) / 0.22, 2.0));
-            wideRings += 0.42 * exp(-pow(sin(ringPhase * 4.60 + 2.10) / 0.17, 2.0));
 
             float thinRings = 0.0;
             thinRings += 0.44 * pow(smoothstep(0.50, 1.00, 0.5 + 0.5 * sin(ringPhase * 6.80 + 0.40)), 2.7);
-            thinRings += 0.32 * pow(smoothstep(0.56, 1.00, 0.5 + 0.5 * sin(ringPhase * 9.70 + 2.80)), 3.8);
-            thinRings += 0.22 * pow(smoothstep(0.62, 1.00, 0.5 + 0.5 * sin(ringPhase * 13.40 + 1.70)), 5.0);
 
-            float microRings = 0.14 * pow(0.5 + 0.5 * sin(ringPhase * 18.0 + 0.8 * sin(phi * 2.0)), 8.0);
-            float ringField = clamp(wideRings + thinRings + microRings, 0.0, 2.15);
+            float ringField = clamp(wideRings + thinRings, 0.0, 1.85);
 
             float slowAzimuth = 0.5 + 0.5 * sin(phi * 3.0 - uTime * omega * 2.2 + 0.45 * sin(r * 0.8));
-            float fineAzimuth = 0.5 + 0.5 * sin(phi * 9.0 - uTime * omega * 4.4 + r * 0.32);
-            float azimuthMod = 0.82 + 0.14 * slowAzimuth + 0.06 * fineAzimuth;
-            float cleanTexture = 0.97 + 0.03 * noise(vec2(phi * 2.0, r * 1.1 - uTime * 0.08));
+            float azimuthMod = 0.86 + 0.14 * slowAzimuth;
 
-            float density = mainDiskWindow * (0.22 + 0.95 * ringField) * azimuthMod * cleanTexture;
-            density += photonDiskWindow * (1.20 + 3.40 * photonCore) * (0.92 + 0.08 * fineAzimuth);
+            float density = mainDiskWindow * (0.24 + 0.92 * ringField) * azimuthMod;
+            density += photonDiskWindow * (1.20 + 3.40 * photonCore) * (0.95 + 0.05 * slowAzimuth);
             density *= cleanGap;
 
             float temp = pow(1.0 - smoothstep(rPhoton, R_OUT, r), 1.58);
@@ -450,10 +437,10 @@
             float travel = 0.0;
             float order = 0.0;
 
-            for(int i=0; i<92; i++){
+            for(int i=0; i<60; i++){
               float r = length(p);
               if(r < EH) break;
-              float stepLen = clamp(0.040 * r + 0.045 * travel, 0.050, 2.25);
+              float stepLen = clamp(0.052 * r + 0.060 * travel, 0.070, 3.05);
               vec3 prev = p;
               prevY = p.y;
 
@@ -481,7 +468,7 @@
                   if(accum.a > 0.93) break;
                 }
               }
-              if(travel > 220.0) break;
+              if(travel > 200.0) break;
             }
 
             if(accum.a < 0.004) discard;
@@ -1273,6 +1260,11 @@
       }
     }
 
+    function setDiskPerformanceMode(on){
+      diskPixelRatioBias = on ? (innerWidth < 760 ? 0.88 : 0.92) : 1;
+      renderer.setPixelRatio(getRenderPixelRatio());
+    }
+
     function bindSwitch(id, key, target){
       const el = document.getElementById(id);
       if(!el) return;
@@ -1292,6 +1284,7 @@
         params[key] = !params[key];
         el.classList.toggle("on", params[key]);
         setObjectVisible(target, params[key]);
+        if(key === "disk") setDiskPerformanceMode(params[key]);
       }, true);
     }
 
@@ -1307,6 +1300,7 @@
     bindSwitch("gridToggle","grid",gridGroup);
     bindSwitch("backgroundToggle","background",backgroundPlane);
     bindSwitch("diskToggle","disk",diskTracer);
+    setDiskPerformanceMode(params.disk);
 
     document.getElementById("addParticleToggle").addEventListener("click", () => {
       setAddParticleMode(!params.addParticleMode);
