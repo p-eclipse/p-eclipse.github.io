@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Gargantua-like Black Hole Simulation</title>
+  <title>Black Hole Simulation</title>
   <style>
     * { box-sizing: border-box; }
     html, body {
@@ -78,22 +78,23 @@
 <body>
   <div id="app"></div>
   <section class="hud">
-    <h1>Gargantua-like Kerr Visualizer</h1>
+    <h1>Kerr Black Hole Visualizer</h1>
     <p>
-      중력렌즈 배경 토글을 추가했습니다. 업로드한 이미지는 HTML과 같은 폴더에 1800.jpg로 두면 배경 텍스처로 사용되고, 로드 실패 시 절차적 성운 배경으로 대체됩니다. 배경은 블랙홀 주변에서 근사 중력렌즈 굴절과 Kerr-like swirl을 받아 휘어져 보입니다.
+      일반상대성이론의 주요 해 중 하나인 Kerr metric을 따르는 블랙홀의 시각화입니다.
     </p>
   </section>
   <section class="controls">
     <div class="row"><label>3D 시공간 좌표축</label><button id="gridToggle" class="switch on"></button></div>
     <div class="row"><label>중력렌즈 배경</label><button id="backgroundToggle" class="switch on"></button></div>
     <div class="row"><label>강착원반</label><button id="diskToggle" class="switch on"></button></div>
+    <div class="row"><label>블랙홀 그림자</label><button id="shadowToggle" class="switch on"></button></div>
     <div class="row"><label>입자 추가 모드</label><button id="addParticleToggle" class="switch"></button></div>
     <div class="sliderRow"><label>블랙홀 질량</label><input id="massSlider" type="range" min="0.35" max="1.70" step="0.01" value="0.92"><span id="massValue" class="value">0.92</span></div>
     <div class="sliderRow"><label>블랙홀 회전</label><input id="spinSlider" type="range" min="0" max="1.80" step="0.01" value="0.72"><span id="spinValue" class="value">0.72</span></div>
     <div class="sliderRow"><label>관찰자 시간</label><input id="timeSlider" type="range" min="0.05" max="3.00" step="0.01" value="1.00"><span id="timeValue" class="value">1.00</span></div>
     <div class="sliderRow"><label>격자 밝기</label><input id="gridBrightSlider" type="range" min="0.25" max="3.50" step="0.01" value="2.10"><span id="gridBrightValue" class="value">2.10</span></div>
   </section>
-  <div class="badge">Drag: orbit camera · Wheel/Pinch: zoom · test particles optional</div>
+  <div class="badge">Left drag: phi/theta · Right drag: pan · Wheel/Pinch: zoom</div>
   <div id="addModeBanner" class="addModeBanner">입자 추가 모드 ON · 원하는 지점을 클릭하면 백색 시험입자가 생성됩니다</div>
 
   <script type="importmap">
@@ -103,6 +104,8 @@
   <script type="module">
     import * as THREE from "three";
     import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+    THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
     const app = document.getElementById("app");
     let diskPixelRatioBias = 1;
@@ -119,7 +122,8 @@
     scene.fog = new THREE.FogExp2(0x02030a, 0.012);
 
     const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.04, 1600);
-    camera.position.set(0, 10, 25);
+    camera.up.set(0, 0, 1);
+    camera.position.set(0, -24, 8.5);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -128,12 +132,23 @@
     controls.zoomSpeed = 0.62;
     controls.minDistance = 7;
     controls.maxDistance = 120;
-    controls.target.set(0, 0.4, 0);
+    controls.target.set(0, 0.0, 0);
+    controls.mouseButtons = {
+      LEFT: THREE.MOUSE.ROTATE,
+      MIDDLE: THREE.MOUSE.DOLLY,
+      RIGHT: THREE.MOUSE.PAN
+    };
+    controls.touches = {
+      ONE: THREE.TOUCH.ROTATE,
+      TWO: THREE.TOUCH.DOLLY_PAN
+    };
+    renderer.domElement.addEventListener("contextmenu", e => e.preventDefault());
 
     const params = {
       background: true,
       grid: true,
       disk: true,
+      shadow: true,
       particles: true,
       addParticleMode: false,
       spin: 0.72,
@@ -143,14 +158,57 @@
     };
 
     const clock = new THREE.Clock();
+    const HORIZON_GEOMETRY_RADIUS = 2.05;
+    const SCHWARZSCHILD_SHADOW_RS = 2.598076211;
+    const MAX_KERR_SPIN = 0.998;
+
+    function spinUnit(){
+      return THREE.MathUtils.clamp(params.spin / 1.8, 0, MAX_KERR_SPIN);
+    }
+
+    function schwarzschildRadiusWorld(){
+      return HORIZON_GEOMETRY_RADIUS * (0.72 + 0.30 * params.mass);
+    }
+
+    function kerrMassWorld(){
+      return 0.5 * schwarzschildRadiusWorld();
+    }
+
+    function kerrHorizonWorldRadius(){
+      const chi = spinUnit();
+      const M = kerrMassWorld();
+      return M * (1 + Math.sqrt(Math.max(1 - chi * chi, 0.000001)));
+    }
+
+    function kerrShadowWorldRadius(){
+      const chi = spinUnit();
+      const chi2 = chi * chi;
+      const flatteningApprox = 1 - 0.045 * chi2 - 0.015 * chi2 * chi2;
+      return SCHWARZSCHILD_SHADOW_RS * schwarzschildRadiusWorld() * flatteningApprox;
+    }
+
     const uniforms = {
       uTime: { value: 0 },
       uSpin: { value: params.spin },
       uLensMass: { value: params.mass },
       uFlow: { value: params.mass },
       uGridBright: { value: params.gridBright },
-      uCameraPos: { value: camera.position.clone() }
+      uCameraPos: { value: camera.position.clone() },
+      uBlackHoleM: { value: kerrMassWorld() },
+      uHorizonRadius: { value: kerrHorizonWorldRadius() },
+      uShadowRadius: { value: kerrShadowWorldRadius() },
+      uScreenShadowRadius: { value: 0.28 },
+      uSpinUnit: { value: spinUnit() },
+      uShadowEnabled: { value: params.shadow ? 1 : 0 }
     };
+
+    function updateKerrUniforms(){
+      uniforms.uBlackHoleM.value = kerrMassWorld();
+      uniforms.uHorizonRadius.value = kerrHorizonWorldRadius();
+      uniforms.uShadowRadius.value = kerrShadowWorldRadius();
+      uniforms.uSpinUnit.value = spinUnit();
+      uniforms.uShadowEnabled.value = params.shadow ? 1 : 0;
+    }
 
     scene.add(new THREE.AmbientLight(0x8fa8ff, 0.12));
 
@@ -212,6 +270,10 @@
       uLensMass: uniforms.uLensMass,
       uSpin: uniforms.uSpin,
       uCameraPos: uniforms.uCameraPos,
+      uBlackHoleM: uniforms.uBlackHoleM,
+      uShadowRadius: uniforms.uShadowRadius,
+      uSpinUnit: uniforms.uSpinUnit,
+      uShadowEnabled: uniforms.uShadowEnabled,
       uBgMap: { value: makeFallbackBackgroundTexture() }
     };
 
@@ -238,6 +300,10 @@
           uniform vec3 uCameraPos;
           uniform float uLensMass;
           uniform float uSpin;
+          uniform float uBlackHoleM;
+          uniform float uShadowRadius;
+          uniform float uSpinUnit;
+          uniform float uShadowEnabled;
 
           const float PI = 3.141592653589793;
           const float TAU = 6.283185307179586;
@@ -247,9 +313,9 @@
             return vec2(atan(d.x, d.z) / TAU + 0.5, asin(clamp(d.y, -1.0, 1.0)) / PI + 0.5);
           }
 
-          vec3 rotateY(vec3 p, float a){
+          vec3 rotateZ(vec3 p, float a){
             float c = cos(a), s = sin(a);
-            return vec3(c * p.x - s * p.z, p.y, s * p.x + c * p.z);
+            return vec3(c * p.x - s * p.y, s * p.x + c * p.y, p.z);
           }
 
           void main(){
@@ -261,20 +327,20 @@
             float b = length(closest) + 0.16;
             vec3 bendDir = normalize(-closest + vec3(0.0001));
 
-            float M = 0.85 + 0.80 * uLensMass;
+            float M = uBlackHoleM;
             float bend = clamp((4.0 * M / b) * smoothstep(58.0, 2.4, b), 0.0, 1.52);
             vec3 lensed = normalize(rd + bendDir * bend);
 
-            float spin01 = clamp(uSpin / 1.80, 0.0, 1.0);
-            float swirl = spin01 * M * M / (b * b + 1.35) * smoothstep(42.0, 2.2, b) * 1.65;
-            lensed = rotateY(lensed, swirl);
+            float spin01 = uSpinUnit;
+            float swirl = spin01 * M * M / (b * b + 0.85) * smoothstep(55.0, 1.8, b) * 5.5;
+            lensed = rotateZ(lensed, swirl);
 
             vec3 col = texture2D(uBgMap, dirToUV(lensed)).rgb;
 
-            float shadow = 1.0 - smoothstep(2.20 + 0.65 * M, 6.25 + 1.10 * M, b);
-            col *= 1.0 - 0.84 * shadow;
+            float shadow = 1.0 - smoothstep(uShadowRadius * 0.74, uShadowRadius * 1.16, b);
+            col *= 1.0 - uShadowEnabled * 0.84 * shadow;
 
-            float ring = exp(-pow((b - (6.2 + 1.05 * M)) / 0.74, 2.0));
+            float ring = exp(-pow((b - uShadowRadius * 1.16) / 0.74, 2.0));
             col += ring * vec3(0.45, 0.62, 0.92) * 0.18;
             col *= 0.76;
             gl_FragColor = vec4(col, 1.0);
@@ -326,153 +392,252 @@
         side: THREE.DoubleSide,
         vertexShader: `
           varying vec3 vWorld;
-          void main(){ vec4 w = modelMatrix * vec4(position,1.0); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }
+          varying vec2 vPlane;
+          void main(){
+            vPlane = position.xy / 60.0;
+            vec4 w = modelMatrix * vec4(position,1.0);
+            vWorld = w.xyz;
+            gl_Position = projectionMatrix * viewMatrix * w;
+          }
         `,
         fragmentShader: `
           precision highp float;
           varying vec3 vWorld;
+          varying vec2 vPlane;
           uniform vec3 uCameraPos;
           uniform float uTime;
           uniform float uSpin;
           uniform float uLensMass;
+          uniform float uBlackHoleM;
+          uniform float uHorizonRadius;
+          uniform float uShadowRadius;
+          uniform float uScreenShadowRadius;
+          uniform float uSpinUnit;
+          uniform float uShadowEnabled;
           float eventHorizonRadius(){
-            return 2.05 * (0.72 + 0.30 * uLensMass);
+            return uHorizonRadius;
           }
-          float photonOrbitRadius(){
-            float EH = eventHorizonRadius();
-            return EH * 1.50;
+          float iscoRadius(){
+            float M = uBlackHoleM;
+            float chi = clamp(uSpinUnit, 0.0, 0.998);
+            float chi2 = chi * chi;
+            float z1 = 1.0 + pow(1.0 - chi2, 1.0 / 3.0) * (pow(1.0 + chi, 1.0 / 3.0) + pow(1.0 - chi, 1.0 / 3.0));
+            float z2 = sqrt(3.0 * chi2 + z1 * z1);
+            return M * (3.0 + z2 - sqrt(max((3.0 - z1) * (3.0 + z1 + 2.0 * z2), 0.0)));
           }
           float apparentShadowRadius(){
-            float EH = eventHorizonRadius();
-            return EH * 2.598076;
+            return uShadowRadius;
           }
-          float photonRingHalfWidth(){
-            return max(0.055, eventHorizonRadius() * 0.035);
+          const float R_OUT = 17.0;
+
+          float diskInnerRadius(){
+            float rISCO = iscoRadius();
+            return max(rISCO, eventHorizonRadius() + 0.55);
           }
-          const float R_IN = 3.12;
-          const float R_OUT = 11.4;
-          const float PHOTON_GAP = 0.72;
+
+          float softBand(float r, float center, float width){
+            return exp(-pow((r - center) / width, 2.0));
+          }
 
           vec4 sampleDisk(vec3 p, vec3 rd, float order, float attenuation){
-            float r = length(p.xz);
-            float phi = atan(p.z, p.x);
-            float rPhoton = photonOrbitRadius();
-            float wPhoton = photonRingHalfWidth();
-            float mainInner = max(R_IN, rPhoton + PHOTON_GAP);
+            float r = length(p.xy);
+            float phi = atan(p.y, p.x);
+            float mainInner = diskInnerRadius();
 
-            float mainDiskWindow = smoothstep(mainInner, mainInner + 0.16, r) * (1.0 - smoothstep(R_OUT - 0.55, R_OUT, r));
-            float photonCore = exp(-pow((r - rPhoton) / wPhoton, 2.0));
-            float photonDiskWindow = smoothstep(rPhoton - 2.2*wPhoton, rPhoton - 0.45*wPhoton, r) * (1.0 - smoothstep(rPhoton + 0.45*wPhoton, rPhoton + 2.2*wPhoton, r));
-
-            float cleanGap = 1.0 - smoothstep(rPhoton + 2.2*wPhoton, rPhoton + PHOTON_GAP, r) * (1.0 - smoothstep(mainInner, mainInner + 0.18, r));
+            float mainDiskWindow = smoothstep(mainInner - 0.03, mainInner + 0.05, r) * (1.0 - smoothstep(R_OUT - 4.0, R_OUT + 0.15, r));
             float omega = 2.8 / pow(max(r, 2.7), 1.5);
 
-            float ringPhase = r;
-            float wideRings = 0.0;
-            wideRings += 0.72 * exp(-pow(sin(ringPhase * 2.35 + 0.15) / 0.31, 2.0));
-            wideRings += 0.54 * exp(-pow(sin(ringPhase * 3.15 + 1.20) / 0.22, 2.0));
-
-            float thinRings = 0.0;
-            thinRings += 0.44 * pow(smoothstep(0.50, 1.00, 0.5 + 0.5 * sin(ringPhase * 6.80 + 0.40)), 2.7);
-
-            float ringField = clamp(wideRings + thinRings, 0.0, 1.85);
+            float disk01 = clamp((r - mainInner) / max(R_OUT - mainInner, 0.001), 0.0, 1.0);
+            float ringField = 0.0;
+            ringField += 0.10 * softBand(r, mainInner + 0.46, 0.180);
+            ringField += 0.12 * softBand(r, mainInner + 0.92, 0.220);
+            ringField += 0.14 * softBand(r, mainInner + 1.50, 0.300);
+            ringField += 0.12 * softBand(r, mainInner + 2.14, 0.390);
+            ringField += 0.10 * softBand(r, mainInner + 2.25, 0.245);
+            ringField += 0.070 * softBand(r, mainInner + 3.10, 0.230);
+            ringField += 0.048 * softBand(r, mainInner + 4.25, 0.340);
+            ringField += 0.030 * softBand(r, mainInner + 5.82, 0.540);
+            ringField *= smoothstep(mainInner + 0.10, mainInner + 0.70, r);
+            ringField *= 1.0 - smoothstep(0.70, 1.0, disk01);
+            ringField = clamp(ringField * 1.72, 0.0, 0.72);
 
             float slowAzimuth = 0.5 + 0.5 * sin(phi * 3.0 - uTime * omega * 2.2 + 0.45 * sin(r * 0.8));
-            float azimuthMod = 0.86 + 0.14 * slowAzimuth;
+            float azimuthReach = smoothstep(mainInner + 0.80, mainInner + 2.60, r);
+            float azimuthMod = 0.97 + 0.03 * slowAzimuth * azimuthReach;
 
-            float density = mainDiskWindow * (0.24 + 0.92 * ringField) * azimuthMod;
-            density += photonDiskWindow * (1.20 + 3.40 * photonCore) * (0.95 + 0.05 * slowAzimuth);
-            density *= cleanGap;
+            float innerRim = exp(-pow((r - mainInner) / 0.26, 2.0)) * step(mainInner - 0.1, r);
+            float smoothBody = 0.44 + 0.46 * ringField + 1.8 * innerRim;
+            float innerMist = exp(-pow((r - (mainInner + 2.8)) / 4.5, 2.0));
+            float density = mainDiskWindow * (smoothBody + 0.22 * innerMist) * azimuthMod;
+            float shadowInteriorFade = smoothstep(apparentShadowRadius() * 0.66, apparentShadowRadius() * 0.88, r);
+            density *= mix(1.0, shadowInteriorFade, uShadowEnabled);
 
-            float temp = pow(1.0 - smoothstep(rPhoton, R_OUT, r), 1.58);
-            vec3 col = mix(vec3(0.95, .34, .10), vec3(1.0, .70, .36), temp);
-            col = mix(col, vec3(1.0, .93, .76), pow(temp, 2.55) * .70);
-            col = mix(col, vec3(1.0, .92, .66), photonDiskWindow * 0.72);
-            vec3 tangent = normalize(vec3(-sin(phi), 0.0, cos(phi)));
+            float temp = pow(1.0 - smoothstep(mainInner, R_OUT, r), 1.58);
+            vec3 col = mix(vec3(0.98, .45, .24), vec3(1.0, .80, .62), temp);
+            col = mix(col, vec3(1.0, .94, .88), pow(temp, 2.30) * .82);
+            vec3 tangent = normalize(vec3(-sin(phi), cos(phi), 0.0));
 
-            float Mbh = 0.78 + 0.68 * uLensMass;
-            float spin01 = clamp(uSpin / 1.80, 0.0, 1.0);
-            float aKerr = 0.98 * spin01 * Mbh;
-            float spinSign = sign(uSpin + 0.0001);
+            float Mbh = uBlackHoleM;
+            float spin01 = uSpinUnit;
+            float aKerr = spin01 * Mbh;
 
-            float rH = Mbh + sqrt(max(Mbh*Mbh - aKerr*aKerr, 0.001));
+            float rH = eventHorizonRadius();
             float rEff = max(r, rH + 0.18);
             float localCompactness = clamp(Mbh / max(rEff, 0.001), 0.0, 0.48);
 
             float betaSchw = sqrt(clamp(Mbh / max(rEff, 2.05 * Mbh), 0.0, 0.62));
-            float frameDraggingBeta = 0.34 * spin01 * localCompactness * localCompactness * smoothstep(10.5, 2.7, rEff);
-            float beta = clamp(betaSchw + frameDraggingBeta, 0.015, 0.78);
+            float frameDraggingBeta = 0.85 * spin01 * localCompactness * localCompactness * smoothstep(10.5, 2.7, rEff);
+            float beta = clamp(betaSchw + frameDraggingBeta, 0.015, 0.88);
             float gamma = inversesqrt(max(1.0 - beta * beta, 0.04));
-            float cosLOS = clamp(dot(tangent * spinSign, -rd), -0.985, 0.985);
+            float cosLOS = clamp(dot(tangent, -rd), -0.985, 0.985);
             float doppler = 1.0 / max(gamma * (1.0 - beta * cosLOS), 0.16);
 
-            float gravShift = sqrt(clamp(1.0 - 2.0 * Mbh / max(rEff, 2.0 * Mbh + 0.10), 0.10, 1.0));
+            float cosThetaK = clamp(p.z / max(rEff, 0.001), -1.0, 1.0);
+            float sinThetaK = sqrt(max(1.0 - cosThetaK * cosThetaK, 0.0));
+            float rho2 = rEff * rEff + aKerr * aKerr * cosThetaK * cosThetaK;
+            float delta = rEff * rEff - 2.0 * Mbh * rEff + aKerr * aKerr;
+            float sigma2 = (rEff * rEff + aKerr * aKerr) * (rEff * rEff + aKerr * aKerr) - aKerr * aKerr * delta * sinThetaK * sinThetaK;
+            float gravShift = sqrt(clamp(rho2 * delta / max(sigma2, 0.001), 0.025, 1.0));
             float gPhysical = doppler * gravShift;
 
-            float shiftGain = 0.82 + 0.42 * uLensMass + 0.46 * spin01 * smoothstep(9.5, 3.0, rEff);
-            float gShift = clamp(1.0 + (gPhysical - 1.0) * shiftGain, 0.28, 2.25);
-            float intensityShift = pow(max(gShift, 0.05), 3.0);
+            float shiftGain = 1.06 + 0.70 * uLensMass + 2.2 * spin01 * smoothstep(9.5, 3.0, rEff);
+            float gShift = clamp(1.0 + (gPhysical - 1.0) * shiftGain, 0.10, 3.8);
+            float intensityShift = pow(max(gShift, 0.05), 4.2);
 
-            vec3 redShiftCol = vec3(1.0, 0.24, 0.07);
-            vec3 blueShiftCol = vec3(0.62, 0.82, 1.0);
-            col = mix(col, redShiftCol, smoothstep(0.96, 0.46, gShift) * (0.54 + 0.24 * uLensMass));
-            col = mix(col, blueShiftCol, smoothstep(1.02, 1.62, gShift) * (0.56 + 0.30 * spin01));
-            col = mix(col, vec3(1.0), smoothstep(1.24, 1.92, gShift) * 0.34);
+            float edgeDust = smoothstep(R_OUT - 3.7, R_OUT - 0.28, r);
+            float softRim = smoothstep(R_OUT - 3.5, R_OUT - 0.62, r) * (1.0 - smoothstep(R_OUT - 0.70, R_OUT + 0.08, r));
+            float broadCloud = 0.86 + 0.14 * sin(r * 0.72 - uTime * (0.10 + 0.10 * spin01));
+            float outerTransparency = 1.0 - smoothstep(R_OUT - 4.6, R_OUT + 0.05, r);
+            float outerTransmission = mix(1.0, 0.62, edgeDust * (0.34 + 0.22 * smoothstep(0.45, 1.0, localCompactness + spin01 * 0.35)));
+            outerTransmission *= mix(1.0, 0.86, softRim * (1.0 - broadCloud));
+            float lensedW = clamp(order, 0.0, 1.0);
+            density *= mix(outerTransmission, 1.0, lensedW * 0.72);
+            density *= mix(1.0, outerTransparency, 0.82 * (1.0 - lensedW * 0.88));
 
-            float beaming = 0.72 + 0.42 * intensityShift;
-            float innerBright = 1.0 + 1.35 * exp(-abs(r - 3.28) * 1.75) + photonDiskWindow * 2.85;
-            float alpha = density * beaming * innerBright * attenuation * (1.0 + 0.66 * order);
-            alpha *= 1.18;
-            return vec4(col * alpha * (2.28 + 0.72 * intensityShift), alpha);
+            float highlightBand = smoothstep(mainInner + 0.90, mainInner + 2.35, r) * (1.0 - smoothstep(R_OUT - 2.8, R_OUT - 0.65, r));
+            float highlightPhase = 4.0 * phi - uTime * omega * (8.0 + 5.0 * spin01) + r * 0.42;
+            float rotationHighlight = highlightBand * pow(smoothstep(0.58, 1.0, 0.5 + 0.5 * sin(highlightPhase)), 2.6);
+            rotationHighlight *= (0.24 + 0.72 * spin01) * (0.58 + 0.42 * smoothstep(-0.20, 0.86, cosLOS));
+            density *= 1.0 + 0.24 * rotationHighlight;
+
+            vec3 redShiftCol = vec3(1.0, 0.30, 0.13);
+            vec3 blueShiftCol = vec3(0.68, 0.88, 1.0);
+            col = mix(col, redShiftCol, smoothstep(1.02, 0.26, gShift) * (0.82 + 0.18 * uLensMass));
+            col = mix(col, blueShiftCol, smoothstep(1.04, 2.50, gShift) * (0.84 + 0.16 * spin01));
+            col = mix(col, vec3(1.0, 0.98, 0.94), smoothstep(1.20, 2.90, gShift) * 0.80);
+            col = mix(col, vec3(1.0, 0.94, 0.80), rotationHighlight * 0.64);
+
+            float beaming = 0.86 + 0.28 * intensityShift;
+            float innerBright = 1.0 + 0.42 * exp(-abs(r - (mainInner + 0.88)) * 0.70);
+            float orderFade = exp(-1.30 * order);
+            float alpha = density * beaming * innerBright * attenuation * orderFade;
+            alpha *= 0.78;
+            return vec4(col * alpha * (1.72 + 0.50 * intensityShift), alpha);
+          }
+
+          vec4 cinematicGlow(){
+            vec2 q = vPlane;
+            float spin01 = uSpinUnit;
+            float mass01 = clamp((uLensMass - 0.35) / 1.35, 0.0, 1.0);
+
+            // 관찰자 기울기: spin축(+z)에서 벗어난 정도. 극(+z)→0, 적도→1
+            // θ=0(face-on)에선 D형/비대칭이 물리적으로 0이어야 함
+            float camLen = max(length(uCameraPos), 0.001);
+            float inclW = length(uCameraPos.xy) / camLen;   // sin(inclination from spin axis)
+
+            float flowSide = q.x;
+            float approaching = smoothstep(-0.18, 0.72, flowSide) * spin01 * inclW;
+            float receding = smoothstep(-0.18, 0.92, -flowSide) * spin01 * inclW;
+
+            float shadowRadius = max(uScreenShadowRadius, 0.035);
+            float screenR = length(q);
+            // Kerr D-shape: inclW=0(face-on)이면 완전한 원, inclW=1(edge-on)이면 최대 D형
+            float dFrac = 0.5 + 0.5 * smoothstep(-shadowRadius, shadowRadius, q.x);
+            float dShapeR = shadowRadius * (1.0 + spin01 * inclW * 0.32 * (0.5 - dFrac));
+            float rimOffset = max(0.006, shadowRadius * 0.028) + 0.002 * mass01;
+            float photonRimRadius = dShapeR + rimOffset;
+            float photonRimWidth = max(0.0042, shadowRadius * mix(0.026, 0.014, spin01));
+            float photonRim = exp(-pow((screenR - photonRimRadius) / photonRimWidth, 2.0));
+            float photonOutside = smoothstep(dShapeR + 0.001, dShapeR + rimOffset * 0.82, screenR);
+            photonRim *= mix(1.0, photonOutside, uShadowEnabled);
+            photonRim *= 0.90 + 0.16 * smoothstep(0.03, 0.22, abs(q.y));
+
+            float relativisticBoost = 0.62 + approaching * (2.6 + 1.4 * spin01) + mass01 * 0.18 - receding * 0.60;
+            float intensity = photonRim * (1.18 + 0.26 * mass01) * relativisticBoost;
+
+            vec3 blueWhite = vec3(0.52, 0.80, 1.0);
+            vec3 warmWhite = vec3(1.0, 0.91, 0.84);
+            vec3 redWarm = vec3(1.0, 0.22, 0.08);
+            vec3 col = mix(redWarm, warmWhite, clamp(photonRim + 0.46, 0.0, 1.0));
+            col = mix(col, blueWhite, approaching * (0.82 + 0.50 * spin01));
+            col = mix(col, redWarm, receding * (0.75 + 0.25 * mass01));
+            col = mix(col, vec3(1.0, 0.94, 0.90), clamp(photonRim * 1.25, 0.0, 1.0));
+            return vec4(col * intensity * 1.18, clamp(intensity * 0.62, 0.0, 0.72));
           }
 
           void main(){
             vec3 ro = uCameraPos;
             vec3 rd = normalize(vWorld - ro);
             vec3 p = ro;
-            float prevY = p.y;
+            float prevZ = p.z;
             vec4 accum = vec4(0.0);
-            float M = 0.78 + 0.68 * uLensMass;
+            float M = uBlackHoleM;
             float EH = eventHorizonRadius();
             float travel = 0.0;
             float order = 0.0;
+            float foregroundDisk = 0.0;
 
-            for(int i=0; i<60; i++){
+            for(int i=0; i<72; i++){
               float r = length(p);
               if(r < EH) break;
-              float stepLen = clamp(0.052 * r + 0.060 * travel, 0.070, 3.05);
+              float stepLen = clamp(0.060 * r + 0.070 * travel, 0.085, 3.35);
               vec3 prev = p;
-              prevY = p.y;
+              prevZ = p.z;
 
               vec3 radialBend = -normalize(p) * (1.65 * M / max(r*r, 0.36));
-              vec3 frameDir = normalize(vec3(-p.z, 0.0, p.x) + vec3(0.0001,0.0,0.0));
-              float frame = uSpin * M / max(r*r*r, 0.85);
+              vec3 frameDir = normalize(vec3(-p.y, p.x, 0.0) + vec3(0.0001,0.0,0.0));
+              float frame = 2.0 * uSpinUnit * M * M / max(r*r*r, 0.85);
               rd = normalize(rd + radialBend * stepLen + frameDir * frame * stepLen * 0.24);
               p += rd * stepLen;
               travel += stepLen;
 
-              if((prevY > 0.0 && p.y <= 0.0) || (prevY < 0.0 && p.y >= 0.0)){
-                float f = abs(prevY) / max(abs(prevY - p.y), 0.00001);
+              if((prevZ > 0.0 && p.z <= 0.0) || (prevZ < 0.0 && p.z >= 0.0)){
+                float f = abs(prevZ) / max(abs(prevZ - p.z), 0.00001);
                 vec3 hp = mix(prev, p, f);
-                float rr = length(hp.xz);
-                float rp = photonOrbitRadius();
-                float wp = photonRingHalfWidth();
-                float mainStart = max(R_IN, rp + PHOTON_GAP);
-                if(((rr > rp - 2.5 * wp && rr < rp + 2.5 * wp) || rr > mainStart) && rr < R_OUT){
-                  float distanceComp = 1.0 + 0.006 * min(travel, 160.0);
-                  float travelFade = exp(-0.00045 * max(travel - 25.0, 0.0));
+                float rr = length(hp.xy);
+                float mainStart = diskInnerRadius();
+                if(rr > mainStart && rr < R_OUT){
+                  float distanceComp = 1.0 / (1.0 + 0.004 * min(travel, 160.0));
+                  float travelFade = exp(-0.0011 * max(travel - 15.0, 0.0));
                   vec4 c = sampleDisk(hp, rd, order, distanceComp * travelFade * (1.0 - accum.a));
                   accum.rgb += c.rgb * (1.0 - accum.a);
                   accum.a += c.a * (1.0 - accum.a);
-                  order += 0.72;
-                  if(accum.a > 0.93) break;
+                  if(order < 0.5){
+                    float hitT = length(hp - ro);
+                    float centerT = max(dot(-ro, rd), 0.0);
+                    foregroundDisk = step(hitT, centerT);
+                  }
+                  order += 1.0;
+                  if(accum.a > 0.95) break;
                 }
               }
-              if(travel > 200.0) break;
+              if(travel > 240.0) break;
             }
 
+            float dCutCamLen = max(length(uCameraPos), 0.001);
+            float dCutInclW = length(uCameraPos.xy) / dCutCamLen;
+            float dCutFrac = 0.5 + 0.5 * smoothstep(-uScreenShadowRadius, uScreenShadowRadius, vPlane.x);
+            float dCutR = uScreenShadowRadius * (1.0 + uSpinUnit * dCutInclW * 0.32 * (0.5 - dCutFrac));
+            float screenR = length(vPlane);
+            float shadowCut = smoothstep(dCutR - 0.006, dCutR + 0.018, screenR);
+            accum.rgb *= mix(1.0, shadowCut, uShadowEnabled * (1.0 - foregroundDisk));
+            accum.a *= mix(1.0, shadowCut, uShadowEnabled * (1.0 - foregroundDisk));
+
+            vec4 glow = cinematicGlow();
+            accum.rgb += glow.rgb * (1.0 - accum.a * 0.35);
+            accum.a = clamp(accum.a + glow.a * (1.0 - accum.a * 0.35), 0.0, 0.96);
             if(accum.a < 0.004) discard;
-            gl_FragColor = vec4(accum.rgb, clamp(accum.a, 0.0, 0.96));
+            gl_FragColor = vec4(accum.rgb, accum.a);
           }
         `
       })
@@ -484,12 +649,12 @@
 
     function createJet(sign){
       const geo = new THREE.ConeGeometry(1.05, 22, 48, 1, true);
-      geo.translate(0, sign * 11, 0);
-      if(sign < 0) geo.rotateX(Math.PI);
+      geo.rotateX(sign > 0 ? Math.PI * 0.5 : -Math.PI * 0.5);
+      geo.translate(0, 0, sign * 11);
       const mat = new THREE.ShaderMaterial({
         uniforms: { uTime: uniforms.uTime }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
         vertexShader: `varying vec3 vPos; void main(){ vPos=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-        fragmentShader: `varying vec3 vPos; uniform float uTime; void main(){ float h=abs(vPos.y)/22.0; float r=length(vPos.xz); float core=exp(-r*3.8)*(1.0-smoothstep(.05,1.0,h)); float pulse=.62+.38*sin(uTime*7.0-h*28.0); vec3 col=mix(vec3(.34,.68,1.0),vec3(1.0,.82,.50),core)*pulse; float a=core*.28*(1.0-h); gl_FragColor=vec4(col*a*2.2,a); }`
+        fragmentShader: `varying vec3 vPos; uniform float uTime; void main(){ float h=abs(vPos.z)/22.0; float r=length(vPos.xy); float core=exp(-r*3.8)*(1.0-smoothstep(.05,1.0,h)); float pulse=.62+.38*sin(uTime*7.0-h*28.0); vec3 col=mix(vec3(.34,.68,1.0),vec3(1.0,.82,.50),core)*pulse; float a=core*.28*(1.0-h); gl_FragColor=vec4(col*a*2.2,a); }`
       });
       return new THREE.Mesh(geo, mat);
     }
@@ -513,33 +678,36 @@
           uniform float uSpin;
           uniform float uFlow;
           uniform float uGridBright;
+          uniform float uBlackHoleM;
+          uniform float uHorizonRadius;
+          uniform float uSpinUnit;
 
           const float EPS = 0.0001;
 
           float kerrR(vec3 p, float a){
             float R2 = dot(p, p);
             return sqrt(max(
-              0.5 * (R2 - a*a) + 0.5 * sqrt((R2 - a*a) * (R2 - a*a) + 4.0 * a*a * p.y * p.y),
+              0.5 * (R2 - a*a) + 0.5 * sqrt((R2 - a*a) * (R2 - a*a) + 4.0 * a*a * p.z * p.z),
               0.001
             ));
           }
 
-          vec3 rotateY(vec3 p, float a){
+          vec3 rotateZ(vec3 p, float a){
             float c = cos(a);
             float s = sin(a);
-            return vec3(c*p.x - s*p.z, p.y, s*p.x + c*p.z);
+            return vec3(c*p.x - s*p.y, s*p.x + c*p.y, p.z);
           }
 
           void main(){
             vec3 p = position;
 
-            float M = 0.72 + 0.70 * uFlow;
-            float spin01 = clamp(uSpin / 1.80, 0.0, 1.0);
-            float a = 0.98 * spin01 * M;
+            float M = uBlackHoleM;
+            float spin01 = uSpinUnit;
+            float a = spin01 * M;
             float r0 = kerrR(p, a);
-            float horizon = M * (1.0 + sqrt(max(1.0 - min(a*a/(M*M), 0.999), 0.001)));
+            float horizon = uHorizonRadius;
 
-            float cosTheta = clamp(p.y / max(r0, EPS), -1.0, 1.0);
+            float cosTheta = clamp(p.z / max(r0, EPS), -1.0, 1.0);
             float sinTheta = sqrt(max(1.0 - cosTheta*cosTheta, 0.0));
             float rho2 = r0*r0 + a*a*cosTheta*cosTheta;
             float Delta = r0*r0 - 2.0*M*r0 + a*a;
@@ -557,8 +725,8 @@
             float omega = 2.0 * M * a * r0 / max(Sigma2, 0.25);
             float equatorWeight = pow(sinTheta, 1.35);
             float twist = omega * 26.0 * strongField * equatorWeight;
-            p = rotateY(p, twist);
-            p.y *= 1.0 - strongField * lapseLike * 0.018 * equatorWeight;
+            p = rotateZ(p, twist);
+            p.z *= 1.0 - strongField * lapseLike * 0.018 * equatorWeight;
 
             float r = kerrR(p, a);
             float horizonMask = smoothstep(horizon + 0.42, horizon + 1.38, r);
@@ -695,6 +863,9 @@
         uSpin: uniforms.uSpin,
         uFlow: uniforms.uFlow,
         uGridBright: uniforms.uGridBright,
+        uBlackHoleM: uniforms.uBlackHoleM,
+        uHorizonRadius: uniforms.uHorizonRadius,
+        uSpinUnit: uniforms.uSpinUnit,
         uLayerOffset: { value: layerOffset }
       };
 
@@ -713,6 +884,9 @@
           uniform float uSpin;
           uniform float uFlow;
           uniform float uGridBright;
+          uniform float uBlackHoleM;
+          uniform float uHorizonRadius;
+          uniform float uSpinUnit;
           uniform float uLayerOffset;
 
           const float EPS = 0.0001;
@@ -723,7 +897,7 @@
           float kerrR(vec3 p, float a){
             float R2 = dot(p, p);
             return sqrt(max(
-              0.5 * (R2 - a*a) + 0.5 * sqrt((R2 - a*a) * (R2 - a*a) + 4.0 * a*a * p.y * p.y),
+              0.5 * (R2 - a*a) + 0.5 * sqrt((R2 - a*a) * (R2 - a*a) + 4.0 * a*a * p.z * p.z),
               0.001
             ));
           }
@@ -744,10 +918,14 @@
             return r;
           }
 
-          vec3 rotateY(vec3 p, float a){
+          float schwarzschildF(float r, float rh){
+            return clamp(1.0 - rh / max(r, rh + EPS), 0.0, 1.0);
+          }
+
+          vec3 rotateZ(vec3 p, float a){
             float c = cos(a);
             float s = sin(a);
-            return vec3(c*p.x - s*p.z, p.y, s*p.x + c*p.z);
+            return vec3(c*p.x - s*p.y, s*p.x + c*p.y, p.z);
           }
 
           void main(){
@@ -760,35 +938,34 @@
             float lifeAlpha = max(0.10, fadeIn * fadeOut);
             float motionAge = smoothstep(0.08, 0.92, age);
 
-            float M = 0.72 + 0.70 * uFlow;
-            float spin01 = clamp(uSpin / 1.80, 0.0, 1.0);
-            float a = 0.98 * spin01 * M;
+            float M = uBlackHoleM;
+            float spin01 = uSpinUnit;
+            float a = spin01 * M;
             float r0 = kerrR(p0, a);
-            float horizon = M * (1.0 + sqrt(max(1.0 - min(a*a/(M*M), 0.999), 0.001)));
+            float horizon = uHorizonRadius;
 
             vec3 radial0 = normalize(p0 + vec3(EPS));
-            float cosTheta0 = clamp(p0.y / max(r0, EPS), -1.0, 1.0);
+            float cosTheta0 = clamp(p0.z / max(r0, EPS), -1.0, 1.0);
             float sinTheta0 = sqrt(max(1.0 - cosTheta0*cosTheta0, 0.0));
             float rho20 = r0*r0 + a*a*cosTheta0*cosTheta0;
 
-            float qMin = rainCoord(horizon + 0.80, horizon);
+            float qMin = rainCoord(horizon + 0.08, horizon);
             float qMax = rainCoord(104.0, horizon);
             float qSpan = qMax - qMin;
-            float q0 = rainCoord(max(r0, horizon + 0.80), horizon);
+            float q0 = rainCoord(max(r0, horizon + 0.08), horizon);
 
-            float fallSpeed = sqrt(max(2.0 * M * r0 / max(rho20, 0.08), 0.0));
-            float coordTimeFactor = clamp(1.0 - horizon / max(r0, horizon + EPS), 0.0, 1.0);
+            float farClockRate = schwarzschildF(r0, horizon);
+            float coordInfallRate = farClockRate * sqrt(clamp(horizon / max(r0, horizon + EPS), 0.0, 0.999));
             float strongField = smoothstep(104.0, 8.0, r0);
-            float timeDelay = coordTimeFactor;
-            float qShift = motionAge * qSpan * 0.82 * strongField * (0.45 + 0.55 * fallSpeed) * timeDelay;
-            float qAdv = max(qMin + 0.12, q0 - qShift);
+            float qShift = motionAge * qSpan * 1.05 * strongField * coordInfallRate;
+            float qAdv = max(qMin, q0 - qShift);
             float rAdv = invertRainCoord(qAdv, horizon);
 
             float r1 = mix(r0, rAdv, strongField);
             vec3 p = radial0 * r1;
 
             float r = kerrR(p, a);
-            float cosTheta = clamp(p.y / max(r, EPS), -1.0, 1.0);
+            float cosTheta = clamp(p.z / max(r, EPS), -1.0, 1.0);
             float sinTheta = sqrt(max(1.0 - cosTheta*cosTheta, 0.0));
             float rho2 = r*r + a*a*cosTheta*cosTheta;
             float Delta = r*r - 2.0*M*r + a*a;
@@ -797,15 +974,16 @@
             float omega = 2.0 * M * a * r / max(Sigma2, 0.25);
             float equatorWeight = pow(sinTheta, 1.35);
             float dragAge = motionAge;
-            float dragAngle = omega * 44.0 * strongField * equatorWeight * dragAge * coordTimeFactor;
-            p = rotateY(p, dragAngle);
+            float coordClock = schwarzschildF(r, horizon);
+            float dragAngle = omega * 44.0 * strongField * equatorWeight * dragAge * coordClock;
+            p = rotateZ(p, dragAngle);
 
             float lapseLike = sqrt(max(2.0 * M * r / max(rho2, 0.08), 0.0));
             vec3 radial = normalize(p + vec3(EPS));
-            float squeeze = strongField * motionAge * coordTimeFactor * lapseLike * 0.22 / max(r - horizon + 1.55, 0.55);
+            float squeeze = strongField * motionAge * coordClock * lapseLike * 0.22 / max(r - horizon + 1.55, 0.55);
             squeeze = min(squeeze, max(r - horizon - 0.24, 0.0));
             p -= radial * squeeze;
-            p.y *= 1.0 - strongField * motionAge * coordTimeFactor * lapseLike * 0.018 * equatorWeight;
+            p.z *= 1.0 - strongField * motionAge * coordClock * lapseLike * 0.018 * equatorWeight;
 
             r = kerrR(p, a);
             float horizonMask = smoothstep(horizon + 0.42, horizon + 1.38, r);
@@ -982,7 +1160,69 @@
     }
 
     function eventHorizonWorldRadius(){
-      return 2.05 * (0.72 + 0.30 * params.mass);
+      return kerrHorizonWorldRadius();
+    }
+
+    function kerrLapseAt(pos){
+      const M = kerrMassWorld();
+      const a = spinUnit() * M;
+      const r = Math.max(pos.length(), eventHorizonWorldRadius() + 1e-4);
+      const cosTheta = THREE.MathUtils.clamp(pos.z / r, -1, 1);
+      const sinTheta2 = Math.max(0, 1 - cosTheta * cosTheta);
+      const rho2 = r * r + a * a * cosTheta * cosTheta;
+      const delta = Math.max(r * r - 2 * M * r + a * a, 0);
+      const sigma2 = Math.max((r * r + a * a) ** 2 - a * a * delta * sinTheta2, 1e-5);
+      return Math.sqrt(THREE.MathUtils.clamp(rho2 * delta / sigma2, 0.000001, 1));
+    }
+
+    function kerrFrameDraggingOmega(pos){
+      const M = kerrMassWorld();
+      const a = spinUnit() * M;
+      const r = Math.max(pos.length(), eventHorizonWorldRadius() + 1e-4);
+      const cosTheta = THREE.MathUtils.clamp(pos.z / r, -1, 1);
+      const sinTheta2 = Math.max(0, 1 - cosTheta * cosTheta);
+      const delta = r * r - 2 * M * r + a * a;
+      const sigma2 = Math.max((r * r + a * a) ** 2 - a * a * delta * sinTheta2, 1e-5);
+      return 2 * M * a * r / sigma2;
+    }
+
+    const lensDirCache = new THREE.Vector3();
+    const lensClosestCache = new THREE.Vector3();
+    const lensAwayCache = new THREE.Vector3();
+    const lensFrameCache = new THREE.Vector3();
+    const lensApparentCache = new THREE.Vector3();
+    const trailLensACache = new THREE.Vector3();
+    const trailLensBCache = new THREE.Vector3();
+    const userCamDirCache = new THREE.Vector3();
+    const userNextPosCache = new THREE.Vector3();
+    const userCoordVelCache = new THREE.Vector3();
+    const userLensTargetCache = new THREE.Vector3();
+    const zAxis = new THREE.Vector3(0, 0, 1);
+
+    function lensedParticlePosition(source, out){
+      const camToSource = lensDirCache.copy(source).sub(camera.position);
+      const dist = Math.max(camToSource.length(), 0.001);
+      const rd = camToSource.multiplyScalar(1 / dist);
+      const h = THREE.MathUtils.clamp(-camera.position.dot(rd), 0, dist);
+      const closest = lensClosestCache.copy(camera.position).addScaledVector(rd, h);
+      const b = Math.max(closest.length(), 0.08);
+      const M = kerrMassWorld();
+      const shadowRadius = kerrShadowWorldRadius();
+      const lensWindow = 1 - THREE.MathUtils.smoothstep(b, shadowRadius * 0.82, shadowRadius * 5.5);
+      const bend = THREE.MathUtils.clamp(4 * M / b, 0, 1.18) * lensWindow * 0.20;
+      const away = lensAwayCache.copy(closest);
+      if(away.lengthSq() < 1e-6) away.set(1, 0, 0);
+      away.normalize();
+      const frame = lensFrameCache.set(-closest.y, closest.x, 0);
+      if(frame.lengthSq() < 1e-6) frame.set(0, 1, 0);
+      frame.normalize().multiplyScalar(spinUnit() * bend * 0.32);
+      const apparentDir = lensApparentCache.copy(rd).addScaledVector(away, bend).add(frame).normalize();
+      out.copy(camera.position).addScaledVector(apparentDir, dist);
+
+      if(!params.shadow) return 1;
+      const occulted = h > 0 && h < dist;
+      if(!occulted) return 1;
+      return THREE.MathUtils.smoothstep(b, shadowRadius * 0.78, shadowRadius * 1.05);
     }
 
     function addUserParticle(pos){
@@ -993,7 +1233,7 @@
           old.mesh.material.dispose();
         }
       }
-      const minR = eventHorizonWorldRadius() * 3.4;
+      const minR = Math.max(eventHorizonWorldRadius() * 3.4, kerrShadowWorldRadius() * 1.18);
       let p = pos.clone();
       if(!Number.isFinite(p.x) || p.lengthSq() < 0.0001){
         const dir = camera.getWorldDirection(new THREE.Vector3()).normalize();
@@ -1001,10 +1241,13 @@
       }
       if(p.length() < minR) p.setLength(minR);
       const r = Math.max(p.length(), minR);
-      const rp = Math.sqrt(p.x*p.x + p.z*p.z) + 0.001;
-      const tangent = new THREE.Vector3(-p.z/rp, 0, p.x/rp);
-      const spin01 = Math.max(0, Math.min(1, params.spin / 1.8));
-      const circular = Math.sqrt(Math.max(0.02, params.mass / Math.max(r, 2.8))) * 0.18;
+      const rp = Math.sqrt(p.x*p.x + p.y*p.y) + 0.001;
+      const tangent = new THREE.Vector3(-p.y/rp, p.x/rp, 0);
+      const spin01 = spinUnit();
+      const M = kerrMassWorld();
+      const a = spin01 * M;
+      const omegaK = Math.sqrt(M) / Math.max(Math.pow(r, 1.5) + a * Math.sqrt(M), 0.1);
+      const circular = THREE.MathUtils.clamp(omegaK * r, 0.02, 0.42) * 0.18;
       const tangentialFactor = circular * (0.35 + 0.65 * spin01);
       const vel = tangent.multiplyScalar(tangentialFactor);
       vel.add(p.clone().normalize().multiplyScalar(-0.015 * params.mass));
@@ -1034,6 +1277,9 @@
         gShift: 1.0,
         brightness: 1.0,
         L,
+        Lz: L,
+        visualPos: p.clone(),
+        lensAlpha: 1.0,
         color,
         mesh,
         age: 0,
@@ -1055,55 +1301,69 @@
       }
 
       const h = Math.min(dt, 0.024);
-      const spin01 = Math.max(0, Math.min(1, params.spin / 1.8));
-      const M = 15.0 * params.mass;
+      const spin01 = spinUnit();
+      const M = kerrMassWorld();
+      const aKerr = spin01 * M;
       const EH = eventHorizonWorldRadius();
-      const camDirCache = new THREE.Vector3();
 
-      function observerRate(r){
-        const f = Math.max(0, 1 - EH / Math.max(r, EH + 1e-4));
-        return THREE.MathUtils.clamp(f, 0.00025, 1.0);
+      function observerRate(pos){
+        const lapse = kerrLapseAt(pos);
+        return THREE.MathUtils.clamp(lapse * lapse, 0.00002, 1.0);
       }
 
-      function gravitationalFrequencyShift(r){
-        const f = Math.max(0, 1 - EH / Math.max(r, EH + 1e-4));
-        const rainBeta = Math.sqrt(Math.min(EH / Math.max(r, EH + 1e-4), 0.9999));
-        return THREE.MathUtils.clamp(f / (1 + rainBeta), 0.0004, 1.0);
+      function gravitationalFrequencyShift(pos, r){
+        const lapse = kerrLapseAt(pos);
+        const rainBeta = Math.sqrt(Math.min(2 * M / Math.max(r, EH + 1e-4), 0.9999));
+        return THREE.MathUtils.clamp(lapse / (1 + rainBeta), 0.00002, 1.0);
       }
 
       for(let i=userParticles.length-1; i>=0; i--){
         const p = userParticles[i];
         const r = p.pos.length() + 0.0001;
-        const rp = Math.sqrt(p.pos.x*p.pos.x + p.pos.z*p.pos.z) + 0.001;
-        const radialIn = p.pos.clone().multiplyScalar(-1/r);
-        const tangent = new THREE.Vector3(-p.pos.z/rp, 0, p.pos.x/rp);
-        const inv = 1 / (r*r + 2.4*2.4);
-        const compact = Math.min(0.48, params.mass / Math.max(r, 0.001));
+        const rp = Math.sqrt(p.pos.x*p.pos.x + p.pos.y*p.pos.y) + 0.001;
+        const tangent = new THREE.Vector3(-p.pos.y/rp, p.pos.x/rp, 0);
+        const compact = Math.min(0.48, M / Math.max(r, 0.001));
 
-        const rate = observerRate(r);
-        const freezeRadius = EH * 1.012;
+        const rate = observerRate(p.pos);
+        const freezeRadius = EH * 1.0006;
+        const nearHorizon = 1 - THREE.MathUtils.smoothstep(rate, 0.0, 0.20);
         if(r <= freezeRadius || p.horizonFrozen){
           p.horizonFrozen = true;
-          p.freezeAge += h;
+          p.freezeAge += h * (0.25 + 0.75 * nearHorizon);
           p.vel.multiplyScalar(0.0);
           p.pos.setLength(freezeRadius);
         } else {
-          const rainBeta = Math.sqrt(Math.min(EH / Math.max(r, EH + 1e-4), 0.9999));
+          const rainBeta = Math.sqrt(Math.min(2 * M / Math.max(r, EH + 1e-4), 0.9999));
+          const farOrbit = THREE.MathUtils.smoothstep(r, EH * 1.75, EH * 7.2);
+          const plungeBias = 1 - THREE.MathUtils.smoothstep(r, EH * 1.9, EH * 6.5);
+          const angularBarrier = THREE.MathUtils.clamp(((p.Lz || 0) * (p.Lz || 0)) / Math.max(2 * M * r * r, 1e-4) * 0.10, 0, 0.36);
+          const radialBeta = Math.sqrt(Math.max(0.018, rainBeta * rainBeta - angularBarrier));
+          const radialCoordSpeed = rate * radialBeta * (1.45 + 0.75 * plungeBias);
 
-          const radialCoordSpeed = rate * rainBeta * 10.5 * params.mass;
-          const omegaH = spin01 * 0.55 * params.mass / Math.max(EH, 0.1);
-          const omegaFD = omegaH * Math.pow(EH / Math.max(r, EH + 1e-4), 3.0) * rate;
-          const omegaGeo = (p.L || 0) / Math.max(r*r + 2.0, 1.0) * rate;
-          const tangentialCoordSpeed = (omegaGeo + omegaFD) * r;
-          const coordVel = radialIn.clone().multiplyScalar(radialCoordSpeed)
-            .add(tangent.clone().multiplyScalar(tangentialCoordSpeed));
+          const omegaFD = kerrFrameDraggingOmega(p.pos);
+          const omegaK = Math.sqrt(M) / Math.max(Math.pow(r, 1.5) + aKerr * Math.sqrt(M), 0.1);
+          const omegaL = (p.Lz || 0) / Math.max(r*r + aKerr*aKerr + 2*M*aKerr*aKerr / Math.max(r, EH), 1.0);
+          const omegaGeo = THREE.MathUtils.lerp(omegaFD, omegaK * 0.84 + omegaL * 0.16, farOrbit);
+          const angularStep = omegaGeo * Math.max(rate, 0.0004) * h;
+          const radialStepCap = Math.min(Math.max(0.006, r * 0.014), Math.max(r - freezeRadius, 0));
+          const radialStep = Math.min(radialCoordSpeed * h, radialStepCap);
+          const nextR = Math.max(freezeRadius, r - radialStep);
 
-          p.vel.lerp(coordVel, 0.50);
-          p.pos.addScaledVector(p.vel, h);
+          userNextPosCache.copy(p.pos).applyAxisAngle(zAxis, angularStep).setLength(nextR);
+          userCoordVelCache.copy(userNextPosCache).sub(p.pos).multiplyScalar(1 / Math.max(h, 0.0001));
+          p.vel.lerp(userCoordVelCache, 0.46 + 0.30 * Math.sqrt(rate));
+          p.pos.copy(userNextPosCache);
+
+          if(nextR <= freezeRadius + 1e-5){
+            p.horizonFrozen = true;
+            p.freezeAge += h * nearHorizon;
+            p.vel.multiplyScalar(0.0);
+            p.pos.setLength(freezeRadius);
+          }
         }
-        p.age += h;
+        p.age += h * Math.max(rate, 0.001);
 
-        const los = camDirCache.copy(camera.position).sub(p.pos).normalize();
+        const los = userCamDirCache.copy(camera.position).sub(p.pos).normalize();
         const speed = Math.min(0.88, p.vel.length() * 0.32);
         const beta = Math.min(0.82, speed + 0.18 * spin01 * compact);
         const gamma = 1 / Math.sqrt(Math.max(1 - beta*beta, 0.04));
@@ -1111,10 +1371,8 @@
         const cosLOS = THREE.MathUtils.clamp(vDir.dot(los), -0.985, 0.985);
         const doppler = 1 / Math.max(gamma * (1 - beta * cosLOS), 0.16);
 
-        let gravShift = gravitationalFrequencyShift(r);
-        if(p.horizonFrozen){
-          gravShift *= Math.exp(-1.85 * p.freezeAge);
-        }
+        let gravShift = gravitationalFrequencyShift(p.pos, r);
+        if(p.horizonFrozen) gravShift *= Math.exp(-1.25 * p.freezeAge);
 
         const gShift = THREE.MathUtils.clamp(doppler * gravShift, 0.0004, 2.0);
         p.gShift = gShift;
@@ -1123,13 +1381,16 @@
         p.brightness = p.receivedFlux;
 
         const visibleColor = redshiftedWhiteColor(gShift);
-        const visualAlpha = THREE.MathUtils.clamp(
+        p.lensAlpha = lensedParticlePosition(p.pos, userLensTargetCache);
+        p.visualPos.lerp(userLensTargetCache, 0.42);
+        const intrinsicAlpha = THREE.MathUtils.clamp(
           0.96 * Math.pow(THREE.MathUtils.clamp(gShift / 0.52, 0, 1), 1.55),
           0,
           1
         );
+        const visualAlpha = intrinsicAlpha * p.lensAlpha;
 
-        if(gShift < 0.030 || visualAlpha < 0.010 || r > 220 || p.age > 120 || !Number.isFinite(p.pos.x)){
+        if(gShift < 0.006 || intrinsicAlpha < 0.003 || r > 220 || p.age > 120 || !Number.isFinite(p.pos.x)){
           if(p.mesh){
             userVisualGroup.remove(p.mesh);
             p.mesh.material.dispose();
@@ -1140,12 +1401,12 @@
 
         p.color.copy(visibleColor);
         if(p.mesh){
-          p.mesh.position.copy(p.pos);
+          p.mesh.position.copy(p.visualPos);
           const redshiftOnset = THREE.MathUtils.smoothstep(0.62, 0.38, gShift);
           const solidColor = new THREE.Color(1.0, 1.0, 1.0).lerp(p.color, redshiftOnset);
           p.mesh.material.color.copy(solidColor);
-          p.mesh.material.transparent = redshiftOnset > 0.02;
-          p.mesh.material.opacity = THREE.MathUtils.lerp(1.0, visualAlpha, redshiftOnset);
+          p.mesh.material.transparent = redshiftOnset > 0.02 || p.lensAlpha < 0.999;
+          p.mesh.material.opacity = THREE.MathUtils.lerp(1.0, intrinsicAlpha, redshiftOnset) * p.lensAlpha;
           p.mesh.scale.setScalar((1.85 + 0.45 * visualAlpha) * (1.0 + 0.015 * Math.sin(p.age * 4.0)));
         }
         const recycled = p.hist.pop();
@@ -1157,9 +1418,9 @@
       const trailVertexCount = pointCount * (USER_STEPS - 1) * 2;
       for(let i=0;i<userParticles.length;i++){
         const p = userParticles[i];
-        userPointPositions[i*3+0] = p.pos.x;
-        userPointPositions[i*3+1] = p.pos.y;
-        userPointPositions[i*3+2] = p.pos.z;
+        userPointPositions[i*3+0] = p.visualPos.x;
+        userPointPositions[i*3+1] = p.visualPos.y;
+        userPointPositions[i*3+2] = p.visualPos.z;
         userPointColors[i*3+0] = p.color.r;
         userPointColors[i*3+1] = p.color.g;
         userPointColors[i*3+2] = p.color.b;
@@ -1170,15 +1431,17 @@
           const base = seg*3;
           const a = p.hist[j];
           const b = p.hist[j+1];
+          const lensA = lensedParticlePosition(a, trailLensACache);
+          const lensB = lensedParticlePosition(b, trailLensBCache);
           const baseAlpha = p.mesh ? p.mesh.material.opacity : 0.0;
-          const fadeA = (1 - j / (USER_STEPS-1)) * 0.72 * baseAlpha;
-          const fadeB = (1 - (j+1) / (USER_STEPS-1)) * 0.72 * baseAlpha;
-          userTrailPositions[base+0] = a.x;
-          userTrailPositions[base+1] = a.y;
-          userTrailPositions[base+2] = a.z;
-          userTrailPositions[base+3] = b.x;
-          userTrailPositions[base+4] = b.y;
-          userTrailPositions[base+5] = b.z;
+          const fadeA = (1 - j / (USER_STEPS-1)) * 0.72 * baseAlpha * lensA;
+          const fadeB = (1 - (j+1) / (USER_STEPS-1)) * 0.72 * baseAlpha * lensB;
+          userTrailPositions[base+0] = trailLensACache.x;
+          userTrailPositions[base+1] = trailLensACache.y;
+          userTrailPositions[base+2] = trailLensACache.z;
+          userTrailPositions[base+3] = trailLensBCache.x;
+          userTrailPositions[base+4] = trailLensBCache.y;
+          userTrailPositions[base+5] = trailLensBCache.z;
           userTrailColors[base+0] = p.color.r;
           userTrailColors[base+1] = p.color.g;
           userTrailColors[base+2] = p.color.b;
@@ -1204,7 +1467,7 @@
 
     const clickRaycaster = new THREE.Raycaster();
     const clickNdc = new THREE.Vector2();
-    const diskPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const diskPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
     const fallbackPlane = new THREE.Plane();
     const clickPoint = new THREE.Vector3();
     const clickNormal = new THREE.Vector3();
@@ -1226,7 +1489,7 @@
         ok = true;
       }
       if(ok){
-        const minR = eventHorizonWorldRadius() * 3.4;
+        const minR = Math.max(eventHorizonWorldRadius() * 3.4, kerrShadowWorldRadius() * 1.18);
         if(clickPoint.lengthSq() < 0.0001){
           clickPoint.copy(clickRaycaster.ray.origin).addScaledVector(clickRaycaster.ray.direction, Math.max(14, minR));
         }
@@ -1261,7 +1524,7 @@
     }
 
     function setDiskPerformanceMode(on){
-      diskPixelRatioBias = on ? (innerWidth < 760 ? 0.88 : 0.92) : 1;
+      diskPixelRatioBias = on ? (innerWidth < 760 ? 0.72 : 0.78) : 1;
       renderer.setPixelRatio(getRenderPixelRatio());
     }
 
@@ -1284,6 +1547,7 @@
         params[key] = !params[key];
         el.classList.toggle("on", params[key]);
         setObjectVisible(target, params[key]);
+        if(key === "shadow") updateKerrUniforms();
         if(key === "disk") setDiskPerformanceMode(params[key]);
       }, true);
     }
@@ -1300,6 +1564,7 @@
     bindSwitch("gridToggle","grid",gridGroup);
     bindSwitch("backgroundToggle","background",backgroundPlane);
     bindSwitch("diskToggle","disk",diskTracer);
+    bindSwitch("shadowToggle","shadow",horizon);
     setDiskPerformanceMode(params.disk);
 
     document.getElementById("addParticleToggle").addEventListener("click", () => {
@@ -1313,6 +1578,7 @@
         value.textContent=params[key].toFixed(2);
         if(uniformA) uniformA.value=params[key];
         if(uniformB) uniformB.value=params[key];
+        updateKerrUniforms();
       });
     }
     bindSlider("spinSlider","spinValue","spin",uniforms.uSpin);
@@ -1334,26 +1600,36 @@
       requestAnimationFrame(resizeRenderer);
     });
 
+    const screenPlaneCenter = new THREE.Vector3();
+    const cameraForward = new THREE.Vector3();
+
     function animate(){
       requestAnimationFrame(animate);
       const dt=Math.min(clock.getDelta(), 0.033) * params.timeScale;
       uniforms.uTime.value += dt;
       uniforms.uCameraPos.value.copy(camera.position);
-      const eventHorizonScale = 0.72 + 0.30 * params.mass;
-      const apparentShadowScale = 2.598076 * eventHorizonScale;
+      updateKerrUniforms();
+      const apparentShadowScale = kerrShadowWorldRadius() / HORIZON_GEOMETRY_RADIUS;
+      horizon.visible = params.shadow;
+      horizon.material.visible = params.shadow;
       horizon.scale.setScalar(apparentShadowScale);
-      blackHoleGroup.rotation.y += dt*.003*params.spin;
+      blackHoleGroup.rotation.z += dt*.003*params.spin;
       if(backgroundPlane.visible || diskTracer.visible){
-        const tracerDist = camera.position.length();
+        camera.getWorldDirection(cameraForward).normalize();
+        const tracerDist = Math.max(8, camera.position.distanceTo(controls.target));
         const fovRad = THREE.MathUtils.degToRad(camera.fov);
         const frustumHeight = 2 * tracerDist * Math.tan(fovRad * 0.5);
-        const coverSize = frustumHeight * Math.max(camera.aspect, 1.0) * 1.28;
+        const coverSize = frustumHeight * Math.max(camera.aspect, 1.0) * 1.55;
         const coverScale = coverSize / 120;
+        uniforms.uScreenShadowRadius.value = THREE.MathUtils.clamp(kerrShadowWorldRadius() / Math.max(60 * coverScale, 0.001), 0.035, 0.85);
+        screenPlaneCenter.copy(camera.position).addScaledVector(cameraForward, tracerDist);
         if(backgroundPlane.visible){
+          backgroundPlane.position.copy(screenPlaneCenter);
           backgroundPlane.lookAt(camera.position);
           backgroundPlane.scale.setScalar(coverScale);
         }
         if(diskTracer.visible){
+          diskTracer.position.copy(screenPlaneCenter);
           diskTracer.lookAt(camera.position);
           diskTracer.scale.setScalar(coverScale);
         }
