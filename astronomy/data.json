@@ -10,6 +10,11 @@
       "name": "Black Hole",
       "path": "./BlackHole/",
       "description": "블랙홀 시뮬레이터"
+    },
+    {
+      "name": "plane Black Hole",
+      "path": "./2DBlackhole/",
+      "description": "평면 블랙홀 시뮬레이터"
     }
   ]
 }
