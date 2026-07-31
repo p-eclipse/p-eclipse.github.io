@@ -95,7 +95,7 @@
     <div class="sliderRow"><label>격자 밝기</label><input id="gridBrightSlider" type="range" min="0.25" max="3.50" step="0.01" value="2.10"><span id="gridBrightValue" class="value">2.10</span></div>
   </section>
   <div class="badge">Left drag: phi/theta · Right drag: pan · Wheel/Pinch: zoom</div>
-  <div id="addModeBanner" class="addModeBanner">입자 추가 모드 ON · 원하는 지점을 클릭하면 백색 시험입자가 생성됩니다</div>
+  <div id="addModeBanner" class="addModeBanner">클릭: 시공간 격자를 따라 자유낙하하는 시험입자 생성</div>
 
   <script type="importmap">
     { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
@@ -189,9 +189,7 @@
 
     const uniforms = {
       uTime: { value: 0 },
-      uSpin: { value: params.spin },
       uLensMass: { value: params.mass },
-      uFlow: { value: params.mass },
       uGridBright: { value: params.gridBright },
       uCameraPos: { value: camera.position.clone() },
       uBlackHoleM: { value: kerrMassWorld() },
@@ -208,6 +206,7 @@
       uniforms.uShadowRadius.value = kerrShadowWorldRadius();
       uniforms.uSpinUnit.value = spinUnit();
       uniforms.uShadowEnabled.value = params.shadow ? 1 : 0;
+      horizon.scale.setScalar(kerrShadowWorldRadius() / HORIZON_GEOMETRY_RADIUS);
     }
 
     scene.add(new THREE.AmbientLight(0x8fa8ff, 0.12));
@@ -267,8 +266,6 @@
     }
 
     const backgroundUniforms = {
-      uLensMass: uniforms.uLensMass,
-      uSpin: uniforms.uSpin,
       uCameraPos: uniforms.uCameraPos,
       uBlackHoleM: uniforms.uBlackHoleM,
       uShadowRadius: uniforms.uShadowRadius,
@@ -298,8 +295,6 @@
           varying vec3 vWorld;
           uniform sampler2D uBgMap;
           uniform vec3 uCameraPos;
-          uniform float uLensMass;
-          uniform float uSpin;
           uniform float uBlackHoleM;
           uniform float uShadowRadius;
           uniform float uSpinUnit;
@@ -364,12 +359,10 @@
     const horizon = new THREE.Mesh(
       new THREE.SphereGeometry(2.05, 48, 24),
       new THREE.ShaderMaterial({
-        uniforms: { uSpin: uniforms.uSpin },
         depthWrite: true,
         depthTest: true,
         vertexShader: `
-          varying vec3 vN; varying vec3 vW;
-          void main(){ vN = normalize(normalMatrix * normal); vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }
+          void main(){ gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
         `,
         fragmentShader: `
           void main(){
@@ -379,6 +372,7 @@
       })
     );
     horizon.renderOrder = 2;
+    horizon.scale.setScalar(kerrShadowWorldRadius() / HORIZON_GEOMETRY_RADIUS);
     blackHoleGroup.add(horizon);
 
     const diskTracer = new THREE.Mesh(
@@ -406,7 +400,6 @@
           varying vec2 vPlane;
           uniform vec3 uCameraPos;
           uniform float uTime;
-          uniform float uSpin;
           uniform float uLensMass;
           uniform float uBlackHoleM;
           uniform float uHorizonRadius;
@@ -664,204 +657,9 @@
     const gridGroup = new THREE.Group();
     scene.add(gridGroup);
 
-    function makeGrid(){
-      const mat = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        vertexShader: `
-          attribute float axisId;
-          varying float vAlpha;
-          varying float vR;
-          varying float vAxis;
-          uniform float uSpin;
-          uniform float uFlow;
-          uniform float uGridBright;
-          uniform float uBlackHoleM;
-          uniform float uHorizonRadius;
-          uniform float uSpinUnit;
-
-          const float EPS = 0.0001;
-
-          float kerrR(vec3 p, float a){
-            float R2 = dot(p, p);
-            return sqrt(max(
-              0.5 * (R2 - a*a) + 0.5 * sqrt((R2 - a*a) * (R2 - a*a) + 4.0 * a*a * p.z * p.z),
-              0.001
-            ));
-          }
-
-          vec3 rotateZ(vec3 p, float a){
-            float c = cos(a);
-            float s = sin(a);
-            return vec3(c*p.x - s*p.y, s*p.x + c*p.y, p.z);
-          }
-
-          void main(){
-            vec3 p = position;
-
-            float M = uBlackHoleM;
-            float spin01 = uSpinUnit;
-            float a = spin01 * M;
-            float r0 = kerrR(p, a);
-            float horizon = uHorizonRadius;
-
-            float cosTheta = clamp(p.z / max(r0, EPS), -1.0, 1.0);
-            float sinTheta = sqrt(max(1.0 - cosTheta*cosTheta, 0.0));
-            float rho2 = r0*r0 + a*a*cosTheta*cosTheta;
-            float Delta = r0*r0 - 2.0*M*r0 + a*a;
-            float Sigma2 = (r0*r0 + a*a) * (r0*r0 + a*a) - a*a * Delta * sinTheta * sinTheta;
-
-            float strongField = smoothstep(86.0, 6.0, r0);
-            float near = smoothstep(68.0, 4.0, r0);
-            float lapseLike = sqrt(max(2.0 * M * r0 / max(rho2, 0.08), 0.0));
-            vec3 radial = normalize(p + vec3(EPS));
-
-            float sag = strongField * lapseLike * 0.42 / max(r0 - horizon + 1.55, 0.55);
-            sag = min(sag, max(r0 - horizon - 0.26, 0.0));
-            p -= radial * sag;
-
-            float omega = 2.0 * M * a * r0 / max(Sigma2, 0.25);
-            float equatorWeight = pow(sinTheta, 1.35);
-            float twist = omega * 26.0 * strongField * equatorWeight;
-            p = rotateZ(p, twist);
-            p.z *= 1.0 - strongField * lapseLike * 0.018 * equatorWeight;
-
-            float r = kerrR(p, a);
-            float horizonMask = smoothstep(horizon + 0.42, horizon + 1.38, r);
-            float viewDist = length(p - cameraPosition);
-            float Rblock = 16.0 * 1.7320508;
-            float viewFade = 1.0 - smoothstep(2.25 * Rblock, 3.0 * Rblock, viewDist);
-
-            vR = r;
-            vAxis = axisId;
-            vAlpha = uGridBright * horizonMask * viewFade * (0.08 + 0.34 * near);
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-          }
-        `,
-        fragmentShader: `
-          varying float vAlpha;
-          varying float vR;
-          varying float vAxis;
-          void main(){
-            vec3 cx = vec3(0.50, 0.78, 1.0);
-            vec3 cy = vec3(1.0, 0.68, 0.38);
-            vec3 cz = vec3(0.66, 1.0, 0.86);
-            vec3 col = vAxis < 0.5 ? cx : (vAxis < 1.5 ? cy : cz);
-            col = mix(col * 0.58, vec3(0.92, 0.98, 1.0), smoothstep(18.0, 2.5, vR));
-            gl_FragColor = vec4(col * 1.08, clamp(vAlpha, 0.0, 0.62));
-          }
-        `
-      });
-
-      const group = new THREE.Group();
-      const extent = 104;
-      const step = 16;
-      const div = 150;
-      const coords = [];
-      for(let v = -extent; v <= extent + 0.001; v += step) coords.push(v);
-
-      function addLine(axis, A, B){
-        const verts = [];
-        const axes = [];
-        for(let i = 0; i <= div; i++){
-          const u = -extent + 2 * extent * i / div;
-          if(axis === 0) verts.push(u, A, B);
-          else if(axis === 1) verts.push(A, u, B);
-          else verts.push(A, B, u);
-          axes.push(axis);
-        }
-        const geo = new THREE.BufferGeometry();
-        geo.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
-        geo.setAttribute("axisId", new THREE.Float32BufferAttribute(axes, 1));
-        group.add(new THREE.Line(geo, mat));
-      }
-
-      for(const y of coords) for(const z of coords) addLine(0, y, z);
-      for(const x of coords) for(const z of coords) addLine(1, x, z);
-      for(const x of coords) for(const y of coords) addLine(2, x, y);
-      return group;
-    }
-
-    function makeOuterMinkowskiGrid(){
-      const mat = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        vertexShader: `
-          attribute float axisId;
-          varying float vAxis;
-          varying float vAlpha;
-          uniform float uGridBright;
-          void main(){
-            vec3 p = position;
-            float viewDist = length(p - cameraPosition);
-            float Rblock = 16.0 * 1.7320508;
-            float gridFade = 1.0 - smoothstep(2.25 * Rblock, 3.0 * Rblock, viewDist);
-            vAxis = axisId;
-            vAlpha = uGridBright * 0.32 * gridFade;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-          }
-        `,
-        fragmentShader: `
-          varying float vAxis;
-          varying float vAlpha;
-          void main(){
-            vec3 cx = vec3(0.38, 0.62, 0.92);
-            vec3 cy = vec3(0.92, 0.56, 0.30);
-            vec3 cz = vec3(0.46, 0.86, 0.68);
-            vec3 col = vAxis < 0.5 ? cx : (vAxis < 1.5 ? cy : cz);
-            gl_FragColor = vec4(col * 1.05, clamp(vAlpha, 0.0, 0.46));
-          }
-        `
-      });
-
-      const extent = 104;
-      const step = 16;
-      const inner = 24;
-      const verts = [];
-      const axes = [];
-
-      function insideCentralCube(x,y,z){
-        return Math.abs(x) <= inner + 0.001 && Math.abs(y) <= inner + 0.001 && Math.abs(z) <= inner + 0.001;
-      }
-
-      function pushSeg(ax, ay, az, bx, by, bz, axis){
-        const mx = (ax + bx) * 0.5;
-        const my = (ay + by) * 0.5;
-        const mz = (az + bz) * 0.5;
-        if(insideCentralCube(mx, my, mz)) return;
-        verts.push(ax, ay, az, bx, by, bz);
-        axes.push(axis, axis);
-      }
-
-      const coords = [];
-      for(let v = -extent; v <= extent + 0.001; v += step) coords.push(v);
-
-      for(let i = 0; i < coords.length - 1; i++){
-        const u0 = coords[i];
-        const u1 = coords[i + 1];
-        for(const y of coords) for(const z of coords) pushSeg(u0, y, z, u1, y, z, 0);
-        for(const x of coords) for(const z of coords) pushSeg(x, u0, z, x, u1, z, 1);
-        for(const x of coords) for(const y of coords) pushSeg(x, y, u0, x, y, u1, 2);
-      }
-
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
-      geo.setAttribute("axisId", new THREE.Float32BufferAttribute(axes, 1));
-      return new THREE.LineSegments(geo, mat);
-    }
-
-    // [OLD hybrid mode]
-    // gridGroup.add(makeOuterMinkowskiGrid());
-
     function makeInfallGridLayer(layerOffset){
       const layerUniforms = {
         uTime: uniforms.uTime,
-        uSpin: uniforms.uSpin,
-        uFlow: uniforms.uFlow,
         uGridBright: uniforms.uGridBright,
         uBlackHoleM: uniforms.uBlackHoleM,
         uHorizonRadius: uniforms.uHorizonRadius,
@@ -881,8 +679,6 @@
           varying float vAxis;
 
           uniform float uTime;
-          uniform float uSpin;
-          uniform float uFlow;
           uniform float uGridBright;
           uniform float uBlackHoleM;
           uniform float uHorizonRadius;
@@ -913,7 +709,7 @@
               float x = max(r / max(rh, EPS) - 1.0, 0.002);
               float f = r + 2.0 * sqrt(max(rh * r, 0.0)) + rh * log(x) - q;
               float df = 1.0 + sqrt(max(rh / max(r, EPS), 0.0)) + 1.0 / max(x, 0.002);
-              r = max(rh + 0.55, r - f / max(df, 0.1));
+              r = max(rh * 1.0006, r - f / max(df, 0.1));
             }
             return r;
           }
@@ -949,7 +745,7 @@
             float sinTheta0 = sqrt(max(1.0 - cosTheta0*cosTheta0, 0.0));
             float rho20 = r0*r0 + a*a*cosTheta0*cosTheta0;
 
-            float qMin = rainCoord(horizon + 0.08, horizon);
+            float qMin = rainCoord(horizon * 1.0006, horizon);
             float qMax = rainCoord(104.0, horizon);
             float qSpan = qMax - qMin;
             float q0 = rainCoord(max(r0, horizon + 0.08), horizon);
@@ -1016,7 +812,7 @@
 
       const extent = 104;
       const step = 16;
-      const div = 92;
+      const div = 72;
       const coords = [];
       for(let v = -extent; v <= extent + 0.001; v += step) coords.push(v);
       const verts = [];
@@ -1057,11 +853,8 @@
     scene.add(particleGroup);
 
     const USER_MAX = 64;
-    const USER_STEPS = 28;
+    const USER_STEPS = 24;
     const userParticles = [];
-    const userVisualGroup = new THREE.Group();
-    particleGroup.add(userVisualGroup);
-    const userParticleGeo = new THREE.SphereGeometry(0.34, 10, 6);
     const userPointPositions = new Float32Array(USER_MAX * 3);
     const userPointColors = new Float32Array(USER_MAX * 3);
     const userPointAlpha = new Float32Array(USER_MAX);
@@ -1069,6 +862,7 @@
     userPointGeo.setAttribute("position", new THREE.BufferAttribute(userPointPositions, 3));
     userPointGeo.setAttribute("aColor", new THREE.BufferAttribute(userPointColors, 3));
     userPointGeo.setAttribute("aAlpha", new THREE.BufferAttribute(userPointAlpha, 1));
+    Object.values(userPointGeo.attributes).forEach(attribute => attribute.setUsage(THREE.DynamicDrawUsage));
     userPointGeo.setDrawRange(0, 0);
     const userPointMat = new THREE.ShaderMaterial({
       transparent: true,
@@ -1109,6 +903,7 @@
     userTrailGeo.setAttribute("position", new THREE.BufferAttribute(userTrailPositions, 3));
     userTrailGeo.setAttribute("aColor", new THREE.BufferAttribute(userTrailColors, 3));
     userTrailGeo.setAttribute("aAlpha", new THREE.BufferAttribute(userTrailAlpha, 1));
+    Object.values(userTrailGeo.attributes).forEach(attribute => attribute.setUsage(THREE.DynamicDrawUsage));
     userTrailGeo.setDrawRange(0, 0);
     const userTrailMat = new THREE.ShaderMaterial({
       transparent: true,
@@ -1133,40 +928,32 @@
     });
     const userTrail = new THREE.LineSegments(userTrailGeo, userTrailMat);
     particleGroup.add(userTrail);
-    let activeUserPointCount = 0;
-    let activeUserTrailVertexCount = 0;
 
-    function updateParticles(dt){
-      return;
-    }
-
-    function redshiftedWhiteColor(g){
+    function redshiftedWhiteColor(g, out){
       const x = THREE.MathUtils.clamp(g, 0, 1.25);
-      if(x > 0.88) return new THREE.Color(1.0, 1.0, 1.0);
+      if(x > 0.88) return out.setRGB(1.0, 1.0, 1.0);
       if(x > 0.66){
         const t = (x - 0.66) / 0.22;
-        return new THREE.Color(1.0, 0.78 + 0.22*t, 0.38 + 0.62*t);
+        return out.setRGB(1.0, 0.78 + 0.22*t, 0.38 + 0.62*t);
       }
       if(x > 0.44){
         const t = (x - 0.44) / 0.22;
-        return new THREE.Color(1.0, 0.34 + 0.44*t, 0.10 + 0.28*t);
+        return out.setRGB(1.0, 0.34 + 0.44*t, 0.10 + 0.28*t);
       }
       if(x > 0.24){
         const t = (x - 0.24) / 0.20;
-        return new THREE.Color(0.70 + 0.30*t, 0.04 + 0.30*t, 0.015 + 0.085*t);
+        return out.setRGB(0.70 + 0.30*t, 0.04 + 0.30*t, 0.015 + 0.085*t);
       }
       const t = x / 0.24;
-      return new THREE.Color(0.10 + 0.60*t, 0.005 + 0.035*t, 0.002 + 0.013*t);
+      return out.setRGB(0.10 + 0.60*t, 0.005 + 0.035*t, 0.002 + 0.013*t);
     }
 
     function eventHorizonWorldRadius(){
       return kerrHorizonWorldRadius();
     }
 
-    function kerrLapseAt(pos){
-      const M = kerrMassWorld();
-      const a = spinUnit() * M;
-      const r = Math.max(pos.length(), eventHorizonWorldRadius() + 1e-4);
+    function kerrLapseAt(pos, M, a, horizon){
+      const r = Math.max(pos.length(), horizon + 1e-4);
       const cosTheta = THREE.MathUtils.clamp(pos.z / r, -1, 1);
       const sinTheta2 = Math.max(0, 1 - cosTheta * cosTheta);
       const rho2 = r * r + a * a * cosTheta * cosTheta;
@@ -1175,29 +962,57 @@
       return Math.sqrt(THREE.MathUtils.clamp(rho2 * delta / sigma2, 0.000001, 1));
     }
 
-    function kerrFrameDraggingOmega(pos){
-      const M = kerrMassWorld();
-      const a = spinUnit() * M;
-      const r = Math.max(pos.length(), eventHorizonWorldRadius() + 1e-4);
-      const cosTheta = THREE.MathUtils.clamp(pos.z / r, -1, 1);
-      const sinTheta2 = Math.max(0, 1 - cosTheta * cosTheta);
-      const delta = r * r - 2 * M * r + a * a;
-      const sigma2 = Math.max((r * r + a * a) ** 2 - a * a * delta * sinTheta2, 1e-5);
-      return 2 * M * a * r / sigma2;
+    function rainCoordinate(r, horizon){
+      const x = Math.max(r / horizon - 1, 0.002);
+      return r + 2 * Math.sqrt(horizon * r) + horizon * Math.log(x);
     }
+
+    function invertRainCoordinate(q, horizon){
+      let r = Math.max(horizon + 0.75, q);
+      for(let i = 0; i < 5; i++){
+        const x = Math.max(r / horizon - 1, 0.002);
+        const f = rainCoordinate(r, horizon) - q;
+        const df = 1 + Math.sqrt(horizon / Math.max(r, 0.0001)) + 1 / x;
+        r = Math.max(horizon * 1.0006, r - f / Math.max(df, 0.1));
+      }
+      return r;
+    }
+
+    console.assert(
+      Math.abs(invertRainCoordinate(rainCoordinate(12, 2), 2) - 12) < 0.001,
+      "Rain-coordinate inversion failed"
+    );
 
     const lensDirCache = new THREE.Vector3();
     const lensClosestCache = new THREE.Vector3();
     const lensAwayCache = new THREE.Vector3();
     const lensFrameCache = new THREE.Vector3();
     const lensApparentCache = new THREE.Vector3();
-    const trailLensACache = new THREE.Vector3();
-    const trailLensBCache = new THREE.Vector3();
     const userCamDirCache = new THREE.Vector3();
+    const userTangentCache = new THREE.Vector3();
+    const userVelocityDirCache = new THREE.Vector3();
     const userNextPosCache = new THREE.Vector3();
     const userCoordVelCache = new THREE.Vector3();
     const userLensTargetCache = new THREE.Vector3();
     const zAxis = new THREE.Vector3(0, 0, 1);
+
+    function advanceGridFreeFall(source, out, dt, M, a, horizon){
+      const r = Math.max(source.length(), horizon + 0.08);
+      const cosTheta = THREE.MathUtils.clamp(source.z / r, -1, 1);
+      const sinTheta2 = Math.max(0, 1 - cosTheta * cosTheta);
+      const delta = r * r - 2 * M * r + a * a;
+      const sigma2 = Math.max((r * r + a * a) ** 2 - a * a * delta * sinTheta2, 0.25);
+      const coordinateClock = THREE.MathUtils.clamp(1 - horizon / r, 0, 1);
+      const strongField = 1 - THREE.MathUtils.smoothstep(r, 8, 104);
+      const qMin = rainCoordinate(horizon * 1.0006, horizon);
+      const qSpan = rainCoordinate(104, horizon) - qMin;
+      const rainBeta = Math.sqrt(THREE.MathUtils.clamp(horizon / r, 0, 0.999));
+      const q = rainCoordinate(r, horizon) - qSpan * 1.05 * strongField * coordinateClock * rainBeta * dt / 6;
+      const nextR = Math.max(horizon * 1.0006, invertRainCoordinate(Math.max(qMin, q), horizon));
+      const omega = 2 * M * a * r / sigma2;
+      const frameDrag = omega * (44 / 6) * strongField * Math.pow(Math.sqrt(sinTheta2), 1.35) * coordinateClock * dt;
+      return out.copy(source).setLength(nextR).applyAxisAngle(zAxis, frameDrag);
+    }
 
     function lensedParticlePosition(source, out){
       const camToSource = lensDirCache.copy(source).sub(camera.position);
@@ -1226,64 +1041,24 @@
     }
 
     function addUserParticle(pos){
-      if(userParticles.length >= USER_MAX){
-        const old = userParticles.shift();
-        if(old && old.mesh){
-          userVisualGroup.remove(old.mesh);
-          old.mesh.material.dispose();
-        }
-      }
+      if(userParticles.length >= USER_MAX) userParticles.shift();
       const minR = Math.max(eventHorizonWorldRadius() * 3.4, kerrShadowWorldRadius() * 1.18);
       let p = pos.clone();
       if(!Number.isFinite(p.x) || p.lengthSq() < 0.0001){
-        const dir = camera.getWorldDirection(new THREE.Vector3()).normalize();
-        p = camera.position.clone().addScaledVector(dir, Math.max(14, minR));
+        camera.getWorldDirection(userNextPosCache).normalize();
+        p = camera.position.clone().addScaledVector(userNextPosCache, Math.max(14, minR));
       }
       if(p.length() < minR) p.setLength(minR);
-      const r = Math.max(p.length(), minR);
-      const rp = Math.sqrt(p.x*p.x + p.y*p.y) + 0.001;
-      const tangent = new THREE.Vector3(-p.y/rp, p.x/rp, 0);
-      const spin01 = spinUnit();
-      const M = kerrMassWorld();
-      const a = spin01 * M;
-      const omegaK = Math.sqrt(M) / Math.max(Math.pow(r, 1.5) + a * Math.sqrt(M), 0.1);
-      const circular = THREE.MathUtils.clamp(omegaK * r, 0.02, 0.42) * 0.18;
-      const tangentialFactor = circular * (0.35 + 0.65 * spin01);
-      const vel = tangent.multiplyScalar(tangentialFactor);
-      vel.add(p.clone().normalize().multiplyScalar(-0.015 * params.mass));
-      const L = r * tangentialFactor;
-      const color = new THREE.Color(1.0, 1.0, 1.0);
-      const mesh = new THREE.Mesh(
-        userParticleGeo,
-        new THREE.MeshBasicMaterial({
-          color: new THREE.Color(1.0, 1.0, 1.0),
-          transparent: false,
-          opacity: 1.0,
-          blending: THREE.NormalBlending,
-          depthWrite: true,
-          depthTest: true,
-          toneMapped: false
-        })
-      );
-      mesh.renderOrder = 90;
-      mesh.position.copy(p);
-      mesh.scale.setScalar(1.85);
-      userVisualGroup.add(mesh);
       userParticles.push({
         pos: p,
-        vel,
+        vel: new THREE.Vector3(),
         hist: Array.from({length: USER_STEPS}, () => p.clone()),
-        emissionWhite: true,
-        gShift: 1.0,
-        brightness: 1.0,
-        L,
-        Lz: L,
+        visualHist: Array.from({length: USER_STEPS}, () => p.clone()),
+        histAlpha: new Float32Array(USER_STEPS).fill(1),
         visualPos: p.clone(),
-        lensAlpha: 1.0,
-        color,
-        mesh,
+        color: new THREE.Color(1, 1, 1),
+        opacity: 1,
         age: 0,
-        grace: 1.2,
         horizonFrozen: false,
         freezeAge: 0
       });
@@ -1291,12 +1066,8 @@
 
     function updateUserParticles(dt){
       if(!params.particles || userParticles.length === 0){
-        if(activeUserPointCount !== 0 || activeUserTrailVertexCount !== 0){
-          activeUserPointCount = 0;
-          activeUserTrailVertexCount = 0;
-          userPointGeo.setDrawRange(0, 0);
-          userTrailGeo.setDrawRange(0, 0);
-        }
+        userPointGeo.setDrawRange(0, 0);
+        userTrailGeo.setDrawRange(0, 0);
         return;
       }
 
@@ -1306,25 +1077,14 @@
       const aKerr = spin01 * M;
       const EH = eventHorizonWorldRadius();
 
-      function observerRate(pos){
-        const lapse = kerrLapseAt(pos);
-        return THREE.MathUtils.clamp(lapse * lapse, 0.00002, 1.0);
-      }
-
-      function gravitationalFrequencyShift(pos, r){
-        const lapse = kerrLapseAt(pos);
-        const rainBeta = Math.sqrt(Math.min(2 * M / Math.max(r, EH + 1e-4), 0.9999));
-        return THREE.MathUtils.clamp(lapse / (1 + rainBeta), 0.00002, 1.0);
-      }
-
       for(let i=userParticles.length-1; i>=0; i--){
         const p = userParticles[i];
         const r = p.pos.length() + 0.0001;
         const rp = Math.sqrt(p.pos.x*p.pos.x + p.pos.y*p.pos.y) + 0.001;
-        const tangent = new THREE.Vector3(-p.pos.y/rp, p.pos.x/rp, 0);
+        const tangent = userTangentCache.set(-p.pos.y/rp, p.pos.x/rp, 0);
         const compact = Math.min(0.48, M / Math.max(r, 0.001));
-
-        const rate = observerRate(p.pos);
+        const lapse = kerrLapseAt(p.pos, M, aKerr, EH);
+        const rate = THREE.MathUtils.clamp(lapse * lapse, 0.00002, 1);
         const freezeRadius = EH * 1.0006;
         const nearHorizon = 1 - THREE.MathUtils.smoothstep(rate, 0.0, 0.20);
         if(r <= freezeRadius || p.horizonFrozen){
@@ -1333,28 +1093,12 @@
           p.vel.multiplyScalar(0.0);
           p.pos.setLength(freezeRadius);
         } else {
-          const rainBeta = Math.sqrt(Math.min(2 * M / Math.max(r, EH + 1e-4), 0.9999));
-          const farOrbit = THREE.MathUtils.smoothstep(r, EH * 1.75, EH * 7.2);
-          const plungeBias = 1 - THREE.MathUtils.smoothstep(r, EH * 1.9, EH * 6.5);
-          const angularBarrier = THREE.MathUtils.clamp(((p.Lz || 0) * (p.Lz || 0)) / Math.max(2 * M * r * r, 1e-4) * 0.10, 0, 0.36);
-          const radialBeta = Math.sqrt(Math.max(0.018, rainBeta * rainBeta - angularBarrier));
-          const radialCoordSpeed = rate * radialBeta * (1.45 + 0.75 * plungeBias);
-
-          const omegaFD = kerrFrameDraggingOmega(p.pos);
-          const omegaK = Math.sqrt(M) / Math.max(Math.pow(r, 1.5) + aKerr * Math.sqrt(M), 0.1);
-          const omegaL = (p.Lz || 0) / Math.max(r*r + aKerr*aKerr + 2*M*aKerr*aKerr / Math.max(r, EH), 1.0);
-          const omegaGeo = THREE.MathUtils.lerp(omegaFD, omegaK * 0.84 + omegaL * 0.16, farOrbit);
-          const angularStep = omegaGeo * Math.max(rate, 0.0004) * h;
-          const radialStepCap = Math.min(Math.max(0.006, r * 0.014), Math.max(r - freezeRadius, 0));
-          const radialStep = Math.min(radialCoordSpeed * h, radialStepCap);
-          const nextR = Math.max(freezeRadius, r - radialStep);
-
-          userNextPosCache.copy(p.pos).applyAxisAngle(zAxis, angularStep).setLength(nextR);
+          advanceGridFreeFall(p.pos, userNextPosCache, h, M, aKerr, EH);
           userCoordVelCache.copy(userNextPosCache).sub(p.pos).multiplyScalar(1 / Math.max(h, 0.0001));
-          p.vel.lerp(userCoordVelCache, 0.46 + 0.30 * Math.sqrt(rate));
+          p.vel.copy(userCoordVelCache);
           p.pos.copy(userNextPosCache);
 
-          if(nextR <= freezeRadius + 1e-5){
+          if(p.pos.length() <= freezeRadius + 1e-5){
             p.horizonFrozen = true;
             p.freezeAge += h * nearHorizon;
             p.vel.multiplyScalar(0.0);
@@ -1367,48 +1111,32 @@
         const speed = Math.min(0.88, p.vel.length() * 0.32);
         const beta = Math.min(0.82, speed + 0.18 * spin01 * compact);
         const gamma = 1 / Math.sqrt(Math.max(1 - beta*beta, 0.04));
-        const vDir = p.vel.lengthSq() > 1e-7 ? p.vel.clone().normalize() : tangent;
+        const vDir = p.vel.lengthSq() > 1e-7 ? userVelocityDirCache.copy(p.vel).normalize() : tangent;
         const cosLOS = THREE.MathUtils.clamp(vDir.dot(los), -0.985, 0.985);
         const doppler = 1 / Math.max(gamma * (1 - beta * cosLOS), 0.16);
 
-        let gravShift = gravitationalFrequencyShift(p.pos, r);
+        const newR = p.pos.length() + 0.0001;
+        const newLapse = kerrLapseAt(p.pos, M, aKerr, EH);
+        const rainBeta = Math.sqrt(Math.min(2 * M / Math.max(newR, EH + 1e-4), 0.9999));
+        let gravShift = THREE.MathUtils.clamp(newLapse / (1 + rainBeta), 0.00002, 1);
         if(p.horizonFrozen) gravShift *= Math.exp(-1.25 * p.freezeAge);
 
         const gShift = THREE.MathUtils.clamp(doppler * gravShift, 0.0004, 2.0);
-        p.gShift = gShift;
-        p.observerRate = rate;
-        p.receivedFlux = Math.pow(Math.min(gShift, 1.0), 3.0);
-        p.brightness = p.receivedFlux;
-
-        const visibleColor = redshiftedWhiteColor(gShift);
-        p.lensAlpha = lensedParticlePosition(p.pos, userLensTargetCache);
-        p.visualPos.lerp(userLensTargetCache, 0.42);
+        redshiftedWhiteColor(gShift, p.color);
+        const lensAlpha = lensedParticlePosition(p.pos, userLensTargetCache);
+        p.visualPos.copy(userLensTargetCache);
         const intrinsicAlpha = THREE.MathUtils.clamp(
           0.96 * Math.pow(THREE.MathUtils.clamp(gShift / 0.52, 0, 1), 1.55),
           0,
           1
         );
-        const visualAlpha = intrinsicAlpha * p.lensAlpha;
+        p.opacity = intrinsicAlpha * lensAlpha;
 
-        if(gShift < 0.006 || intrinsicAlpha < 0.003 || r > 220 || p.age > 120 || !Number.isFinite(p.pos.x)){
-          if(p.mesh){
-            userVisualGroup.remove(p.mesh);
-            p.mesh.material.dispose();
-          }
+        if(gShift < 0.006 || p.opacity < 0.003 || newR > 220 || p.age > 120 || !Number.isFinite(p.pos.x)){
           userParticles.splice(i, 1);
           continue;
         }
 
-        p.color.copy(visibleColor);
-        if(p.mesh){
-          p.mesh.position.copy(p.visualPos);
-          const redshiftOnset = THREE.MathUtils.smoothstep(0.62, 0.38, gShift);
-          const solidColor = new THREE.Color(1.0, 1.0, 1.0).lerp(p.color, redshiftOnset);
-          p.mesh.material.color.copy(solidColor);
-          p.mesh.material.transparent = redshiftOnset > 0.02 || p.lensAlpha < 0.999;
-          p.mesh.material.opacity = THREE.MathUtils.lerp(1.0, intrinsicAlpha, redshiftOnset) * p.lensAlpha;
-          p.mesh.scale.setScalar((1.85 + 0.45 * visualAlpha) * (1.0 + 0.015 * Math.sin(p.age * 4.0)));
-        }
         const recycled = p.hist.pop();
         recycled.copy(p.pos);
         p.hist.unshift(recycled);
@@ -1424,24 +1152,25 @@
         userPointColors[i*3+0] = p.color.r;
         userPointColors[i*3+1] = p.color.g;
         userPointColors[i*3+2] = p.color.b;
-        userPointAlpha[i] = p.mesh ? p.mesh.material.opacity : 0.0;
+        userPointAlpha[i] = p.opacity;
+
+        for(let j=0;j<USER_STEPS;j++){
+          p.histAlpha[j] = lensedParticlePosition(p.hist[j], p.visualHist[j]);
+        }
 
         for(let j=0;j<USER_STEPS-1;j++){
           const seg = (i*(USER_STEPS-1)+j)*2;
           const base = seg*3;
-          const a = p.hist[j];
-          const b = p.hist[j+1];
-          const lensA = lensedParticlePosition(a, trailLensACache);
-          const lensB = lensedParticlePosition(b, trailLensBCache);
-          const baseAlpha = p.mesh ? p.mesh.material.opacity : 0.0;
-          const fadeA = (1 - j / (USER_STEPS-1)) * 0.72 * baseAlpha * lensA;
-          const fadeB = (1 - (j+1) / (USER_STEPS-1)) * 0.72 * baseAlpha * lensB;
-          userTrailPositions[base+0] = trailLensACache.x;
-          userTrailPositions[base+1] = trailLensACache.y;
-          userTrailPositions[base+2] = trailLensACache.z;
-          userTrailPositions[base+3] = trailLensBCache.x;
-          userTrailPositions[base+4] = trailLensBCache.y;
-          userTrailPositions[base+5] = trailLensBCache.z;
+          const a = p.visualHist[j];
+          const b = p.visualHist[j+1];
+          const fadeA = (1 - j / (USER_STEPS-1)) * 0.72 * p.opacity * p.histAlpha[j];
+          const fadeB = (1 - (j+1) / (USER_STEPS-1)) * 0.72 * p.opacity * p.histAlpha[j+1];
+          userTrailPositions[base+0] = a.x;
+          userTrailPositions[base+1] = a.y;
+          userTrailPositions[base+2] = a.z;
+          userTrailPositions[base+3] = b.x;
+          userTrailPositions[base+4] = b.y;
+          userTrailPositions[base+5] = b.z;
           userTrailColors[base+0] = p.color.r;
           userTrailColors[base+1] = p.color.g;
           userTrailColors[base+2] = p.color.b;
@@ -1453,10 +1182,8 @@
         }
       }
 
-      activeUserPointCount = pointCount;
-      activeUserTrailVertexCount = trailVertexCount;
-      userPointGeo.setDrawRange(0, activeUserPointCount);
-      userTrailGeo.setDrawRange(0, activeUserTrailVertexCount);
+      userPointGeo.setDrawRange(0, pointCount);
+      userTrailGeo.setDrawRange(0, trailVertexCount);
       userPointGeo.attributes.position.needsUpdate = true;
       userPointGeo.attributes.aColor.needsUpdate = true;
       userPointGeo.attributes.aAlpha.needsUpdate = true;
@@ -1571,19 +1298,18 @@
       setAddParticleMode(!params.addParticleMode);
     });
 
-    function bindSlider(id, valueId, key, uniformA, uniformB){
+    function bindSlider(id, valueId, key, uniform){
       const input=document.getElementById(id), value=document.getElementById(valueId);
       input.addEventListener("input",()=>{
         params[key]=Number(input.value);
         value.textContent=params[key].toFixed(2);
-        if(uniformA) uniformA.value=params[key];
-        if(uniformB) uniformB.value=params[key];
-        updateKerrUniforms();
+        if(uniform) uniform.value=params[key];
+        if(key === "spin" || key === "mass") updateKerrUniforms();
       });
     }
-    bindSlider("spinSlider","spinValue","spin",uniforms.uSpin);
-    bindSlider("massSlider","massValue","mass",uniforms.uLensMass, uniforms.uFlow);
-    bindSlider("timeSlider","timeValue","timeScale",null);
+    bindSlider("spinSlider","spinValue","spin");
+    bindSlider("massSlider","massValue","mass",uniforms.uLensMass);
+    bindSlider("timeSlider","timeValue","timeScale");
     bindSlider("gridBrightSlider","gridBrightValue","gridBright",uniforms.uGridBright);
 
     let resizeQueued = false;
@@ -1606,14 +1332,9 @@
     function animate(){
       requestAnimationFrame(animate);
       const dt=Math.min(clock.getDelta(), 0.033) * params.timeScale;
+      controls.update();
       uniforms.uTime.value += dt;
       uniforms.uCameraPos.value.copy(camera.position);
-      updateKerrUniforms();
-      const apparentShadowScale = kerrShadowWorldRadius() / HORIZON_GEOMETRY_RADIUS;
-      horizon.visible = params.shadow;
-      horizon.material.visible = params.shadow;
-      horizon.scale.setScalar(apparentShadowScale);
-      blackHoleGroup.rotation.z += dt*.003*params.spin;
       if(backgroundPlane.visible || diskTracer.visible){
         camera.getWorldDirection(cameraForward).normalize();
         const tracerDist = Math.max(8, camera.position.distanceTo(controls.target));
@@ -1635,9 +1356,7 @@
         }
       }
 
-      updateParticles(dt);
       updateUserParticles(dt);
-      controls.update();
       renderer.render(scene,camera);
     }
     animate();
