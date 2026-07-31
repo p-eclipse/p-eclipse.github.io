@@ -63,7 +63,7 @@
 <div class="panel">
   <h1>블랙홀 · 일반상대론</h1>
   <p class="sub">2차원 공간 + 1차원 시간을 탑뷰로 본 시공간.
-  좌표격자는 자유낙하 측지선을 따라 수축하고, 회전(각운동량)은 프레임 드래깅으로 시공간을 끌고 돕니다.</p>
+  격자·빛·물체가 매 순간 같은 시공간 계량을 읽으며 함께 진화합니다.</p>
 
   <div class="row">
     <label>질량 (Rₛ)</label>
@@ -76,7 +76,7 @@
     <span class="val" id="spinV">↺ 0.60</span>
   </div>
   <div class="row">
-    <label>흐름 속도</label>
+    <label>시간 배율</label>
     <input id="speed" type="range" min="0.2" max="7" step="0.05" value="1.6">
     <span class="val" id="speedV">1.6×</span>
   </div>
@@ -100,10 +100,12 @@
   <div class="legend">
     <div><span class="k" style="background:#59d0ff"></span>먼 곳: 평탄한 시공간</div>
     <div><span class="k" style="background:#ff7a3c"></span>지평선 근처: 강한 적색편이 · 낙하</div>
-    <div style="margin-top:6px"><b>측지선:</b> dr/dτ = −c·√(Rₛ/r)</div>
+    <div style="margin-top:6px"><b>공유 격자 흐름:</b> βᵣ = −c√(Rₛ/r), βφ = −rω</div>
+    <div><b>빛:</b> dx/dt = β + c·p/|p|</div>
+    <div><b>물체:</b> dx/dt = β + c·p/√(m²c²+p²)</div>
+    <div><b>공통 운동량:</b> dp/dt = −(∇β)ᵀp</div>
     <div><b>드래깅:</b> ω = 2Ma/(r³+a²r+2Ma²) &nbsp;<i>(|a/M|>1: 초극단 ↺/↻)</i></div>
-    <div><b>공 적색편이:</b> 1+z = E /(1−Rₛ/r)</div>
-    <div style="margin-top:6px;color:#9fb0d4">공 모드에서 <b>드래그로 발사</b> — 짧게=낙하, 접선방향=공전</div>
+    <div style="margin-top:6px;color:#9fb0d4">공 모드에서 <b>드래그로 발사</b> — 짧게 놓으면 격자와 함께 자유낙하</div>
   </div>
 </div>
 
@@ -119,7 +121,7 @@ const hintEl = document.getElementById('hint');
 const P = {
   rs: 1.2,        // 슈바르츠실트 반지름 (world 단위)
   spin: 0.6,      // 회전 a/M  (물리적: a ≤ M)
-  speed: 1.6,     // 격자 흐름 속도 배율
+  speed: 1.6,     // 모든 계에 공통인 좌표시간 배율
   density: 30,
   showGrid:true, showLight:true, showStars:true, paused:false, ballMode:false,
 };
@@ -133,6 +135,65 @@ function updateDerived(){
 function omega(r){ // 프레임 드래깅 각속도
   const M=DER.M, a=DER.a;
   return 2*M*a / (r*r*r + a*a*r + 2*M*a*a);
+}
+
+// ================= 공유 시공간 계량 =================
+// Painlevé–Gullstrand형 ADM 계량:
+//   ds² = -c²dt² + |dx - β(x,t)dt|²
+// β는 화면의 격자 자체가 흐르는 속도(shift field)다. 격자, 광자, 물체는
+// 모두 매 적분 단계에서 이 함수를 다시 읽으므로 질량/회전 변화에도 즉시 반응한다.
+const C=1;
+const SIM_RATE=2.4; // 물리는 c=1로 유지하고 표시용 좌표시간만 가속
+function spacetimeFlow(x,y,t=0){
+  const r=Math.max(1e-5,Math.hypot(x,y));
+  const rx=x/r, ry=y/r;
+  const vr=-C*Math.sqrt(P.rs/r);       // 자유낙하하는 공간의 방사 흐름
+  const vt=-r*omega(r);                // 회전에 의한 접선 shift (화면상 a>0: 반시계)
+  return {x:vr*rx-vt*ry, y:vr*ry+vt*rx};
+}
+function flowJacobian(x,y,t=0){
+  // 같은 실시간 field를 수치 미분한다. 이 Jacobian이 빛과 물체의 운동량을
+  // 평행이동시켜 둘 다 동일한 시공간 곡률을 느끼게 한다.
+  const r=Math.max(P.rs,Math.hypot(x,y));
+  const h=Math.max(2e-4,Math.min(0.012,r*8e-4));
+  const xp=spacetimeFlow(x+h,y,t), xm=spacetimeFlow(x-h,y,t);
+  const yp=spacetimeFlow(x,y+h,t), ym=spacetimeFlow(x,y-h,t);
+  return {
+    xx:(xp.x-xm.x)/(2*h), xy:(yp.x-ym.x)/(2*h),
+    yx:(xp.y-xm.y)/(2*h), yy:(yp.y-ym.y)/(2*h),
+  };
+}
+function phaseDerivative(s,mass,t){
+  const flow=spacetimeFlow(s.x,s.y,t);
+  const J=flowJacobian(s.x,s.y,t);
+  const p2=s.px*s.px+s.py*s.py;
+  const denom=mass===0?Math.max(1e-9,Math.sqrt(p2)):Math.sqrt(mass*mass*C*C+p2);
+  return {
+    x:flow.x+C*s.px/denom,
+    y:flow.y+C*s.py/denom,
+    px:-(J.xx*s.px+J.yx*s.py),
+    py:-(J.xy*s.px+J.yy*s.py),
+  };
+}
+function rk4Phase(s,dt,mass,t){
+  const add=(q,k,h)=>({x:q.x+k.x*h,y:q.y+k.y*h,px:q.px+k.px*h,py:q.py+k.py*h});
+  const k1=phaseDerivative(s,mass,t);
+  const k2=phaseDerivative(add(s,k1,dt*0.5),mass,t+dt*0.5);
+  const k3=phaseDerivative(add(s,k2,dt*0.5),mass,t+dt*0.5);
+  const k4=phaseDerivative(add(s,k3,dt),mass,t+dt);
+  s.x+=dt*(k1.x+2*k2.x+2*k3.x+k4.x)/6;
+  s.y+=dt*(k1.y+2*k2.y+2*k3.y+k4.y)/6;
+  s.px+=dt*(k1.px+2*k2.px+2*k3.px+k4.px)/6;
+  s.py+=dt*(k1.py+2*k2.py+2*k3.py+k4.py)/6;
+}
+function integratePhase(s,dt,mass,t){
+  const steps=Math.max(1,Math.min(64,Math.ceil(dt/0.018)));
+  const h=dt/steps;
+  for(let i=0;i<steps;i++){
+    rk4Phase(s,h,mass,t+i*h);
+    if(Math.hypot(s.x,s.y)<=DER.rHor*1.005) return false;
+  }
+  return true;
 }
 
 const view = { cx:0, cy:0, worldRadius:12 };
@@ -190,28 +251,28 @@ function resetGen(g){
   }
   g.age=0;
 }
-function integrateGen(g,dt){
-  const rs=P.rs,N=g.N,rHor=DER.rHor;
-  const sub=5,h=dt/sub;
+function integrateGen(g,dt,t0){
+  const N=g.N,rHor=DER.rHor;
+  const sub=Math.max(1,Math.min(48,Math.ceil(dt/0.025))),h=dt/sub;
   for(let s=0;s<sub;s++){
     for(let k=0;k<N*N;k++){
       if(g.absorbed[k])continue;
       let x=g.x[k],y=g.y[k];
       const r=Math.hypot(x,y);
       if(r<=rHor*1.015){g.absorbed[k]=1;continue;}
-      const vr=Math.sqrt(rs/r);            // 방사 자유낙하 (측지선)
-      const om=omega(r);                    // 프레임 드래깅
-      const rn=r-vr*h;
-      if(rn<=rHor){g.absorbed[k]=1;continue;}
-      const phi=Math.atan2(y,x)-om*h;   // a>0 → 화면상 반시계
-      g.x[k]=rn*Math.cos(phi); g.y[k]=rn*Math.sin(phi);
+      // 공유 shift field를 midpoint로 적분: 이 격자 흐름을 빛과 물체도 사용한다.
+      const f1=spacetimeFlow(x,y,t0+s*h);
+      const mx=x+f1.x*h*0.5, my=y+f1.y*h*0.5;
+      const f2=spacetimeFlow(mx,my,t0+(s+0.5)*h);
+      g.x[k]=x+f2.x*h; g.y[k]=y+f2.y*h;
+      if(Math.hypot(g.x[k],g.y[k])<=rHor) g.absorbed[k]=1;
     }
   }
 }
-function updateGens(dt){
+function updateGens(wallDt,simDt,t0){
   for(const g of gens){
-    g.age+=dt;                    // 실시간(초) — 페이드 수명용
-    integrateGen(g,dt*P.speed);   // 위치는 흐름 속도로 적분
+    g.age+=wallDt;                 // 화면 페이드는 실제 시간 기준
+    integrateGen(g,simDt,t0);      // 위치는 모두와 같은 좌표시간 기준
     if(g.age>=lifetime) resetGen(g);
   }
 }
@@ -226,16 +287,6 @@ function speedColor(v,a){
   const t=Math.min(1,v);
   const r=Math.round(60+t*t*200), gc=Math.round(175-t*95), b=Math.round(255-t*150);
   return `rgba(${r},${gc},${b},${a})`;
-}
-// 정지된 평평한 기준 격자 (먼 곳/배경) — world 좌표에 고정
-function drawFlatGrid(){
-  const sp=latSpacing;
-  const xMin=view.cx-W/(2*scale), xMax=view.cx+W/(2*scale);
-  const yMin=view.cy-H/(2*scale), yMax=view.cy+H/(2*scale);
-  ctx.lineWidth=1; ctx.strokeStyle='rgba(120,160,255,0.10)'; ctx.beginPath();
-  for(let i=Math.floor(xMin/sp);i<=Math.ceil(xMax/sp);i++){ const sx=W2Sx(i*sp); ctx.moveTo(sx,0); ctx.lineTo(sx,H); }
-  for(let j=Math.floor(yMin/sp);j<=Math.ceil(yMax/sp);j++){ const sy=W2Sy(j*sp); ctx.moveTo(0,sy); ctx.lineTo(W,sy); }
-  ctx.stroke();
 }
 function drawGrid(g){
   const gA=genAlpha(g); if(gA<=0.01)return;
@@ -263,158 +314,99 @@ function drawGrid(g){
   }
 }
 
-// ================= 빛: 광자 측지선 + 가우시안 펄스 =================
-// 경로: d²u/dφ² + u = 1.5·Rₛ·u²  (u=1/r) 를 RK4 적분
+// ================= 빛: 공유 계량 위의 실시간 null 측지선 =================
+// 미리 만든 정적 곡선을 재생하지 않는다. 광자의 (x,p)를 매 프레임 갱신하며,
+// 국소 자유낙하 격자에 대한 빛의 속력은 항상 c다.
 let lightShot=null;
-// 매 발사마다 충돌계수 b를 바꿔 궤적 생성.
-//  b < 임계(≈2.598 Rₛ) → 지평선에 박힘(포획),  b > 임계 → 크게 휘어 쌍곡선으로 탈출.
 function newLightShot(){
-  const rs=P.rs, rMax=view.worldRadius*1.5;
-  const bMag=(1.4+Math.random()*2.5)*rs;      // 임계값 전후로 랜덤
-  const sign=Math.random()<0.5?1:-1;          // 좌/우 어느 쪽에서 올지
-  const raw=integratePhoton(sign*bMag, rMax, rs);
-  const Rtrim=view.worldRadius*1.25;           // 화면 근처 구간만 사용
-  let lo=0, hi=raw.length-1;
-  while(lo<raw.length && Math.hypot(raw[lo][0],raw[lo][1])>Rtrim) lo++;
-  while(hi>=0 && Math.hypot(raw[hi][0],raw[hi][1])>Rtrim) hi--;
-  const pts=raw.slice(lo,hi+1);
-  if(pts.length<3){ lightShot=null; return; }
-  const cum=[0]; let L=0;
-  for(let i=1;i<pts.length;i++){ L+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]); cum.push(L); }
-  lightShot={pts,cum,len:L,captured:raw.captured,s:0};
+  const R=view.worldRadius*1.28;
+  const impact=(Math.random()*2-1)*Math.min(P.rs*3.5,R*0.72);
+  const turn=Math.random()*Math.PI*2;
+  const ct=Math.cos(turn),st=Math.sin(turn);
+  const x0=-R, y0=impact, dx=1,dy=0;
+  lightShot={
+    x:x0*ct-y0*st, y:x0*st+y0*ct,
+    px:dx*ct-dy*st, py:dx*st+dy*ct,
+    trail:[], R, age:0, entered:false, status:'flying', doneAge:0,
+  };
 }
-function integratePhoton(b,rMax,rs){
-  const sign=b>=0?1:-1, ab=Math.abs(b);
-  let u=1e-5,du=1/ab,phi=1e-5;
-  const dphi=0.010,out=[]; out.captured=false;
-  const f=(u)=>1.5*rs*u*u-u;
-  for(let s=0;s<4000;s++){
-    const k1u=du,k1v=f(u);
-    const k2u=du+0.5*dphi*k1v,k2v=f(u+0.5*dphi*k1u);
-    const k3u=du+0.5*dphi*k2v,k3v=f(u+0.5*dphi*k2u);
-    const k4u=du+dphi*k3v,k4v=f(u+dphi*k3u);
-    u+=dphi*(k1u+2*k2u+2*k3u+k4u)/6;
-    du+=dphi*(k1v+2*k2v+2*k3v+k4v)/6;
-    phi+=dphi;
-    if(u<=0)break;
-    const r=1/u;
-    if(r<=rs*1.01){out.captured=true;break;}
-    const X=r*Math.cos(phi),Y=sign*r*Math.sin(phi);
-    out.push([X,Y]);
-    if(r>rMax*1.4&&phi>0.3)break;
-    if(phi>Math.PI*2.2)break;
-  }
-  return out;
-}
-function pointAtArc(path,s){
-  const cum=path.cum,pts=path.pts;
-  if(s<=0)return pts[0];
-  if(s>=path.len)return pts[pts.length-1];
-  let lo=0,hi=cum.length-1;
-  while(lo<hi-1){ const mid=(lo+hi)>>1; if(cum[mid]<s)lo=mid; else hi=mid; }
-  const t=(s-cum[lo])/(cum[hi]-cum[lo]||1);
-  return [pts[lo][0]+(pts[hi][0]-pts[lo][0])*t, pts[lo][1]+(pts[hi][1]-pts[lo][1])*t];
-}
-const LIGHT_SPEED=10;   // world/sec (표시용)
-function advanceLight(dt){
+function advanceLight(dt,t0){
   if(!lightShot){ newLightShot(); return; }
-  lightShot.s+=LIGHT_SPEED*dt;
-  if(lightShot.s>=lightShot.len) newLightShot();   // 도착(포획/탈출)하면 새 광선 발사
+  const q=lightShot;
+  if(q.status==='flying'){
+    const alive=integratePhase(q,dt,0,t0);
+    q.age+=dt;
+    const r=Math.hypot(q.x,q.y);
+    if(r<q.R*0.92) q.entered=true;
+    if(!alive){
+      q.status='captured';
+    }else if((q.entered&&r>q.R*1.12)||q.age>q.R*5/C){
+      q.status='escaped';
+    }
+    const prev=q.trail[q.trail.length-1];
+    if(!prev||Math.hypot(q.x-prev[0],q.y-prev[1])>0.025) q.trail.push([q.x,q.y]);
+    if(q.trail.length>320) q.trail.shift();
+  }else{
+    q.doneAge+=dt;
+    if(q.doneAge>0.7) newLightShot();
+  }
 }
 function drawPhotons(){
-  const path=lightShot; if(!path) return;
-  const Rpx=Math.max(4, 0.42*scale);
-  const cap=path.captured;
-  // 희미한 전체 경로
-  ctx.lineWidth=1; ctx.strokeStyle=cap?'rgba(255,150,110,0.10)':'rgba(180,205,255,0.10)';
-  ctx.beginPath(); ctx.moveTo(W2Sx(path.pts[0][0]),W2Sy(path.pts[0][1]));
-  for(let i=1;i<path.pts.length;i++) ctx.lineTo(W2Sx(path.pts[i][0]),W2Sy(path.pts[i][1]));
-  ctx.stroke();
-
-  const head=Math.min(path.s,path.len);
-  const tailLen=path.len*0.30;                                  // 잔상 길이
-  const fin=smoothstep(0,path.len*0.06,head);
-  const fout=cap?1:smoothstep(0,path.len*0.06,path.len-head);   // 포획이면 지평선까지 밝게 유지
-  const env=fin*fout;
-  // 포획/탈출에 따른 색 (포획: 따뜻하게 빨려듦 / 탈출: 차가운 백청색)
-  const c0=cap?'255,236,220':'230,242,255', c1=cap?'255,150,110':'150,200,255';
-
-  ctx.globalCompositeOperation='lighter';
-  const N=30;
-  for(let i=0;i<N;i++){
-    const f=i/(N-1);                                            // 0=꼬리, 1=머리
-    const s=head-(1-f)*tailLen;
-    if(s<0) continue;                                           // 시작 이전은 생략(잔상 페이드인)
-    const p=pointAtArc(path,s);
-    const px=W2Sx(p[0]),py=W2Sy(p[1]);
-    const a=f*f*env, R=Rpx*(0.35+0.65*f);
-    const g=ctx.createRadialGradient(px,py,0,px,py,R);
-    g.addColorStop(0,`rgba(${c0},${0.5*a})`);
-    g.addColorStop(0.4,`rgba(${c1},${0.2*a})`);
-    g.addColorStop(1,`rgba(${c1},0)`);
-    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(px,py,R,0,7); ctx.fill();
+  const q=lightShot; if(!q||q.trail.length<2) return;
+  const cap=q.status==='captured';
+  const pts=q.trail, start=Math.max(1,pts.length-180);
+  ctx.lineWidth=1.35; ctx.lineCap='round';
+  for(let i=start;i<pts.length;i++){
+    const f=(i-start)/Math.max(1,pts.length-start-1);
+    const c=cap?'255,145,100':'145,205,255';
+    ctx.strokeStyle=`rgba(${c},${0.05+0.55*f*f})`;
+    ctx.beginPath();
+    ctx.moveTo(W2Sx(pts[i-1][0]),W2Sy(pts[i-1][1]));
+    ctx.lineTo(W2Sx(pts[i][0]),W2Sy(pts[i][1]));
+    ctx.stroke();
   }
-  // 밝은 머리 코어
-  const hp=pointAtArc(path,head);
-  ctx.fillStyle=`rgba(255,255,255,${0.75*env})`;
-  ctx.beginPath(); ctx.arc(W2Sx(hp[0]),W2Sy(hp[1]),Math.max(1.2,Rpx*0.16),0,7); ctx.fill();
+  const px=W2Sx(q.x),py=W2Sy(q.y),Rpx=Math.max(4,0.42*scale);
+  ctx.globalCompositeOperation='lighter';
+  const g=ctx.createRadialGradient(px,py,0,px,py,Rpx);
+  g.addColorStop(0,'rgba(255,255,255,0.95)');
+  g.addColorStop(0.35,cap?'rgba(255,160,110,0.50)':'rgba(165,215,255,0.50)');
+  g.addColorStop(1,'rgba(130,190,255,0)');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(px,py,Rpx,0,7); ctx.fill();
   ctx.globalCompositeOperation='source-over';
 }
 
 // ================= 공 (입자 측지선 + 부피 + 적색편이) =================
 const BALL_R=0.22;         // 고유 반지름 (world)
-const BALL_TSCALE=1.25;    // 좌표시간 진행 배율
 let balls=[];
 function spawnBall(x0,y0,vx,vy){
   const rs=P.rs, r=Math.hypot(x0,y0);
   if(r<=rs*1.05) return;
-  const phi=Math.atan2(y0,x0);
-  const rhx=Math.cos(phi), rhy=Math.sin(phi);      // 방사 단위
-  const thx=-Math.sin(phi), thy=Math.cos(phi);     // 접선 단위
   const vmag=Math.hypot(vx,vy);
-  let speed=Math.min(0.95, vmag);                  // 국소 고유속도 (<c)
-  let ur=0,ut=0;
-  if(vmag>1e-6){ ur=(vx*rhx+vy*rhy)/vmag; ut=(vx*thx+vy*thy)/vmag; }
-  const gamma=1/Math.sqrt(1-speed*speed);
-  const vr=speed*ur, vt=speed*ut;
-  const fr=Math.sqrt(Math.max(1e-6,1-rs/r));
-  const L=r*gamma*vt;                               // 각운동량
-  const E=fr*gamma;                                 // 에너지
-  const pr=fr*gamma*vr;                             // dr/dτ
-  balls.push({r,phi,pr,E,L,frozen:false,fade:1,trail:[],zfac:E/Math.max(1e-6,fr*fr)});
+  const speed=Math.min(0.95*C,vmag);
+  const ux=vmag>1e-9?vx/vmag:0, uy=vmag>1e-9?vy/vmag:0;
+  const gamma=1/Math.sqrt(1-(speed/C)*(speed/C));
+  // 드래그 속도는 격자에 대한 국소속도다. 0이면 p=0이므로 dx/dt=β:
+  // 공이 바로 그 위치의 격자점과 완전히 같은 자유낙하를 시작한다.
+  balls.push({
+    x:x0,y:y0,px:gamma*speed*ux/C,py:gamma*speed*uy/C,
+    frozen:false,fade:1,trail:[],zfac:1,
+  });
 }
-function ballAccel(r,L){
-  const M=DER.M;
-  return -M/(r*r) + L*L/(r*r*r) - 3*M*L*L/(r*r*r*r);
-}
-function integrateBall(b,dt){
-  const rs=P.rs;
+function integrateBall(b,dt,t0){
   if(b.frozen){ b.fade-=dt*0.28; return; }
-  const dtc=dt*BALL_TSCALE, sub=4, hc=dtc/sub;
-  for(let s=0;s<sub;s++){
-    if(b.r<=rs*1.02){ b.frozen=true; b.r=rs*1.02; break; }
-    const tt=b.E/Math.max(1e-6,(1-rs/b.r));   // dt/dτ (적색편이)
-    const htau=hc/tt;                          // 좌표시간→고유시간
-    // RK4 (r,pr) in τ
-    const L=b.L;
-    const a1=ballAccel(b.r,L);
-    const k1r=b.pr, k1p=a1;
-    const a2=ballAccel(b.r+0.5*htau*k1r,L);
-    const k2r=b.pr+0.5*htau*k1p, k2p=a2;
-    const a3=ballAccel(b.r+0.5*htau*k2r,L);
-    const k3r=b.pr+0.5*htau*k2p, k3p=a3;
-    const a4=ballAccel(b.r+htau*k3r,L);
-    const k4r=b.pr+htau*k3p, k4p=a4;
-    b.r+=htau*(k1r+2*k2r+2*k3r+k4r)/6;
-    b.pr+=htau*(k1p+2*k2p+2*k3p+k4p)/6;
-    b.phi+=(L/(b.r*b.r)-omega(b.r))*htau;      // 공전 + 프레임 드래깅(반시계=+a)
+  if(!integratePhase(b,dt,1,t0)){
+    const phi=Math.atan2(b.y,b.x);
+    b.x=DER.rHor*1.005*Math.cos(phi); b.y=DER.rHor*1.005*Math.sin(phi);
+    b.frozen=true;
   }
-  b.zfac=b.E/Math.max(1e-6,(1-rs/b.r));
+  const r=Math.hypot(b.x,b.y);
+  const gamma=Math.sqrt(1+b.px*b.px+b.py*b.py);
+  // 원거리 정지 관측자에 대한 시각적 적색편이 근사(운동 + 중력).
+  b.zfac=gamma/Math.sqrt(Math.max(0.025,1-P.rs/Math.max(P.rs*1.001,r)));
   // 탈출 제거
-  if(b.r>view.worldRadius*4.5){ b.fade-=dt*0.5; }
+  if(r>view.worldRadius*4.5){ b.fade-=dt*0.5; }
   // 궤적 기록
-  const x=b.r*Math.cos(b.phi), y=b.r*Math.sin(b.phi);
-  b.trail.push([x,y,b.zfac]);
+  b.trail.push([b.x,b.y,b.zfac]);
   if(b.trail.length>160) b.trail.shift();
 }
 function redshiftColor(zfac){
@@ -424,11 +416,13 @@ function redshiftColor(zfac){
   else{ const t=(u-0.5)/0.5; R=255-135*t; G=200-190*t; B=120-110*t; }
   return [R|0,G|0,B|0];
 }
-function drawBalls(dt){
+function updateBalls(dt,t0){
+  for(const b of balls) integrateBall(b,dt,t0);
+}
+function drawBalls(){
   const rs=P.rs;
   for(const b of balls){
-    if(!P.paused) integrateBall(b,dt);
-    const x=b.r*Math.cos(b.phi), y=b.r*Math.sin(b.phi);
+    const x=b.x, y=b.y, r=Math.hypot(x,y), phi=Math.atan2(y,x);
     const px=W2Sx(x), py=W2Sy(y);
     const col=redshiftColor(b.zfac);
     const z=Math.max(0,b.zfac-1);
@@ -448,7 +442,7 @@ function drawBalls(dt){
       }
     }
     // 조석 변형(스파게티화): 지평선 근처에서 방사방향으로 늘어남 (부피 보존)
-    const stretch=1+Math.min(2.6, rs*0.7/Math.max(0.2,(b.r-rs+0.25)));
+    const stretch=1+Math.min(2.6, rs*0.7/Math.max(0.2,(r-rs+0.25)));
     const rA=BALL_R*stretch, rB=BALL_R/Math.sqrt(stretch);
     const rApx=Math.max(2,rA*scale), rBpx=Math.max(1.5,rB*scale);
 
@@ -462,7 +456,7 @@ function drawBalls(dt){
 
     // 몸체 (방사방향으로 정렬된 타원)
     ctx.save();
-    ctx.translate(px,py); ctx.rotate(b.phi);
+    ctx.translate(px,py); ctx.rotate(phi);
     const bg=ctx.createRadialGradient(0,0,0,0,0,rApx);
     bg.addColorStop(0,`rgba(${Math.min(255,col[0]+40)},${Math.min(255,col[1]+30)},${Math.min(255,col[2]+30)},${dim})`);
     bg.addColorStop(1,`rgba(${col[0]*0.6|0},${col[1]*0.5|0},${col[2]*0.5|0},${dim})`);
@@ -540,9 +534,10 @@ function drawAim(){
 }
 
 // ================= 렌더 루프 =================
-let last=performance.now(),tGlobal=0;
+let last=performance.now(),tGlobal=0,simTime=0;
 function frame(now){
   let dt=(now-last)/1000; last=now; if(dt>0.05)dt=0.05; tGlobal+=dt;
+  const simDt=dt*P.speed*SIM_RATE, t0=simTime;
   ctx.fillStyle='#03040a'; ctx.fillRect(0,0,W,H);
 
   if(P.showStars){
@@ -552,12 +547,17 @@ function frame(now){
       ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,7); ctx.fill();
     }
   }
-  if(!P.paused){ updateGens(dt); advanceLight(dt); }
+  if(!P.paused){
+    updateGens(dt,simDt,t0);
+    advanceLight(simDt,t0);
+    updateBalls(simDt,t0);
+    simTime+=simDt;
+  }
 
-  if(P.showGrid){ drawFlatGrid(); for(const g of gens) drawGrid(g); }
+  if(P.showGrid){ for(const g of gens) drawGrid(g); }
   drawBlackHole();
   if(P.showLight) drawPhotons();
-  drawBalls(dt);
+  drawBalls();
   drawAim();
 
   requestAnimationFrame(frame);
