@@ -54,7 +54,7 @@
       const W=960,H=540,start={x:170,y:410},target={x:730,y:155},maxDrag=190;
       const FRICTION=46;
       const ui={round:document.querySelector("#round"),score:document.querySelector("#score"),force:document.querySelector("#force"),meter:document.querySelector("#meter"),angle:document.querySelector("#angle"),message:document.querySelector("#message"),next:document.querySelector("#next"),reset:document.querySelector("#reset"),result:document.querySelector("#result"),final:document.querySelector("#final")};
-      let puck={...start},velocity={x:0,y:0},aim=null,dragging=false,moving=false,shots=[],last=0,out=false;
+      let puck={...start},velocity={x:0,y:0},aim=null,dragging=false,moving=false,shots=[],last=0;
       const length=v=>Math.hypot(v.x,v.y),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
       const point=e=>{const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}};
       function scoreAt(p){const d=dist(p,target);return d<=34?100:d<=68?70:d<=108?40:0}
@@ -80,7 +80,7 @@
         drawArrow();ctx.fillStyle="#d9ff4f";ctx.strokeStyle="#14213d";ctx.lineWidth=3;ctx.beginPath();ctx.arc(puck.x,puck.y,18,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle="#14213d";ctx.beginPath();ctx.arc(puck.x,puck.y,7,0,Math.PI*2);ctx.fill();ctx.textAlign="start";
       }
       function finish(){
-        moving=false;velocity={x:0,y:0};const s=out?0:scoreAt(puck);shots.push({...puck,score:s});out=false;
+        moving=false;velocity={x:0,y:0};const s=scoreAt(puck);shots.push({...puck,score:s});
         if(s===100)setMessage("정중앙! 힘의 크기와 방향이 모두 정확했어요.");
         else if(s>0)setMessage("목표 구역 도착! 이전 기록과 비교해 보세요.");
         else if(puck.x>target.x+90)setMessage("너무 멀리 갔어요. 다음에는 힘을 줄여 보세요.");
@@ -91,8 +91,11 @@
       function frame(t){
         if(!moving)return;const dt=Math.min((t-last)/1000,.032);last=t;let speed=length(velocity);
         if(speed<2){finish();return}puck.x+=velocity.x*dt;puck.y+=velocity.y*dt;
-        if(puck.x<18||puck.x>W-18||puck.y<18||puck.y>H-18){puck.x=Math.max(18,Math.min(W-18,puck.x));puck.y=Math.max(18,Math.min(H-18,puck.y));out=true;finish();return}
-        const ns=Math.max(0,speed-FRICTION*dt),ratio=ns/speed;velocity.x*=ratio;velocity.y*=ratio;draw();requestAnimationFrame(frame);
+        let bounced=false;
+        if(puck.x<18||puck.x>W-18){puck.x=Math.max(18,Math.min(W-18,puck.x));velocity.x*=-1;bounced=true}
+        if(puck.y<18||puck.y>H-18){puck.y=Math.max(18,Math.min(H-18,puck.y));velocity.y*=-1;bounced=true}
+        if(bounced){velocity.x*=.82;velocity.y*=.82;setMessage("벽에 부딪혀 반사되었습니다.")}
+        speed=length(velocity);const ns=Math.max(0,speed-FRICTION*dt),ratio=ns/speed;velocity.x*=ratio;velocity.y*=ratio;draw();requestAnimationFrame(frame);
       }
       canvas.addEventListener("pointerdown",e=>{if(moving||shots.length>=5||dist(point(e),puck)>35)return;canvas.setPointerCapture(e.pointerId);dragging=true;aim={x:0,y:0};setMessage("화살표의 길이와 방향을 확인하고 손을 놓으세요.");draw()});
       canvas.addEventListener("pointermove",e=>{if(!dragging)return;const p=point(e),raw={x:p.x-puck.x,y:p.y-puck.y},n=length(raw),k=n>maxDrag?maxDrag/n:1;aim={x:raw.x*k,y:raw.y*k};updateReadout();draw()});
