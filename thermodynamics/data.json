@@ -35,6 +35,11 @@
       "name": "States of Matter",
       "path": "./StatesOfMatter/",
       "description": "물질의 상태 시뮬레이션"
+    },
+    {
+      "name": "Pressure, Particle model",
+      "path": "./ParticlePressure/",
+      "description": "압력 입자 모형 시뮬레이션"
     }
   ]
 }
