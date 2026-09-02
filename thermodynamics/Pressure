@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>기체의 압력 - A/B 입자 모형 시뮬레이션</title>
+<style>
+:root{--bg:#f4f7fb;--panel:#fff;--text:#172033;--muted:#68748a;--line:#dfe5ef;--accent:#3867d6;--A:#4f7cff;--B:#7a879c;--hit:#ff7b54;--good:#0f9d78}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Pretendard,"Noto Sans KR",system-ui,-apple-system,sans-serif}.wrap{width:min(1220px,96vw);margin:22px auto}h1{margin:0 0 6px;font-size:clamp(24px,3vw,38px);letter-spacing:-.04em}.sub{margin:0 0 18px;color:var(--muted);font-size:15px;line-height:1.55}.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,.78fr);gap:18px;align-items:start}.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;overflow:hidden}.sim-card{padding:16px}.sim-top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.status{display:flex;gap:9px;flex-wrap:wrap}.pill{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:#f0f4ff;color:#3159bd;font-weight:800;font-size:13px}button{border:0;border-radius:12px;padding:10px 14px;font-size:14px;font-weight:850;cursor:pointer;min-height:42px}.primary{background:var(--accent);color:#fff}.secondary{background:#eef2f8;color:#26344e}.canvas-wrap{position:relative;background:#edf2f9;border-radius:16px;overflow:hidden;border:2px solid #bdc9dc}canvas{display:block;width:100%;aspect-ratio:16/10}.hint{position:absolute;left:12px;bottom:10px;background:rgba(255,255,255,.92);border:1px solid rgba(0,0,0,.08);padding:6px 9px;border-radius:10px;font-size:12px;color:#526076}.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:13px;color:var(--muted)}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}.dot.a{background:var(--A)}.dot.b{background:var(--B)}.dot.hit{background:var(--hit)}.side{padding:18px}.side h2{margin:0 0 12px;font-size:20px}.section-title{margin:12px 0 4px;font-size:15px;font-weight:900}.section-title.a{color:#3159bd}.section-title.b{color:#5c6677}.control{padding:11px 0;border-bottom:1px solid var(--line)}.control:last-of-type{border-bottom:0}.labelrow{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px;font-weight:850}.value{color:var(--accent);white-space:nowrap}input[type=range]{width:100%}.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.metric{border-radius:14px;padding:12px;background:#f7f9fd;border:1px solid var(--line)}.metric .k{font-size:12px;color:var(--muted);margin-bottom:4px}.metric .v{font-size:22px;font-weight:950;letter-spacing:-.03em}.pressure-box{margin-top:12px;padding:14px;border-radius:16px;background:#eef9f5;border:1px solid #cceadd}.pressure-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.pressure-label{font-weight:900}.pressure-number{font-size:23px;font-weight:950;color:var(--good)}.bars{display:grid;gap:7px;margin-top:11px}.barrow{display:grid;grid-template-columns:82px 1fr 58px;gap:8px;align-items:center;font-size:12px}.bar{height:10px;background:#dde6e2;border-radius:999px;overflow:hidden}.bar>div{height:100%;width:0%;transition:width .12s linear}#aBar,#aPBar{background:#4f7cff}#bBar,#bPBar{background:#7a879c}.explain{margin-top:14px;padding:12px 14px;border-radius:14px;background:#fff8e8;border:1px solid #f1dfac;font-size:14px;line-height:1.6}.note{margin-top:12px;padding:11px 13px;border-radius:13px;background:#f4f6fa;border:1px solid var(--line);color:#53617a;font-size:12px;line-height:1.55}@media(max-width:850px){.layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>기체의 압력 — A와 B 입자 모형</h1>
+<p class="sub">A와 B 기체의 입자 수와 온도를 각각 바꾸어 보세요. 각 입자가 피스톤에 충돌할 때마다 피스톤이 일정 거리 이동하며, 충돌의 누적에 따라 부피가 달라집니다.</p>
+<div class="layout">
+<section class="card sim-card">
+<div class="sim-top"><div class="status"><span class="pill" id="balanceText">A와 B의 충돌 비교 중</span><span class="pill">1회 충돌 → 일정 거리 이동</span></div><div><button class="primary" id="pauseBtn">일시정지</button> <button class="secondary" id="resetBtn">초기화</button></div></div>
+<div class="canvas-wrap"><canvas id="sim" width="900" height="560"></canvas><div class="hint">주황색 섬광 = 피스톤과 충돌한 순간</div></div>
+<div class="legend"><span><i class="dot a"></i>A 기체 입자</span><span><i class="dot b"></i>B 기체 입자</span><span><i class="dot hit"></i>피스톤 충돌</span></div>
+</section>
+<aside class="card side">
+<h2>실험 조건</h2>
+<div class="section-title a">A 기체</div>
+<div class="control"><div class="labelrow"><label for="aCountRange">A 입자 수</label><span class="value"><span id="aCountVal">120</span>개</span></div><input id="aCountRange" type="range" min="40" max="220" step="10" value="120"></div>
+<div class="control"><div class="labelrow"><label for="aTempRange">A 온도</label><span class="value"><span id="aTempVal">300</span> K</span></div><input id="aTempRange" type="range" min="180" max="520" step="10" value="300"></div>
+<div class="section-title b">B 기체</div>
+<div class="control"><div class="labelrow"><label for="bCountRange">B 입자 수</label><span class="value"><span id="bCountVal">120</span>개</span></div><input id="bCountRange" type="range" min="40" max="220" step="10" value="120"></div>
+<div class="control"><div class="labelrow"><label for="bTempRange">B 온도</label><span class="value"><span id="bTempVal">300</span> K</span></div><input id="bTempRange" type="range" min="180" max="520" step="10" value="300"></div>
+<div class="control"><div class="labelrow"><label for="stepRange">충돌 1회당 이동량</label><span class="value"><span id="stepVal">0.70</span> px</span></div><input id="stepRange" type="range" min="0.2" max="2.0" step="0.1" value="0.7"></div>
+<div class="metric-grid"><div class="metric"><div class="k">A 기체 부피</div><div class="v"><span id="volumeVal">68</span><small>%</small></div></div><div class="metric"><div class="k">피스톤 이동</div><div class="v" id="pistonDir">정지</div></div></div>
+<div class="pressure-box">
+<div class="pressure-head"><div class="pressure-label">기체의 압력</div><div class="pressure-number" id="pressureCompare">A = B</div></div>
+<div class="bars">
+<div class="barrow"><span>A 압력</span><div class="bar"><div id="aPBar"></div></div><b id="aPressure">1.00</b></div>
+<div class="barrow"><span>B 압력</span><div class="bar"><div id="bPBar"></div></div><b id="bPressure">1.00</b></div>
+</div>
+<div style="margin-top:12px;padding-top:10px;border-top:1px solid #cceadd">
+<div class="barrow"><span>A 충돌</span><div class="bar"><div id="aBar"></div></div><b id="aHits">0/s</b></div>
+<div class="barrow" style="margin-top:7px"><span>B 충돌</span><div class="bar"><div id="bBar"></div></div><b id="bHits">0/s</b></div>
+</div>
+</div>
+<div class="explain" id="explain">A와 B의 입자가 피스톤을 때리는 횟수가 비슷하면 피스톤 위치가 크게 변하지 않습니다.</div>
+<div class="note">압력값은 수업용 상대값이며 <b>P ∝ NT/V</b> 관계로 계산됩니다. 아래의 충돌 횟수와 함께 보면서 입자 모형과 압력을 연결해 보세요.</div>
+</aside>
+</div>
+</div>
+<script>
+(()=>{const c=document.getElementById('sim'),x=c.getContext('2d');const L=50,T=54,D=505,MIN=360,MAX=700,RGT=850,R=4.2;let px=585,paused=false,last=performance.now();const A=[],B=[],fl=[];let ahc=0,bhc=0,ahs=0,bhs=0,win=performance.now();const ac=document.getElementById('aCountRange'),at=document.getElementById('aTempRange'),bc=document.getElementById('bCountRange'),bt=document.getElementById('bTempRange'),sr=document.getElementById('stepRange');let pat=+at.value,pbt=+bt.value;
+const step=()=>+sr.value;
+function mk(s){const ang=Math.random()*Math.PI*2,temp=s==='A'?+at.value:+bt.value,sp=(80+Math.random()*65)*Math.sqrt(temp/300);return s==='A'?{x:L+R+Math.random()*Math.max(20,px-L-2*R),y:T+R+Math.random()*(D-T-2*R),vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp}:{x:px+R+Math.random()*Math.max(20,RGT-px-2*R),y:T+R+Math.random()*(D-T-2*R),vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp}}
+function sync(){while(A.length<+ac.value)A.push(mk('A'));while(A.length>+ac.value)A.pop();while(B.length<+bc.value)B.push(mk('B'));while(B.length>+bc.value)B.pop()}
+function bounds(){for(const p of A)p.x=Math.max(L+R,Math.min(p.x,px-R));for(const p of B)p.x=Math.max(px+R,Math.min(p.x,RGT-R))}
+function flash(xx,yy){fl.push({x:xx,y:yy,l:1});if(fl.length>120)fl.shift()}
+function nudge(d){px+=d*step();px=Math.max(MIN,Math.min(MAX,px));bounds()}
+function group(g,s,dt){for(const p of g){p.x+=p.vx*dt;p.y+=p.vy*dt;if(p.y-R<=T&&p.vy<0){p.y=T+R;p.vy*=-1}if(p.y+R>=D&&p.vy>0){p.y=D-R;p.vy*=-1}if(s==='A'){if(p.x-R<=L&&p.vx<0){p.x=L+R;p.vx*=-1}if(p.x+R>=px&&p.vx>0){p.x=px-R;p.vx*=-1;ahc++;nudge(1);flash(px,p.y)}}else{if(p.x+R>=RGT&&p.vx>0){p.x=RGT-R;p.vx*=-1}if(p.x-R<=px&&p.vx<0){p.x=px+R;p.vx*=-1;bhc++;nudge(-1);flash(px,p.y)}}}}
+function upd(dt){group(A,'A',dt);group(B,'B',dt);for(const f of fl)f.l-=dt*3.8;while(fl.length&&fl[0].l<=0)fl.shift();const now=performance.now(),e=(now-win)/1000;if(e>=.5){ahs=Math.round(ahc/e);bhs=Math.round(bhc/e);ahc=bhc=0;win=now}}
+function draw(){x.clearRect(0,0,900,560);x.fillStyle='#eaf1ff';x.fillRect(L,T,px-L,D-T);x.fillStyle='#f0f2f5';x.fillRect(px,T,RGT-px,D-T);x.strokeStyle='#42516a';x.lineWidth=5;x.strokeRect(L,T,RGT-L,D-T);x.fillStyle='#6c778a';x.fillRect(px-6,T-4,12,D-T+8);x.fillStyle='#8f99aa';x.fillRect(px-26,(T+D)/2-10,52,20);for(const f of fl){x.beginPath();x.arc(f.x,f.y,7+(1-f.l)*11,0,Math.PI*2);x.strokeStyle=`rgba(255,123,84,${Math.max(0,f.l)})`;x.lineWidth=3;x.stroke()}for(const p of A){x.beginPath();x.arc(p.x,p.y,R,0,Math.PI*2);x.fillStyle='#4f7cff';x.fill()}for(const p of B){x.beginPath();x.arc(p.x,p.y,R,0,Math.PI*2);x.fillStyle='#7a879c';x.fill()}x.font='900 22px system-ui';x.fillStyle='#3159bd';x.fillText('A',L+20,T+34);x.fillStyle='#626d7f';x.fillText('B',RGT-40,T+34);x.font='800 15px system-ui';x.fillStyle='#4b586d';x.fillText('피스톤',px-27,T-14)}
+function ui(){
+document.getElementById('aCountVal').textContent=A.length;
+document.getElementById('bCountVal').textContent=B.length;
+document.getElementById('aTempVal').textContent=at.value;
+document.getElementById('bTempVal').textContent=bt.value;
+document.getElementById('stepVal').textContent=step().toFixed(2);
+
+const aVol=(px-L)/(585-L);
+const bVol=(RGT-px)/(RGT-585);
+const aP=(A.length/120)*(+at.value/300)/Math.max(.2,aVol);
+const bP=(B.length/120)*(+bt.value/300)/Math.max(.2,bVol);
+
+document.getElementById('volumeVal').textContent=Math.round((px-L)/(MAX-L)*100);
+document.getElementById('aPressure').textContent=aP.toFixed(2);
+document.getElementById('bPressure').textContent=bP.toFixed(2);
+
+const pm=Math.max(1,aP,bP);
+document.getElementById('aPBar').style.width=Math.min(100,aP/pm*100)+'%';
+document.getElementById('bPBar').style.width=Math.min(100,bP/pm*100)+'%';
+
+document.getElementById('aHits').textContent=ahs+'/s';
+document.getElementById('bHits').textContent=bhs+'/s';
+const m=Math.max(1,ahs,bhs);
+document.getElementById('aBar').style.width=ahs/m*100+'%';
+document.getElementById('bBar').style.width=bhs/m*100+'%';
+
+const pd=aP-bP;
+const d=ahs-bhs;
+if(Math.abs(pd)<0.08){
+document.getElementById('pressureCompare').textContent='A ≈ B';
+}else if(pd>0){
+document.getElementById('pressureCompare').textContent='A > B';
+}else{
+document.getElementById('pressureCompare').textContent='B > A';
+}
+
+if(Math.abs(d)<3){
+document.getElementById('balanceText').textContent='A와 B의 충돌이 비슷함';
+document.getElementById('pistonDir').textContent='거의 정지';
+document.getElementById('explain').innerHTML='현재 A의 상대 압력은 <b>'+aP.toFixed(2)+'</b>, B는 <b>'+bP.toFixed(2)+'</b>입니다. 압력은 입자 수와 온도가 커질수록 증가하고, 같은 양의 기체라면 부피가 작아질수록 증가합니다.';
+}else if(d>0){
+document.getElementById('balanceText').textContent='A가 더 자주 충돌';
+document.getElementById('pistonDir').textContent='오른쪽 →';
+document.getElementById('explain').innerHTML='A 입자가 피스톤에 더 자주 충돌해 오른쪽으로 밀고 있습니다. 피스톤이 이동해 A의 부피가 커지면 A의 압력은 다시 낮아지는 방향으로 변합니다.';
+}else{
+document.getElementById('balanceText').textContent='B가 더 자주 충돌';
+document.getElementById('pistonDir').textContent='← 왼쪽';
+document.getElementById('explain').innerHTML='B 입자가 피스톤에 더 자주 충돌해 왼쪽으로 밀고 있습니다. 피스톤이 이동해 B의 부피가 커지면 B의 압력은 다시 낮아지는 방향으로 변합니다.';
+}}
+function frame(now){const dt=Math.min(.025,(now-last)/1000);last=now;if(!paused)upd(dt);draw();ui();requestAnimationFrame(frame)}
+ac.addEventListener('input',sync);bc.addEventListener('input',sync);at.addEventListener('input',()=>{const n=+at.value,f=Math.sqrt(n/pat);for(const p of A){p.vx*=f;p.vy*=f}pat=n});bt.addEventListener('input',()=>{const n=+bt.value,f=Math.sqrt(n/pbt);for(const p of B){p.vx*=f;p.vy*=f}pbt=n});document.getElementById('pauseBtn').addEventListener('click',()=>{paused=!paused;document.getElementById('pauseBtn').textContent=paused?'계속하기':'일시정지'});document.getElementById('resetBtn').addEventListener('click',()=>{px=585;ac.value=bc.value=120;at.value=bt.value=300;sr.value=.7;pat=pbt=300;A.length=B.length=fl.length=0;ahc=bhc=ahs=bhs=0;win=performance.now();sync();paused=false;document.getElementById('pauseBtn').textContent='일시정지'});sync();requestAnimationFrame(frame)})();
+</script>
+</body>
+</html>
