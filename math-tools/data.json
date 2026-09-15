@@ -2,9 +2,9 @@
   "title": "Math Tools",
   "folders": [
     {
-      "name": "Bulding",
-      "path": "./building/",
-      "description": "개발중입니다."
+      "name": "Plotnote",
+      "path": "./Plotnote/",
+      "description": "플로트노트: 데이터입력&분석"
     }
   ]
 }
