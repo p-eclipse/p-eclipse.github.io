@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>기체의 압력 - A/B 입자 모형 시뮬레이션</title>
+<title>기체의 압력 입자 모형 시뮬레이션</title>
 <style>
 :root{--bg:#f4f7fb;--panel:#fff;--text:#172033;--muted:#68748a;--line:#dfe5ef;--accent:#3867d6;--A:#4f7cff;--B:#7a879c;--hit:#ff7b54;--good:#0f9d78}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Pretendard,"Noto Sans KR",system-ui,-apple-system,sans-serif}.wrap{width:min(1220px,96vw);margin:22px auto}h1{margin:0 0 6px;font-size:clamp(24px,3vw,38px);letter-spacing:-.04em}.sub{margin:0 0 18px;color:var(--muted);font-size:15px;line-height:1.55}.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,.78fr);gap:18px;align-items:start}.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;overflow:hidden}.sim-card{padding:16px}.sim-top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.status{display:flex;gap:9px;flex-wrap:wrap}.pill{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:#f0f4ff;color:#3159bd;font-weight:800;font-size:13px}button{border:0;border-radius:12px;padding:10px 14px;font-size:14px;font-weight:850;cursor:pointer;min-height:42px}.primary{background:var(--accent);color:#fff}.secondary{background:#eef2f8;color:#26344e}.canvas-wrap{position:relative;background:#edf2f9;border-radius:16px;overflow:hidden;border:2px solid #bdc9dc}canvas{display:block;width:100%;aspect-ratio:16/10}.hint{position:absolute;left:12px;bottom:10px;background:rgba(255,255,255,.92);border:1px solid rgba(0,0,0,.08);padding:6px 9px;border-radius:10px;font-size:12px;color:#526076}.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:13px;color:var(--muted)}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}.dot.a{background:var(--A)}.dot.b{background:var(--B)}.dot.hit{background:var(--hit)}.side{padding:18px}.side h2{margin:0 0 12px;font-size:20px}.section-title{margin:12px 0 4px;font-size:15px;font-weight:900}.section-title.a{color:#3159bd}.section-title.b{color:#5c6677}.control{padding:11px 0;border-bottom:1px solid var(--line)}.control:last-of-type{border-bottom:0}.labelrow{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px;font-weight:850}.value{color:var(--accent);white-space:nowrap}input[type=range]{width:100%}.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.metric{border-radius:14px;padding:12px;background:#f7f9fd;border:1px solid var(--line)}.metric .k{font-size:12px;color:var(--muted);margin-bottom:4px}.metric .v{font-size:22px;font-weight:950;letter-spacing:-.03em}.pressure-box{margin-top:12px;padding:14px;border-radius:16px;background:#eef9f5;border:1px solid #cceadd}.pressure-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.pressure-label{font-weight:900}.pressure-number{font-size:23px;font-weight:950;color:var(--good)}.bars{display:grid;gap:7px;margin-top:11px}.barrow{display:grid;grid-template-columns:82px 1fr 58px;gap:8px;align-items:center;font-size:12px}.bar{height:10px;background:#dde6e2;border-radius:999px;overflow:hidden}.bar>div{height:100%;width:0%;transition:width .12s linear}#aBar,#aPBar{background:#4f7cff}#bBar,#bPBar{background:#7a879c}.explain{margin-top:14px;padding:12px 14px;border-radius:14px;background:#fff8e8;border:1px solid #f1dfac;font-size:14px;line-height:1.6}.note{margin-top:12px;padding:11px 13px;border-radius:13px;background:#f4f6fa;border:1px solid var(--line);color:#53617a;font-size:12px;line-height:1.55}@media(max-width:850px){.layout{grid-template-columns:1fr}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Pretendard,"Noto Sans KR",system-ui,-apple-system,sans-serif}.wrap{width:min(1220px,96vw);margin:22px auto}h1{margin:0 0 6px;font-size:clamp(24px,3vw,38px);letter-spacing:-.04em}.sub{margin:0 0 18px;color:var(--muted);font-size:15px;line-height:1.55}.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,.78fr);gap:18px;align-items:start}.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;overflow:hidden}.sim-card{padding:16px}.sim-top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.status{display:flex;gap:9px;flex-wrap:wrap}.pill{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:#f0f4ff;color:#3159bd;font-weight:800;font-size:13px}button{border:0;border-radius:12px;padding:10px 14px;font-size:14px;font-weight:850;cursor:pointer;min-height:42px}.primary{background:var(--accent);color:#fff}.secondary{background:#eef2f8;color:#26344e}.canvas-wrap{position:relative;background:#edf2f9;border-radius:16px;overflow:hidden;border:2px solid #bdc9dc}canvas{display:block;width:100%;aspect-ratio:16/10;touch-action:none}.hint{pointer-events:none;position:absolute;left:12px;bottom:10px;background:rgba(255,255,255,.92);border:1px solid rgba(0,0,0,.08);padding:6px 9px;border-radius:10px;font-size:12px;color:#526076}.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:13px;color:var(--muted)}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}.dot.a{background:var(--A)}.dot.b{background:var(--B)}.dot.hit{background:var(--hit)}.side{padding:18px}.side h2{margin:0 0 12px;font-size:20px}.section-title{margin:12px 0 4px;font-size:15px;font-weight:900}.section-title.a{color:#3159bd}.section-title.b{color:#5c6677}.control{padding:11px 0;border-bottom:1px solid var(--line)}.control:last-of-type{border-bottom:0}.labelrow{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px;font-weight:850}.value{color:var(--accent);white-space:nowrap}input[type=range]{width:100%}.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.metric{border-radius:14px;padding:12px;background:#f7f9fd;border:1px solid var(--line)}.metric .k{font-size:12px;color:var(--muted);margin-bottom:4px}.metric .v{font-size:22px;font-weight:950;letter-spacing:-.03em}.pressure-box{margin-top:12px;padding:14px;border-radius:16px;background:#eef9f5;border:1px solid #cceadd}.pressure-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.pressure-label{font-weight:900}.pressure-number{font-size:23px;font-weight:950;color:var(--good)}.bars{display:grid;gap:7px;margin-top:11px}.barrow{display:grid;grid-template-columns:82px 1fr 58px;gap:8px;align-items:center;font-size:12px}.bar{height:10px;background:#dde6e2;border-radius:999px;overflow:hidden}.bar>div{height:100%;width:0%;transition:width .12s linear}#aBar,#aPBar{background:#4f7cff}#bBar,#bPBar{background:#7a879c}.explain{margin-top:14px;padding:12px 14px;border-radius:14px;background:#fff8e8;border:1px solid #f1dfac;font-size:14px;line-height:1.6}.note{margin-top:12px;padding:11px 13px;border-radius:13px;background:#f4f6fa;border:1px solid var(--line);color:#53617a;font-size:12px;line-height:1.55}@media(max-width:850px){.layout{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -16,7 +16,7 @@
 <div class="layout">
 <section class="card sim-card">
 <div class="sim-top"><div class="status"><span class="pill" id="balanceText">A와 B의 충돌 비교 중</span><span class="pill">완전탄성충돌 · 맥스웰–볼츠만 초기 분포</span></div><div><button class="primary" id="pauseBtn">일시정지</button> <button class="secondary" id="heatBtn" aria-pressed="true">온도 조절 켜짐</button> <button class="secondary" id="resetBtn">초기화</button></div></div>
-<div class="canvas-wrap"><canvas id="sim" width="900" height="560"></canvas><div class="hint">주황색 섬광 = 피스톤과 충돌한 순간</div></div>
+<div class="canvas-wrap"><canvas id="sim" width="900" height="560" aria-label="가운데 피스톤을 좌우로 드래그하여 기체 부피 조절"></canvas><div class="hint">피스톤을 좌우로 드래그 · 놓으면 자유롭게 이동</div></div>
 <div class="legend"><span><i class="dot a"></i>A 기체 입자</span><span><i class="dot b"></i>B 기체 입자</span><span><i class="dot hit"></i>피스톤 충돌</span></div>
 </section>
 <aside class="card side">
@@ -42,6 +42,7 @@
 </div>
 <div class="explain" id="explain">충돌할 때 입자와 피스톤의 속도가 함께 바뀝니다.</div>
 <div class="note">입자 간 충돌과 입자–피스톤 충돌은 완전탄성충돌입니다. 압력은 각 면이 받은 <b>충격량의 합 ÷ 시간 ÷ 면적</b>으로 측정한 상대값입니다. 초기 속도는 2차원 맥스웰–볼츠만 분포에서 추출합니다. 온도 조절 중에는 각 기체의 모든 입자의 열운동 속력을 같은 비율로 서서히 바꿉니다. 온도 조절을 끄면 외부 가열·냉각 없이 충돌만으로 에너지를 주고받습니다. 질량 조절은 같은 속도의 새 피스톤으로 교체하는 조작이므로 계의 에너지가 달라질 수 있습니다.</div>
+<div class="note">피스톤을 잡고 있으면 손으로 위치를 조절하며, 놓으면 정지 상태에서 다시 자유롭게 움직입니다. 실행 중 드래그는 기체에 일을 하므로 온도가 달라질 수 있습니다. 일시정지 중 드래그는 입자 위치만 재배치합니다. 입자 공간 확보를 위해 드래그 범위는 A 부피 12.5~87.5%입니다.</div>
 <div class="note">현재 온도: A <b id="aActualTemp">300</b> K <span id="aHeatState"></span> · B <b id="bActualTemp">300</b> K <span id="bHeatState"></span><br>피스톤 속도: <b id="pistonSpeed">0.0</b> px/s</div>
 </aside>
 </div>
@@ -49,6 +50,42 @@
 <script>
 (()=>{const c=document.getElementById('sim'),x=c.getContext('2d');const L=50,T=54,D=505,RGT=850,R=4.2,MIN=L+2*R,MAX=RGT-2*R,CENTER=(L+RGT)/2,PARTICLE_MASS=1;let px=CENTER,pv=0,paused=false,last=performance.now();const A=[],B=[],fl=[];let ahc=0,bhc=0,ahs=0,bhs=0,win=0,ai=0,bi=0,aps=0,bps=0;const ac=document.getElementById('aCountRange'),at=document.getElementById('aTempRange'),bc=document.getElementById('bCountRange'),bt=document.getElementById('bTempRange'),mr=document.getElementById('massRange');
 const pistonMass=()=>+mr.value;
+let dragId=null,dragOffset=0,dragTarget=px;
+// Leave room for the finite-size particles, even at the maximum particle count.
+const DRAG_MIN=L+100,DRAG_MAX=RGT-100;
+function pointerPosition(e){
+  const rect=c.getBoundingClientRect();
+  return {x:(e.clientX-rect.left)*c.width/rect.width,y:(e.clientY-rect.top)*c.height/rect.height};
+}
+function overPiston(p){
+  return p.y>=T-4&&p.y<=D+4&&Math.abs(p.x-px)<=(Math.abs(p.y-(T+D)/2)<=18?30:14);
+}
+function moveDrag(e){
+  dragTarget=Math.max(DRAG_MIN,Math.min(DRAG_MAX,pointerPosition(e).x-dragOffset));
+  if(paused){
+    // Paused dragging sets a new arrangement; it does not simulate compression work.
+    for(const p of A)p.x=L+R+(p.x-L-R)*(dragTarget-L-2*R)/Math.max(1e-9,px-L-2*R);
+    for(const p of B)p.x=RGT-R-(RGT-R-p.x)*(RGT-dragTarget-2*R)/Math.max(1e-9,RGT-px-2*R);
+    px=dragTarget;pv=0;fl.length=0;ahc=bhc=ahs=bhs=ai=bi=aps=bps=win=0;
+    draw();ui();
+  }
+}
+function endDrag(e){
+  if(dragId===null||(e&&e.pointerId!==dragId))return;
+  const id=dragId;dragId=null;pv=0;c.style.cursor='default';
+  if(c.hasPointerCapture(id))c.releasePointerCapture(id);
+}
+c.addEventListener('pointerdown',e=>{
+  if(e.button!==0||dragId!==null||!overPiston(pointerPosition(e)))return;
+  e.preventDefault();dragId=e.pointerId;dragOffset=pointerPosition(e).x-px;dragTarget=px;pv=0;
+  c.setPointerCapture(dragId);c.style.cursor='grabbing';
+});
+c.addEventListener('pointermove',e=>{
+  if(dragId!==null){if(e.pointerId===dragId)moveDrag(e)}
+  else c.style.cursor=overPiston(pointerPosition(e))?'grab':'default';
+});
+for(const event of ['pointerup','pointercancel','lostpointercapture'])c.addEventListener(event,endDrag);
+window.addEventListener('blur',()=>endDrag());
 // A continuous global heat bath for each chamber, chosen for visible, smooth heating.
 // This weak-coupling model suppresses canonical kinetic-energy fluctuations.
 const THERMAL_TAU=.8;
@@ -121,7 +158,8 @@ function hitPiston(p,side){
   const relative=p.vx-pv;
   if(side==='A'?relative<=0:relative>=0)return false;
   // J is the signed impulse delivered to the piston. Tangential vy is unchanged.
-  const M=pistonMass(),J=2*relative/(1/p.mass+1/M);
+  // While held, the hand prescribes piston motion and supplies/absorbs work.
+  const M=dragId===null?pistonMass():Infinity,J=2*relative/(1/p.mass+1/M);
   p.vx-=J/p.mass;pv+=J/M;
   if(side==='A'){ahc++;ai+=Math.abs(J)}else{bhc++;bi+=Math.abs(J)}
   flash(px,p.y);return true;
@@ -150,7 +188,7 @@ function drift(dt){
     for(const g of [A,B])for(const p of g){p.x+=p.vx*soon;p.y+=p.vy*soon}
     left-=soon;
     if(!event)break;
-    if(event.type==='stop'){px=Math.max(MIN,Math.min(MAX,px));pv=-pv}
+    if(event.type==='stop'){px=Math.max(MIN,Math.min(MAX,px));pv=dragId===null?-pv:0}
     else if(event.type==='x')event.p.vx=-event.p.vx;
     else if(event.type==='y')event.p.vy=-event.p.vy;
     else hitPiston(event.p,event.side);
@@ -209,6 +247,7 @@ function confine(g,s){
   }
 }
 function upd(dt){
+  if(dragId!==null)pv=dt>0?Math.max(-400,Math.min(400,(dragTarget-px)/dt)):0;
   let remaining=dt;
   while(remaining>1e-9){
     let maxSpeed=Math.max(1,Math.abs(pv));
@@ -235,7 +274,7 @@ function upd(dt){
     ahc=bhc=ai=bi=0;win=0;
   }
 }
-function draw(){x.clearRect(0,0,900,560);x.fillStyle='#eaf1ff';x.fillRect(L,T,px-L,D-T);x.fillStyle='#f0f2f5';x.fillRect(px,T,RGT-px,D-T);x.strokeStyle='#42516a';x.lineWidth=5;x.strokeRect(L,T,RGT-L,D-T);x.fillStyle='#6c778a';x.fillRect(px-6,T-4,12,D-T+8);x.fillStyle='#8f99aa';x.fillRect(px-26,(T+D)/2-10,52,20);for(const f of fl){x.beginPath();x.arc(f.x,f.y,7+(1-f.l)*11,0,Math.PI*2);x.strokeStyle=`rgba(255,123,84,${Math.max(0,f.l)})`;x.lineWidth=3;x.stroke()}for(const p of A){x.beginPath();x.arc(p.x,p.y,R,0,Math.PI*2);x.fillStyle='#4f7cff';x.fill()}for(const p of B){x.beginPath();x.arc(p.x,p.y,R,0,Math.PI*2);x.fillStyle='#7a879c';x.fill()}x.font='900 22px system-ui';x.fillStyle='#3159bd';x.fillText('A',L+20,T+34);x.fillStyle='#626d7f';x.fillText('B',RGT-40,T+34);x.font='800 15px system-ui';x.fillStyle='#4b586d';x.fillText('피스톤',px-27,T-14)}
+function draw(){x.clearRect(0,0,900,560);x.fillStyle='#eaf1ff';x.fillRect(L,T,px-L,D-T);x.fillStyle='#f0f2f5';x.fillRect(px,T,RGT-px,D-T);x.strokeStyle='#42516a';x.lineWidth=5;x.strokeRect(L,T,RGT-L,D-T);x.fillStyle=dragId===null?'#6c778a':'#3867d6';x.fillRect(px-6,T-4,12,D-T+8);x.fillStyle='#8f99aa';x.fillRect(px-26,(T+D)/2-10,52,20);for(const f of fl){x.beginPath();x.arc(f.x,f.y,7+(1-f.l)*11,0,Math.PI*2);x.strokeStyle=`rgba(255,123,84,${Math.max(0,f.l)})`;x.lineWidth=3;x.stroke()}for(const p of A){x.beginPath();x.arc(p.x,p.y,R,0,Math.PI*2);x.fillStyle='#4f7cff';x.fill()}for(const p of B){x.beginPath();x.arc(p.x,p.y,R,0,Math.PI*2);x.fillStyle='#7a879c';x.fill()}x.font='900 22px system-ui';x.fillStyle='#3159bd';x.fillText('A',L+20,T+34);x.fillStyle='#626d7f';x.fillText('B',RGT-40,T+34);x.font='800 15px system-ui';x.fillStyle='#4b586d';x.fillText('피스톤',px-27,T-14)}
 function ui(){
 document.getElementById('aCountVal').textContent=A.length;
 document.getElementById('bCountVal').textContent=B.length;
@@ -276,7 +315,7 @@ document.getElementById('pressureCompare').textContent='B > A';
 }
 
 document.getElementById('balanceText').textContent=Math.abs(pd)<.08?'양쪽 평균 압력이 비슷함':pd>0?'A의 평균 압력이 더 큼':'B의 평균 압력이 더 큼';
-document.getElementById('pistonDir').textContent=Math.abs(pv)<1?'거의 정지':pv>0?'오른쪽 →':'← 왼쪽';
+document.getElementById('pistonDir').textContent=dragId!==null?'직접 조작 중':Math.abs(pv)<1?'거의 정지':pv>0?'오른쪽 →':'← 왼쪽';
 document.getElementById('explain').textContent='피스톤은 충돌 사이에도 관성으로 움직입니다. 충돌 횟수가 같아도 전달된 충격량이 다르면 압력이 다릅니다. 가벼울수록 개별 충돌에 속도가 크게 변합니다.';
 }
 function frame(now){const dt=Math.min(.025,(now-last)/1000);last=now;if(!paused)upd(dt);draw();ui();requestAnimationFrame(frame)}
@@ -289,10 +328,10 @@ document.getElementById('heatBtn').addEventListener('click',()=>{
   document.getElementById('heatBtn').setAttribute('aria-pressed',String(heatEnabled));ui();
 });
 document.getElementById('pauseBtn').addEventListener('click',()=>{
-  paused=!paused;document.getElementById('pauseBtn').textContent=paused?'계속하기':'일시정지';
+  endDrag();paused=!paused;document.getElementById('pauseBtn').textContent=paused?'계속하기':'일시정지';
 });
 document.getElementById('resetBtn').addEventListener('click',()=>{
-  heatEnabled=true;heatA=heatB=0;
+  endDrag();heatEnabled=true;heatA=heatB=0;
   document.getElementById('heatBtn').textContent='온도 조절 켜짐';
   document.getElementById('heatBtn').setAttribute('aria-pressed','true');
   px=CENTER;pv=0;ac.value=bc.value=120;at.value=bt.value=300;mr.value=2;
