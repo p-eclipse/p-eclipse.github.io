@@ -20,6 +20,11 @@
       "name": "randomForce",
       "path": "./randomForce/",
       "description": "무작위로 추가되는 힘으로부터 알짜힘을 찾아보세요"
+    },
+    {
+      "name": "Force-Motion",
+      "path": "./Force-Motion/",
+      "description": "물체에 작용하는 힘과 운동상태 사이의 관계"
     }
   ]
 }
