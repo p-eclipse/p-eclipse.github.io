@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>운동의 세 가지 모습</title>
+<style>
+:root{color-scheme:light;font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#f5f7fb;color:#202e44}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0,#e6eefb,transparent 65%);min-height:100vh}main{max-width:1500px;margin:auto;padding:64px 32px 30px}header{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:36px}.eyebrow{font-size:12px;letter-spacing:3px;color:#566780;margin-bottom:14px}h1{font-size:clamp(26px,4vw,44px);letter-spacing:-1.8px;margin:0;font-weight:600}button{font:inherit;color:#24364e;border:1px solid #cbd5e3;background:#ffffff;border-radius:30px;min-height:44px;padding:10px 22px;cursor:pointer}button:hover{background:#eaf0f8}button:focus-visible{outline:3px solid #007ca8;outline-offset:4px}.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}.panel{min-width:0;background:linear-gradient(150deg,#ffffff,#f5f8fd);border:1px solid #d7e0ec;border-radius:24px;overflow:hidden}.heading{padding:26px 25px 0}.index{font-size:12px;letter-spacing:2px;color:var(--color);margin-bottom:14px}h2{font-size:21px;font-weight:500;margin:0;letter-spacing:-.6px}.sub{color:#586b85;font-size:14px;margin:10px 0 0}canvas{width:100%;height:330px;display:block}.readout{border-top:1px solid #dce4ef;margin:0 25px;padding:22px 0 26px;display:flex;align-items:center;justify-content:space-between;gap:16px}.label{font-size:12px;color:#586b85;margin-bottom:8px}.value{font-size:22px;font-variant-numeric:tabular-nums}.unit{font-size:13px;color:#586b85}.meter{height:4px;width:92px;background:#dce4ef;border-radius:4px;margin-top:12px;overflow:hidden}.fill{height:100%;background:var(--color)}.direction{font-size:14px;color:#405572;text-align:right}.footer{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:#566983;font-size:12px;margin-top:24px;line-height:1.8}.key.force{background:#df216a;height:3px}.key{display:inline-block;width:24px;height:2px;background:#405572;vertical-align:middle;margin-right:8px}@media(max-width:950px){main{padding:32px 20px}.gallery{gap:12px}.heading{padding:22px 18px 0}h2{font-size:18px}.readout{margin:0 18px}canvas{height:280px}}@media(max-width:740px){header{align-items:center}.gallery{grid-template-columns:1fr}canvas{height:290px}.heading{padding:24px 24px 0}.readout{margin:0 24px}main{padding:30px 16px}.footer{gap:8px}button{white-space:nowrap;padding:10px 15px}}
+</style>
+</head>
+<body><main>
+<header><div><div class="eyebrow">MOTION STUDY · 힘과 운동</div><h1>운동의 세 가지 모습</h1></div><button id="toggle" type="button" aria-pressed="false">일시 정지</button></header>
+<div class="gallery">
+<section class="panel" style="--color:#008398"><div class="heading"><div class="index">01 / SPEED</div><h2>속력만 변하는 경우</h2><p class="sub">방향은 그대로, 빠르게 느리게</p></div><canvas aria-label="오른쪽으로만 진행하며 속력이 변하는 물체"></canvas><div class="readout"><div><div class="label">속력</div><div class="value"><span class="speed"></span> <span class="unit">m/s</span></div><div class="meter"><div class="fill"></div></div></div><div class="direction">방향 일정<br>→ 오른쪽</div></div></section>
+<section class="panel" style="--color:#7350c6"><div class="heading"><div class="index">02 / DIRECTION</div><h2>방향만 변하는 경우</h2><p class="sub">같은 빠르기로, 계속 방향을 바꾸며</p></div><canvas aria-label="일정한 속력으로 원을 따라 도는 물체"></canvas><div class="readout"><div><div class="label">속력</div><div class="value"><span class="speed"></span> <span class="unit">m/s</span></div><div class="meter"><div class="fill"></div></div></div><div class="direction">방향 변화<br>↻ 원운동</div></div></section>
+<section class="panel" style="--color:#b7680b"><div class="heading"><div class="index">03 / SPEED + DIRECTION</div><h2>속력과 방향 모두 변하는 경우</h2><p class="sub">올라갈 때 느리게, 내려올 때 빠르게</p></div><canvas aria-label="비스듬히 던진 공이 올라갈 때 느려지고 내려올 때 빨라지는 포물선 운동"></canvas><div class="readout"><div><div class="label">속력</div><div class="value"><span class="speed"></span> <span class="unit">m/s</span></div><div class="meter"><div class="fill"></div></div></div><div class="direction">방향 변화<br>↗ 포물선 운동</div></div></section>
+</div><div class="footer"><span><i class="key"></i>물체 색 화살표: 속도 벡터　<i class="key force"></i>분홍 화살표: 알짜힘 · 잔상: 같은 시간 간격의 위치</span><span>직선 운동은 화면 밖으로 이어집니다 · 포물선은 공기 저항 없는 모형, 착지 후 재시작 · 힘 화살표는 같은 질량 기준의 상대 크기</span></div>
+</main>
+<script>
+'use strict';
+// Distance is in model meters; its derivative is the displayed speed.
+function motionState(i,t){
+ if(i===2){
+  const phase=t%4, vx=1.4, vy=-2.8+1.4*phase;
+  return {x:vx*phase,y:-2.8*phase+.7*phase*phase,speed:Math.hypot(vx,vy),direction:Math.atan2(vy,vx),cycle:Math.floor(t/4)};
+ }
+ const distance=i===1?2*t:2*t-1.4/0.85*Math.sin(0.85*t);
+ const speed=i===1?2:2-1.4*Math.cos(0.85*t);
+ return {distance,speed,angle:distance/2.5-Math.PI/2};
+}
+function forceState(i,t){
+ const m=motionState(i,t);
+ if(i===0)return {x:1.19*Math.sin(.85*t),y:0};
+ if(i===1)return {x:-1.6*Math.cos(m.angle),y:-1.6*Math.sin(m.angle)};
+ return {x:0,y:1.4};
+}
+const panels=[...document.querySelectorAll('.panel')].map((el,i)=>({el,i,canvas:el.querySelector('canvas'),ctx:el.querySelector('canvas').getContext('2d'),color:getComputedStyle(el).getPropertyValue('--color').trim(),value:el.querySelector('.speed'),fill:el.querySelector('.fill')}));
+let time=0,last=null,paused=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const button=document.getElementById('toggle');
+function updateButton(){button.textContent=paused?'재생':'일시 정지';button.setAttribute('aria-pressed',String(paused));}
+button.addEventListener('click',()=>{paused=!paused;updateButton();});updateButton();
+function draw(p){
+ const {ctx:c,canvas,i,color}=p,w=canvas.clientWidth,h=canvas.clientHeight,dpr=Math.min(devicePixelRatio||1,2);
+ if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
+ c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);
+ const cx=w/2,cy=h/2,r=Math.min(w*.29,h*.30),s=motionState(i,time),scale=r/2.5;
+ c.fillStyle='#d5dfea';for(let x=20;x<w;x+=24)for(let y=18;y<h;y+=24){c.beginPath();c.arc(x,y,.7,0,Math.PI*2);c.fill();}
+ const projectileScale=Math.min((w-100)/5.6,(h-100)/2.8),startX=(w-5.6*projectileScale)/2,ground=h-65;
+ c.strokeStyle='#c3cfdf';c.lineWidth=1;c.beginPath();if(i===0){c.moveTo(0,cy);c.lineTo(w,cy);}else if(i===1)c.arc(cx,cy,r,0,Math.PI*2);else{for(let n=0;n<=80;n++){const u=n/20,x=startX+1.4*u*projectileScale,y=ground+(-2.8*u+.7*u*u)*projectileScale;n===0?c.moveTo(x,y):c.lineTo(x,y);}}c.stroke();
+ function position(t){const m=motionState(i,t);if(i===2)return {x:startX+m.x*projectileScale,y:ground+m.y*projectileScale};return i===0?{x:((m.distance*scale+w*.25)%(w+80)+(w+80))%(w+80)-40,y:cy}:{x:cx+r*Math.cos(m.angle),y:cy+r*Math.sin(m.angle)};}
+ // Sample at fixed times so dot spacing encodes speed even at different frame rates.
+ for(let j=1;j<=19;j++){const sample=Math.floor(time/.13)*.13-j*.13;if(sample<0||(i===2&&motionState(i,sample).cycle!==s.cycle))continue;const q=position(sample);c.globalAlpha=(1-j/20)*.42;c.fillStyle=color;c.beginPath();c.arc(q.x,q.y,3,0,Math.PI*2);c.fill();}c.globalAlpha=1;
+ const pos=position(time),direction=i===0?0:i===2?s.direction:s.angle+Math.PI/2,len=16*s.speed;
+ c.save();c.translate(pos.x,pos.y);c.rotate(direction);c.strokeStyle=color;c.lineWidth=2.5;c.lineCap='round';c.lineJoin='round';c.beginPath();c.moveTo(0,0);c.lineTo(len,0);c.moveTo(len-7,-5);c.lineTo(len,0);c.lineTo(len-7,5);c.stroke();c.restore();
+ // Net force is proportional to acceleration for equal model masses.
+ const force=forceState(i,time),forceLength=Math.hypot(force.x,force.y)*32;
+ if(forceLength>1){
+  c.save();c.translate(pos.x,pos.y);c.rotate(Math.atan2(force.y,force.x));
+  c.lineCap='round';c.lineJoin='round';
+  // A dark outline separates coincident velocity and force arrows.
+  for(const [stroke,width] of [['#ffffff',7],['#df216a',3.5]]){
+   c.strokeStyle=stroke;c.lineWidth=width;c.beginPath();c.moveTo(0,0);c.lineTo(forceLength,0);c.moveTo(forceLength-8,-6);c.lineTo(forceLength,0);c.lineTo(forceLength-8,6);c.stroke();
+  }
+  c.restore();
+ }
+ const glow=c.createRadialGradient(pos.x,pos.y,1,pos.x,pos.y,26);glow.addColorStop(0,color+'66');glow.addColorStop(1,color+'00');c.fillStyle=glow;c.beginPath();c.arc(pos.x,pos.y,26,0,Math.PI*2);c.fill();c.fillStyle=color;c.beginPath();c.arc(pos.x,pos.y,8,0,Math.PI*2);c.fill();c.fillStyle='#ffffffcc';c.beginPath();c.arc(pos.x-2,pos.y-2,2.5,0,Math.PI*2);c.fill();
+ p.value.textContent=s.speed.toFixed(1);p.fill.style.width=(s.speed/3.4*100)+'%';
+}
+function frame(now){if(last!==null&&!paused&&!document.hidden)time+=Math.min((now-last)/1000,.05);last=now;panels.forEach(draw);requestAnimationFrame(frame);}requestAnimationFrame(frame);
+</script></body></html>
