@@ -10,6 +10,16 @@
       "name": "Curling",
       "path": "./Curling/",
       "description": "힘을 이용한 컬링게임"
+    },
+    {
+      "name": "netForce",
+      "path": "./netForce/",
+      "description": "물체에 작용하는 알짜힘을 맞춰보세요"
+    },
+    {
+      "name": "randomForce",
+      "path": "./randomForce/",
+      "description": "무작위로 추가되는 힘으로부터 알짜힘을 찾아보세요"
     }
   ]
 }
