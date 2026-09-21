@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>힘을 잇다 · 알짜힘 탐구</title>
+<style>
+:root{font-family:Arial,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:#213330;background:#f3f5f1;--green:#176858;--line:#dce3dc}
+*{box-sizing:border-box}body{margin:0}button,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);background:#fff;color:inherit;border-radius:10px;padding:10px 13px;font-weight:700}button:hover{background:#edf3ed}button:disabled{opacity:.35;cursor:default}button:focus-visible,select:focus-visible,canvas:focus-visible{outline:3px solid #efa94d;outline-offset:3px}button.active{background:#e2eee7;border-color:#8fbaaa;color:#145c4b}.primary{background:var(--green);border-color:var(--green);color:white}.primary:hover{background:#0e5143}.quiet{background:transparent}
+header{max-width:1600px;margin:auto;padding:25px 30px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{display:flex;align-items:center;gap:14px}.mark{width:44px;height:44px;border-radius:14px;background:var(--green);display:grid;place-items:center;color:white;font-size:29px}.eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;color:#64766b;margin-bottom:5px}h1{font-size:26px;letter-spacing:-1px;margin:0}.header-note{font-size:13px;color:#63726b}
+main{max-width:1600px;margin:auto;padding:0 30px 25px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px}.board{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 6px 25px #233b2810;display:flex;flex-direction:column}.toolbar{padding:13px 16px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--line);flex-wrap:wrap}.tools{display:flex;gap:6px}.toolbar .spacer{flex:1}.toolbar button{font-size:13px;padding:9px 11px}.canvas-wrap{position:relative;flex:1;min-height:440px;height:calc(100vh - 230px);max-height:850px}canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}.board-footer{border-top:1px solid var(--line);padding:12px 17px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#607268}.key{display:flex;gap:13px;flex-wrap:wrap}.key span{display:flex;align-items:center;gap:5px}.sample{display:inline-block;width:20px;border-top:2px solid #61847b}.sample.dashed{border-top-style:dashed;opacity:.6}.sample.result{border-color:#d55b35;border-top-width:5px}.mode-controls{border-top:1px solid var(--line);margin-top:16px;padding-top:14px}.mode-controls .tools{flex-direction:column}.mode-controls button{text-align:left;padding:12px}.status{min-height:18px}
+aside{display:flex;flex-direction:column;gap:14px}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:20px}.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}h2{font-size:16px;margin:0;letter-spacing:-.3px}.badge{font-size:12px;background:#edf2ed;border-radius:20px;padding:5px 9px;color:#60746a}.label{font-size:12px;color:#627269;display:block;margin-bottom:7px}select{width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;color:#294337;background:#fafbf8;margin-bottom:10px}.full{width:100%}.help{font-size:12px;line-height:1.7;color:#728075;margin:11px 0 0}.measure{background:#fffaf2;border-color:#e9dfcf}.measure h2{font-size:14px}.value{font-size:46px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-2px;line-height:1.3;margin:14px 0 4px;color:#b04d2d}.unit{font-size:19px;letter-spacing:0;margin-left:7px}.measure .help{color:#85745f}.measure-actions{display:flex;gap:7px;margin-top:14px}.measure-actions button{font-size:12px;flex:1}.instructions{padding:2px 4px}.instructions h2{font-size:13px;margin:8px 0 12px}.step{display:flex;gap:10px;margin:12px 0;font-size:13px;line-height:1.5;color:#56695e}.num{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#e3eae2;display:grid;place-items:center;font-size:11px;font-weight:bold}.export{margin-top:auto}.export button{padding:14px}.reset{margin-top:9px;font-size:12px;font-weight:400}.empty{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;max-width:330px;width:80%;color:#76877d}.empty strong{display:block;font-size:21px;color:#405e50;margin-bottom:11px}.empty p{font-size:14px;line-height:1.8;margin:0}.empty[hidden]{display:none}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#213c32;color:#fff;border-radius:12px;padding:12px 20px;font-size:13px;box-shadow:0 5px 20px #0002;z-index:4}.toast[hidden]{display:none}
+@media(max-width:850px){header{padding:18px 16px}.header-note{display:none}main{padding:0 12px 20px;grid-template-columns:minmax(0,1fr) 240px;gap:12px}.card{padding:15px}.toolbar{padding:10px}.canvas-wrap{height:580px}.board-footer{flex-direction:column}.value{font-size:38px}}
+@media(max-width:620px){main{grid-template-columns:1fr}.canvas-wrap{height:480px;min-height:360px}aside{display:grid;grid-template-columns:1fr 1fr;gap:10px}.instructions{display:none}.export{grid-column:1/-1}.card h2{font-size:13px}.measure-actions{flex-direction:column}.brand{gap:10px}h1{font-size:23px}.toolbar .spacer{display:none}.toolbar{justify-content:space-between}.board-footer{font-size:11px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="mark" aria-hidden="true">↗</div><div><div class="eyebrow">SCIENCE PLAYGROUND</div><h1>힘을 잇다</h1></div></div><div class="header-note">화살표를 이어 붙여, 알짜힘을 발견해 보세요.</div></header>
+<main>
+<section class="board" aria-label="힘 화살표 플레이그라운드">
+ <div class="toolbar"><div class="spacer"></div><div class="tools"><button id="undo" title="실행 취소 (Ctrl/⌘+Z)" disabled>↶ 취소</button><button id="remove" disabled>선택 삭제</button><button id="fit" title="모든 화살표가 보이도록 맞추기">전체 보기</button></div></div>
+ <div class="canvas-wrap"><canvas id="board" tabindex="0" aria-label="힘 화살표를 끌어 연결하는 모눈 공간. 화살표 선택 후 방향키로 이동, Shift와 방향키로 한 칸 이동, Delete로 삭제할 수 있습니다."></canvas><div id="empty" class="empty"><strong>첫 번째 힘을 더해 볼까요?</strong><p>오른쪽의 <b>+ 힘 추가</b>를 눌러 주세요.<br>선생님이 안내한 개수만큼 추가하면 됩니다.</p></div></div>
+ <div class="board-footer"><div class="key"><span><i class="sample"></i>옮기는 힘</span><span><i class="sample dashed"></i>원래 힘의 잔상</span><span><i class="sample result"></i>내가 그린 알짜힘</span></div><span id="status" class="status" aria-live="polite">가로·세로 한 칸 = 각각 1 N</span></div>
+</section>
+<aside>
+ <section class="card"><div class="card-head"><h2>힘 추가</h2><span id="count" class="badge">0개</span></div><label class="label" for="direction">새로 추가할 힘의 방향</label><select id="direction"><option value="plane">여러 방향</option><option value="line">좌우 방향 · 직선 계산</option></select><button id="add" class="primary full">+ 힘 추가</button><p class="help">한 번 누르면 힘이 하나 생깁니다.<br>크기는 1~5 N 중 무작위로 정해집니다.</p><div class="mode-controls"><div class="tools"><button id="move" class="active" aria-pressed="true">↖ 힘 옮기기</button><button id="draw" aria-pressed="false">↗ 알짜힘 그리기</button></div></div></section>
+ <section class="card measure"><h2>내가 그린 알짜힘의 크기</h2><div class="value"><span id="magnitude">—</span><span class="unit">N</span></div><p id="measure-note" class="help">알짜힘 화살표를 그리면 표시됩니다.</p><div class="measure-actions"><button id="zero">0 N 표시</button><button id="clear-result" disabled>알짜힘 지우기</button></div><p class="help">학생이 그린 길이를 읽은 값입니다.<br>정답 여부를 자동으로 판단하지 않습니다.</p></section>
+ <div class="instructions"><h2>이렇게 탐구해요</h2><div class="step"><span class="num">1</span><span>힘의 <b>꼬리를 다른 힘의 머리</b>에 가까이 옮기면 붙어요. 빈 모눈을 드래그하면 화면이 이동해요.</span></div><div class="step"><span class="num">2</span><span><b>알짜힘 그리기</b>를 누르고 시작점에서 끝점까지 드래그하세요. 두 점을 차례로 눌러도 돼요.</span></div><div class="step"><span class="num">3</span><span>완성한 결과를 <b>PNG로 저장</b>해 패들렛에 올려 주세요.</span></div><p class="help">점선은 원래 작용점의 힘입니다.<br>옮긴 화살표는 힘을 합쳐 보는 표현이며, 물체의 이동 경로가 아닙니다.</p></div>
+ <div class="export"><button id="export" class="primary full">↓ 활동 결과 PNG 저장</button><button id="reset" class="quiet full reset">처음부터 다시 하기</button></div>
+</aside>
+</main><div id="toast" class="toast" role="status" hidden></div>
+<script>
+'use strict';
+const $=id=>document.getElementById(id), canvas=$('board'), ctx=canvas.getContext('2d');
+const colors=['#24796c','#426bc1','#a264af','#bb8430','#428ba2','#aa5c70'];
+let forces=[],result=null,nextId=1,selected=null,mode='move',history=[],drag=null,pending=null,hoverSnap=null;
+let width=800,height=600,view={scale:48,x:400,y:300},labelHits=[];
+const origin={x:0,y:0};
+const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const head=f=>({x:f.x+f.dx,y:f.y+f.dy});
+const magnitude=r=>distance(r.a,r.b);
+const number=n=>Number(n.toFixed(2)).toLocaleString('ko-KR',{maximumFractionDigits:2});
+const screen=(p,v=view)=>({x:v.x+p.x*v.scale,y:v.y+p.y*v.scale});
+function point(e){const r=canvas.getBoundingClientRect();return {x:(e.clientX-r.left-view.x)/view.scale,y:(e.clientY-r.top-view.y)/view.scale};}
+function snapshot(){return JSON.stringify({forces,result,nextId});}
+function save(){history.push(snapshot());if(history.length>60)history.shift();}
+function restore(s){({forces,result,nextId}=JSON.parse(s));selected=null;pending=null;drag=null;hoverSnap=null;update();}
+function announce(text){$('status').textContent=text;}
+function setMode(next){mode=next;pending=null;hoverSnap=null;$('move').classList.toggle('active',next==='move');$('draw').classList.toggle('active',next==='draw');$('move').setAttribute('aria-pressed',next==='move');$('draw').setAttribute('aria-pressed',next==='draw');canvas.style.cursor=next==='draw'?'crosshair':'grab';announce(next==='draw'?'시작점과 끝점을 직접 정해 주세요.':'화살표는 힘 이동 · 빈 모눈은 화면 이동');render();}
+function update(){
+ $('count').textContent=forces.length+'개';$('empty').hidden=forces.length>0||!!result;
+ $('magnitude').textContent=result?number(magnitude(result)):'—';
+ $('measure-note').textContent=result?'모눈 기준으로 측정 · 소수 둘째 자리까지 표시':'알짜힘 화살표를 그리면 표시됩니다.';
+ $('clear-result').disabled=!result;$('remove').disabled=selected===null;$('undo').disabled=history.length===0;
+ render();
+}
+function endpoints(exclude){const points=[origin];for(const f of forces){if(f.id!==exclude)points.push({x:f.x,y:f.y},head(f));}return points;}
+function nearest(p,points,radius=15/view.scale){let best=null,d=radius;for(const q of points){const n=distance(p,q);if(n<d){d=n;best=q;}}return best?{...best}:null;}
+function snapForce(f){
+ let best=null,d=16/view.scale;
+ for(const other of forces){if(f.id===other.id)continue;
+  for(const [from,to] of [[f,head(other)],[head(f),other]]){const n=distance(from,to);if(n<d){d=n;best={dx:to.x-from.x,dy:to.y-from.y,point:{x:to.x,y:to.y}};}}
+ }
+ if(best){f.x+=best.dx;f.y+=best.dy;return best.point;}return null;
+}
+function bounds(){const pts=[origin];for(const f of forces)pts.push(f,head(f),{x:f.dx,y:f.dy});if(result)pts.push(result.a,result.b);return {minX:Math.min(...pts.map(p=>p.x)),maxX:Math.max(...pts.map(p=>p.x)),minY:Math.min(...pts.map(p=>p.y)),maxY:Math.max(...pts.map(p=>p.y))};}
+function fitted(w,h,maxScale=48){const b=bounds(),pad=65,top=155;const s=Math.max(.01,Math.min(maxScale,(w-2*pad)/Math.max(1,b.maxX-b.minX),(h-top-pad)/Math.max(1,b.maxY-b.minY)));return {scale:s,x:w/2-(b.minX+b.maxX)*s/2,y:(h+top-pad)/2-(b.minY+b.maxY)*s/2};}
+function fit(){view=fitted(width,height);render();}
+function resize(){const r=canvas.getBoundingClientRect();width=r.width;height=r.height;const dpr=window.devicePixelRatio||1;canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);fit();}
+function pill(c,text,x,y,color,ghost=false){c.save();c.font='600 13px Arial,"Apple SD Gothic Neo","Malgun Gothic",sans-serif';const w=c.measureText(text).width+14;c.fillStyle=ghost?'#ffffffcc':'#fffffff2';c.beginPath();c.roundRect(x-w/2,y-11,w,23,6);c.fill();c.fillStyle=color;c.textAlign='center';c.textBaseline='middle';c.fillText(text,x,y+1);c.restore();}
+function arrow(c,a,b,color,{ghost=false,chosen=false,label='',v=view,boxes=null,id=null}={}){
+ const p=screen(a,v),q=screen(b,v),len=distance(p,q),angle=Math.atan2(q.y-p.y,q.x-p.x);
+ c.save();c.strokeStyle=color;c.fillStyle=color;c.globalAlpha=ghost?.28:1;c.lineWidth=ghost?2:id==='result'?7:chosen?4.5:3;c.lineCap='round';c.setLineDash(ghost?[5,6]:[]);
+ c.beginPath();c.moveTo(p.x,p.y);c.lineTo(q.x,q.y);c.stroke();c.setLineDash([]);
+ if(len>2){const size=Math.min(id==='result'?19:12,Math.max(5,len*.35));c.beginPath();c.moveTo(q.x,q.y);c.lineTo(q.x-size*Math.cos(angle-.43),q.y-size*Math.sin(angle-.43));c.lineTo(q.x-size*Math.cos(angle+.43),q.y-size*Math.sin(angle+.43));c.closePath();c.fill();}
+ c.beginPath();c.arc(p.x,p.y,ghost?2:3.5,0,Math.PI*2);c.fill();c.restore();
+ if(label){const offset=19;let x=(p.x+q.x)/2+Math.sin(angle)*offset,y=(p.y+q.y)/2-Math.cos(angle)*offset;c.save();c.font='600 13px Arial,\"Apple SD Gothic Neo\",\"Malgun Gothic\",sans-serif';const half=c.measureText(label).width/2+9;c.restore();if(boxes){while(boxes.some(b=>Math.abs(b.x-x)<b.half+half+3&&Math.abs(b.y-y)<26))y+=27;boxes.push({x,y,half,id});}pill(c,label,x,y,color,ghost);}
+}
+function drawScene(c,w,h,v,{exporting=false}={}){
+ const labels=[];c.clearRect(0,0,w,h);c.fillStyle='#fdfefb';c.fillRect(0,0,w,h);c.save();
+ c.lineWidth=1;let gridStep=v.scale;
+ if(gridStep>0){for(let x=((v.x%gridStep)+gridStep)%gridStep;x<w;x+=gridStep){c.strokeStyle='#e6ece5';c.beginPath();c.moveTo(Math.round(x)+.5,0);c.lineTo(Math.round(x)+.5,h);c.stroke();}for(let y=((v.y%gridStep)+gridStep)%gridStep;y<h;y+=gridStep){c.strokeStyle='#e6ece5';c.beginPath();c.moveTo(0,Math.round(y)+.5);c.lineTo(w,Math.round(y)+.5);c.stroke();}}
+ for(const f of forces){if(distance(f,origin)>.025)arrow(c,origin,{x:f.dx,y:f.dy},f.color,{ghost:true,v});}
+ const o=screen(origin,v);c.fillStyle='#eff4ed';c.strokeStyle='#a5b6aa';c.lineWidth=1.5;c.beginPath();c.arc(o.x,o.y,11,0,Math.PI*2);c.fill();c.stroke();c.fillStyle='#5a7264';c.beginPath();c.arc(o.x,o.y,3,0,Math.PI*2);c.fill();
+ if(forces.length||result)pill(c,'원래 작용점',o.x,o.y+28,'#7a8b7f');
+ for(const f of forces)arrow(c,f,head(f),f.color,{chosen:!exporting&&selected===f.id,label:`힘 ${f.id} · ${number(Math.hypot(f.dx,f.dy))} N`,v,boxes:labels,id:f.id});
+ const shown=!exporting&&pending?pending:result;
+ if(shown){arrow(c,shown.a,shown.b,'#d55b35',{chosen:true,label:`알짜힘 · ${number(magnitude(shown))} N`,v,boxes:labels,id:'result'});if(!exporting){for(const p of [shown.a,shown.b]){const q=screen(p,v);c.fillStyle='#fff';c.strokeStyle='#d55b35';c.lineWidth=2;c.beginPath();c.arc(q.x,q.y,6,0,Math.PI*2);c.fill();c.stroke();}}else if(magnitude(shown)<.001){const q=screen(shown.a,v);c.strokeStyle='#d55b35';c.beginPath();c.arc(q.x,q.y,6,0,Math.PI*2);c.stroke();}}
+ if(!exporting&&hoverSnap){const p=screen(hoverSnap,v);c.strokeStyle='#238b76';c.fillStyle='#57b79d22';c.lineWidth=2;c.beginPath();c.arc(p.x,p.y,12,0,Math.PI*2);c.fill();c.stroke();}
+ // A real one-cell ruler, with separate horizontal and vertical labels.
+ const unit=v.scale,keyW=Math.max(160,unit+76),keyH=Math.max(106,unit+62);
+ c.fillStyle='#fffffff2';c.strokeStyle='#dce5da';c.lineWidth=1;c.beginPath();c.roundRect(14,14,keyW,keyH,10);c.fill();c.stroke();
+ const kx=32,ky=43;c.strokeStyle='#6b8575';c.strokeRect(kx,ky,unit,unit);c.fillStyle='#426451';c.font='600 12px Arial,"Apple SD Gothic Neo",sans-serif';c.textAlign='center';c.fillText('1 N',kx+unit/2,ky-9);c.textAlign='left';c.fillText('1 N',kx+unit+9,ky+unit/2+4);c.font='11px Arial,"Apple SD Gothic Neo",sans-serif';c.fillStyle='#788b7b';c.fillText('가로·세로 한 칸의 길이',28,14+keyH-12);
+ if(!exporting)labelHits=labels;
+ c.restore();
+}
+function render(){drawScene(ctx,width,height,view);}
+function segmentDistance(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy;const t=l?Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/l)):0;return distance(p,{x:a.x+t*dx,y:a.y+t*dy});}
+function hit(p){const s=screen(p);for(const b of [...labelHits].reverse())if(Math.abs(s.x-b.x)<b.half&&Math.abs(s.y-b.y)<12)return b.id==='result'?{type:'result'}:{type:'force',id:b.id};if(result){for(const key of ['b','a'])if(distance(p,result[key])<12/view.scale)return {type:'endpoint',key};if(segmentDistance(p,result.a,result.b)<9/view.scale)return {type:'result'};}for(const f of [...forces].reverse())if(segmentDistance(p,f,head(f))<12/view.scale)return {type:'force',id:f.id};return null;}
+canvas.addEventListener('pointerdown',e=>{
+ if(e.button!==0||drag)return;e.preventDefault();canvas.focus();canvas.setPointerCapture(e.pointerId);const p=point(e);
+ if(mode==='draw'){
+  const snapped=nearest(p,endpoints())||p;
+  if(pending){save();result={a:pending.a,b:snapped};selected='result';setMode('move');update();return;}
+  pending={a:snapped,b:snapped};drag={type:'drawing',start:p,before:snapshot(),pointer:e.pointerId};render();return;
+ }
+ const target=hit(p);selected=target?.id??(target?'result':null);if(target){drag={...target,start:p,before:snapshot(),pointer:e.pointerId};if(target.type==='force'){const f=forces.find(f=>f.id===target.id);drag.initial={x:f.x,y:f.y};}}else{drag={type:'pan',pointer:e.pointerId,clientX:e.clientX,clientY:e.clientY,initial:{...view}};canvas.style.cursor='grabbing';}update();
+});
+canvas.addEventListener('pointermove',e=>{
+ if(drag&&e.pointerId!==drag.pointer)return;
+ if(drag?.type==='pan'){view.x=drag.initial.x+e.clientX-drag.clientX;view.y=drag.initial.y+e.clientY-drag.clientY;render();return;}
+ const p=point(e);
+ if(pending&&(!drag||drag.type==='drawing')){hoverSnap=nearest(p,endpoints());pending.b=hoverSnap||p;render();return;}
+ if(!drag)return;
+ if(drag.type==='force'){const f=forces.find(f=>f.id===drag.id);f.x=drag.initial.x+p.x-drag.start.x;f.y=drag.initial.y+p.y-drag.start.y;hoverSnap=snapForce(f);}
+ else if(drag.type==='endpoint'){hoverSnap=nearest(p,endpoints());result[drag.key]=hoverSnap||p;}
+ update();
+});
+canvas.addEventListener('pointerup',e=>{
+ if(!drag||e.pointerId!==drag.pointer)return;
+ if(drag.type==='drawing'){
+  if(distance(drag.start,point(e))*view.scale>8){history.push(drag.before);result={a:{...pending.a},b:{...pending.b}};selected='result';setMode('move');}
+ }else if(drag.type!=='pan'&&snapshot()!==drag.before)history.push(drag.before);
+ drag=null;hoverSnap=null;canvas.style.cursor=mode==='draw'?'crosshair':'grab';update();
+});
+function cancelDrag(){if(drag?.type==='pan')view={...drag.initial};else if(drag)restore(drag.before);pending=null;drag=null;hoverSnap=null;canvas.style.cursor=mode==='draw'?'crosshair':'grab';render();}
+canvas.addEventListener('pointercancel',e=>{if(drag&&e.pointerId===drag.pointer)cancelDrag();});
+canvas.addEventListener('keydown',e=>{
+ if(e.key==='Escape'){cancelDrag();setMode('move');return;}
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();$('undo').click();return;}
+ if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();$('remove').click();return;}
+ const dirs={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
+ if(dirs[e.key]&&typeof selected==='number'){e.preventDefault();save();const f=forces.find(f=>f.id===selected),step=e.shiftKey?1:.1;f.x+=dirs[e.key][0]*step;f.y+=dirs[e.key][1]*step;update();}
+});
+$('move').onclick=()=>setMode('move');$('draw').onclick=()=>{setMode('draw');canvas.focus();};
+function spreadAngle(existing=forces){
+ const turn=2*Math.PI;
+ if(!existing.length)return Math.random()*turn;
+ const angles=existing.map(f=>(Math.atan2(f.dy,f.dx)+turn)%turn).sort((a,b)=>a-b);
+ const gaps=angles.map((start,i)=>({start,size:(i+1<angles.length?angles[i+1]:angles[0]+turn)-start}));
+ const largest=Math.max(...gaps.map(g=>g.size));
+ // Choose a broad empty sector, then vary the angle within its middle 30%.
+ const choices=gaps.filter(g=>g.size>=largest*.85),gap=choices[Math.floor(Math.random()*choices.length)];
+ return (gap.start+gap.size*(.35+Math.random()*.3))%turn;
+}
+$('add').onclick=()=>{
+ save();setMode('move');const length=1+Math.floor(Math.random()*5),angle=$('direction').value==='line'?(Math.random()<.5?0:Math.PI):spreadAngle();
+ forces.push({id:nextId,x:0,y:0,dx:length*Math.cos(angle),dy:length*Math.sin(angle),color:colors[(nextId-1)%colors.length]});selected=nextId++;fit();update();announce('힘을 추가했습니다. 화살표를 끌어 연결해 보세요.');
+};
+$('undo').onclick=()=>{if(history.length)restore(history.pop());};
+$('remove').onclick=()=>{if(selected===null)return;save();if(selected==='result')result=null;else forces=forces.filter(f=>f.id!==selected);selected=null;update();};
+$('clear-result').onclick=()=>{if(!result)return;save();result=null;selected=null;setMode('move');update();};
+$('zero').onclick=()=>{save();result={a:{...origin},b:{...origin}};selected='result';setMode('move');update();announce('학생의 답으로 알짜힘 0 N을 표시했습니다.');};
+$('fit').onclick=fit;
+$('reset').onclick=()=>{if(!forces.length&&!result)return;if(!confirm('모든 힘과 알짜힘을 지우고 다시 시작할까요?'))return;save();forces=[];result=null;nextId=1;selected=null;setMode('move');fit();update();};
+let toastTimer;function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,4000);}
+$('export').onclick=()=>{
+ if(!forces.length&&!result){toast('먼저 힘을 추가해 활동을 시작해 주세요.');return;}
+ const out=document.createElement('canvas');out.width=1600;out.height=1100;const c=out.getContext('2d');c.fillStyle='#f3f5f1';c.fillRect(0,0,1600,1100);
+ c.fillStyle='#213c32';c.font='bold 32px Arial,"Apple SD Gothic Neo","Malgun Gothic",sans-serif';c.fillText('힘을 잇다 · 알짜힘 탐구',40,55);c.font='17px Arial,"Apple SD Gothic Neo","Malgun Gothic",sans-serif';c.fillStyle='#63786a';c.fillText(`힘 ${forces.length}개  |  내가 그린 알짜힘: ${result?number(magnitude(result))+' N':'아직 그리지 않음'}`,40,88);
+ c.save();c.translate(30,115);drawScene(c,1540,865,fitted(1540,865,64),{exporting:true});c.restore();
+ c.fillStyle='#526c5b';c.font='17px Arial,"Apple SD Gothic Neo","Malgun Gothic",sans-serif';c.fillText('실선: 옮긴 힘    ·    점선: 원래 작용점의 힘    ·    주황색: 내가 그린 알짜힘',40,1025);c.font='15px Arial,"Apple SD Gothic Neo","Malgun Gothic",sans-serif';c.fillText('화살표는 힘을 합쳐 보는 표현입니다. 표시된 알짜힘은 학생이 그린 결과이며, 정답 판정이 아닙니다.',40,1058);
+ out.toBlob(blob=>{if(!blob){toast('이미지 저장에 실패했습니다. 다시 시도해 주세요.');return;}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='알짜힘_탐구_'+new Date().toISOString().slice(0,10)+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);toast('PNG를 저장했습니다. 패들렛에 파일을 올려 주세요.');},'image/png');
+};
+new ResizeObserver(resize).observe(canvas.parentElement);update();
+</script>
+</body>
+</html>
