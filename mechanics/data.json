@@ -12,6 +12,11 @@
       "description": "힘을 이용한 컬링게임"
     },
     {
+      "name": "Buoyancy Game",
+      "path": "./buoyancy-game/",
+      "description": "부력게임: 화물을 지켜라"
+    },
+    {
       "name": "netForce",
       "path": "./netForce/",
       "description": "물체에 작용하는 알짜힘을 맞춰보세요"
