@@ -17,9 +17,9 @@ button[aria-pressed=true],#play{background:#c2d9ce;color:#10251c}input[type=rang
 @media(max-width:620px){.camera{left:20px;top:20px;font-size:9px}.camera-right{right:20px;top:22px;font-size:9px}.camera strong{font-size:10px}}
 
 #sky-background{position:fixed;inset:0;z-index:0;background:#050c16;pointer-events:none}
-#sky{z-index:1;mix-blend-mode:screen}#constellation-layer{z-index:2;pointer-events:none}#name-layer{z-index:3;pointer-events:none}#sun-layer{z-index:4;pointer-events:none;inset:auto}#sun-layer[hidden],#moon-layer[hidden]{display:none}#moon-layer{z-index:5;pointer-events:none;inset:auto}#ground-layer{z-index:6;pointer-events:none}
+#sky{z-index:1;mix-blend-mode:screen}#constellation-layer{z-index:2;pointer-events:none}#horizon-grid{z-index:2;pointer-events:none}#horizon-grid[hidden]{display:none}#name-layer{z-index:3;pointer-events:none}#sun-layer{z-index:4;pointer-events:none;inset:auto}#sun-layer[hidden],#moon-layer[hidden]{display:none}#moon-layer{z-index:5;pointer-events:none;inset:auto}#ground-layer{z-index:6;pointer-events:none}
 .panel,.camera,.camera-right{z-index:10}
-.horizon-letter{position:fixed;z-index:7;pointer-events:none;transform:translate(-50%,-100%);color:#e3e9e5;font:600 clamp(20px, 2.5vw, 28px)/1.25 ui-monospace,Consolas,monospace;text-shadow:0 1px 4px #000,0 0 8px #000;letter-spacing:1px}.horizon-letter[hidden]{display:none}.observe-tools{display:grid;gap:10px;padding:12px 0 2px}.target-tools,.time-tools{display:flex;align-items:center;flex-wrap:wrap;gap:7px}.observe-tools label,.observe-tools span{font-size:12px}.time-tools label{display:flex;align-items:center;gap:4px}.time-tools input{width:57px;font:inherit;padding:7px 6px;border:1px solid #c2d9ce55;border-radius:8px;background:#111c2a;color:#fff;text-align:center}.observe-tools [role=status]{color:#c2d9ce;font-size:11px}@media(max-width:620px){.time-tools input{width:48px}.observe-tools{gap:12px}.time-tools select{max-width:85px}}#fold{display:inline-flex;align-items:center;justify-content:center;flex:0 0 36px;width:36px;height:36px;min-width:36px;padding:0;border-radius:11px;border:1px solid #c2d9ce38;background:#c2d9ce0c;color:#dce9e2;transition:background .15s,border-color .15s}#fold:hover{background:#c2d9ce21;border-color:#c2d9ce70}#fold svg{display:block;transition:transform .18s ease}.compact #fold svg{transform:rotate(180deg)}@media(prefers-reduced-motion:reduce){#fold,#fold svg{transition:none}}#clock-edit{color:inherit;background:transparent;border:0;border-bottom:1px solid #c2d9ce55;padding:2px 0;color-scheme:dark;max-width:100%}#clock-edit::-webkit-calendar-picker-indicator{display:none}#clock-edit:focus-visible{outline:1px solid #b9d6c7;outline-offset:2px}#clock,.compact #clock-edit{display:none}.compact #clock{display:inline}@media(max-width:620px){.head{flex-wrap:wrap}}#city-form input{font:inherit;padding:7px 9px;border:1px solid #c2d9ce55;border-radius:8px;background:#111c2a;color:inherit;max-width:100%}#city-form a{font-size:11px;color:#c2d9ce}#site-hud{max-width:min(42vw,280px);white-space:pre-line;overflow-wrap:anywhere}</style><main><div id="sky-background" aria-hidden="true"></div><canvas id="constellation-layer" aria-hidden="true"></canvas><canvas id="name-layer" aria-hidden="true"></canvas><canvas id="moon-layer" aria-hidden="true" hidden></canvas><canvas id="sun-layer" aria-hidden="true" hidden></canvas><canvas id="ground-layer" aria-hidden="true"></canvas><canvas id="sky" tabindex="0" aria-label="3차원 밤하늘. 드래그하거나 방향키로 시선을 이동하세요."></canvas>
+.horizon-letter{position:fixed;z-index:7;pointer-events:none;transform:translate(-50%,-100%);color:#e3e9e5;font:600 clamp(20px, 2.5vw, 28px)/1.25 ui-monospace,Consolas,monospace;text-shadow:0 1px 4px #000,0 0 8px #000;letter-spacing:1px}.horizon-letter[hidden]{display:none}.observe-tools{display:grid;gap:10px;padding:12px 0 2px}.target-tools,.time-tools{display:flex;align-items:center;flex-wrap:wrap;gap:7px}.observe-tools label,.observe-tools span{font-size:12px}.time-tools label{display:flex;align-items:center;gap:4px}.time-tools input{width:57px;font:inherit;padding:7px 6px;border:1px solid #c2d9ce55;border-radius:8px;background:#111c2a;color:#fff;text-align:center}.observe-tools [role=status]{color:#c2d9ce;font-size:11px}@media(max-width:620px){.time-tools input{width:48px}.observe-tools{gap:12px}.time-tools select{max-width:85px}}#fold{display:inline-flex;align-items:center;justify-content:center;flex:0 0 36px;width:36px;height:36px;min-width:36px;padding:0;border-radius:11px;border:1px solid #c2d9ce38;background:#c2d9ce0c;color:#dce9e2;transition:background .15s,border-color .15s}#fold:hover{background:#c2d9ce21;border-color:#c2d9ce70}#fold svg{display:block;transition:transform .18s ease}.compact #fold svg{transform:rotate(180deg)}@media(prefers-reduced-motion:reduce){#fold,#fold svg{transition:none}}#clock-edit{color:inherit;background:transparent;border:0;border-bottom:1px solid #c2d9ce55;padding:2px 0;color-scheme:dark;max-width:100%}#clock-edit::-webkit-calendar-picker-indicator{display:none}#clock-edit:focus-visible{outline:1px solid #b9d6c7;outline-offset:2px}#clock,.compact #clock-edit{display:none}.compact #clock{display:inline}@media(max-width:620px){.head{flex-wrap:wrap}}#city-form input{font:inherit;padding:7px 9px;border:1px solid #c2d9ce55;border-radius:8px;background:#111c2a;color:inherit;max-width:100%}#city-form a{font-size:11px;color:#c2d9ce}#site-hud{max-width:min(42vw,280px);white-space:pre-line;overflow-wrap:anywhere}</style><main><div id="sky-background" aria-hidden="true"></div><canvas id="constellation-layer" aria-hidden="true"></canvas><canvas id="horizon-grid" aria-hidden="true" hidden></canvas><canvas id="name-layer" aria-hidden="true"></canvas><canvas id="moon-layer" aria-hidden="true" hidden></canvas><canvas id="sun-layer" aria-hidden="true" hidden></canvas><canvas id="ground-layer" aria-hidden="true"></canvas><canvas id="sky" tabindex="0" aria-label="3차원 밤하늘. 드래그하거나 방향키로 시선을 이동하세요."></canvas>
 <div class="camera" id="camera"><strong><i class="lamp"></i>NIGHT SKY / TIMELAPSE</strong><span id="eclipse-status"></span><span id="capture">20s · f/2.8 · ISO 1600</span></div><div class="camera-right" id="site-hud">37.30° N &nbsp; 127.11° E<br>YONGIN, KOREA</div><section class="panel" aria-label="관측 조작창"><div class="head"><div class="status"><input class="clock" id="clock-edit" type="time" step="1" value="12:00:00" aria-label="관측 시각 (관측지 현지 시각)"><span class="clock" id="clock"></span><div class="meta"><strong>별의 일주운동 관측실</strong><small><span id="site-name">용인</span> <span id="stamp"></span> <span id="site-zone">Asia/Seoul</span></small></div></div><div class="actions"><button id="play">▶ 재생</button><select id="speed" aria-label="재생 속도"><option value="60">60배속</option><option value="300">300배속</option><option value="900" selected>900배속</option><option value="1800">1800배속</option></select><button id="fold" aria-label="간략보기로 전환" title="간략보기로 전환" aria-controls="controls" aria-expanded="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" aria-hidden="true" focusable="false"><path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></div>
 <div id="controls"><div class="observe-tools">
  <form id="city-form" class="target-tools"><input id="city-query" type="search" aria-label="도시 이름" placeholder="도시 이름 (예: 서울, Paris)" required maxlength="80"><button>도시 검색</button><span id="city-status" role="status"></span><a href="https://open-meteo.com/en/docs/geocoding-api" target="_blank" rel="noopener">도시 자료: GeoNames / Open-Meteo</a></form><div class="target-tools"><label for="target">천체 찾기</label><select id="target"><option value="sun">태양</option><option value="moon">달</option><option value="polaris">북극성</option></select><button id="find">찾기</button><button id="track" aria-pressed="false">추적 시작</button><span id="tracking-status" role="status"></span></div>
@@ -697,6 +697,8 @@ const stars=catalog.map(([id,a,d,m])=>({id,a:a*rad,sd:sin(d*rad),cd:cos(d*rad),m
 const el=id=>document.getElementById(id),canvas=el('sky'),ctx=null,date=el('date'),slider=el('time');
 const skyBackground=el('sky-background'),constellationCanvas=el('constellation-layer'),nameCanvas=el('name-layer');
 const constellationCtx=constellationCanvas.getContext('2d'),nameCtx=nameCanvas.getContext('2d');
+const horizonGrid=el('horizon-grid'),horizonCtx=horizonGrid.getContext('2d');
+let horizonKey='';
 const groundCanvas=el('ground-layer'),groundCtx=groundCanvas.getContext('2d');
 const sunCanvas=el('sun-layer'),sunCtx=sunCanvas.getContext('2d');let sunSpriteKey='';sunCanvas.width=sunCanvas.height=1;
 const moonCanvas=el('moon-layer'),moonCtx=moonCanvas.getContext('2d');let moonSpriteKey='';moonCanvas.width=moonCanvas.height=1;
@@ -745,20 +747,29 @@ function createSkyRenderer(surface){
  const vertex=`#version 300 es
  precision highp float;out vec2 uv;void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);uv=p;gl_Position=vec4(p*2.-1.,0.,1.);}`;
  const fragment=`#version 300 es
- precision highp float;in vec2 uv;out vec4 result;uniform sampler2D image;uniform vec2 size;uniform float focal,yaw,pitch,latitude,sid,oldSid,night;uniform int mode,samples;
- void main(){if(mode==1){result=texture(image,uv);return;}
+ precision highp float;in vec2 uv;out vec4 result;uniform sampler2D image,gridMap;uniform bool showGridMap;uniform vec2 size;uniform float focal,yaw,pitch,latitude,sid,oldSid,night;uniform int mode,samples;
+ void main(){if(mode==1&&!showGridMap){result=texture(image,uv);return;}
  vec2 q=(uv-.5)*size/focal;float sy=sin(yaw),cy=cos(yaw),sp=sin(pitch),cp=cos(pitch);
  vec3 ray=normalize(vec3(cy,-sy,0.)*q.x+vec3(-sy*sp,-cy*sp,cp)*q.y+vec3(sy*cp,cy*cp,sp));
- if(ray.z<=0.){result=vec4(0.,0.,0.,1.);return;}
+ if(ray.z<=0.){result=mode==1?texture(image,uv):vec4(0.,0.,0.,1.);return;}
  float sd=sin(latitude)*ray.z+cos(latitude)*ray.y,k=cos(latitude)*ray.z-sin(latitude)*ray.y;
- float ha=atan(-ray.x,k),v=.5-asin(clamp(sd,-1.,1.))/3.14159265359;vec3 light=vec3(0.);
+ float ha=atan(-ray.x,k),v=.5-asin(clamp(sd,-1.,1.))/3.14159265359;
+ if(mode==1){
+  vec4 stars=texture(image,uv);
+  float line=texture(gridMap,vec2(fract((sid-ha)/6.28318530718)+.5/2160.,v+.5/1080.)).r;
+  result=vec4(mix(stars.rgb,vec3(.79,.64,.41),line*.52),1.);
+  return;
+ }
+ vec3 light=vec3(0.);
  for(int i=0;i<16;i++){if(i>=samples)break;float t=float(i+1)/float(samples);float a=mix(oldSid,sid,t)-ha;vec2 st=vec2(fract(a/6.28318530718),v);light=max(light,texture(image,st).rgb);}
  result=vec4(light*night*night*clamp(ray.z*3.5,0.,1.),1.);}`;
  function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
  const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));gl.useProgram(program);
- const locations={};for(const k of ['image','size','focal','yaw','pitch','latitude','sid','oldSid','night','mode','samples'])locations[k]=gl.getUniformLocation(program,k);
+ const locations={};for(const k of ['image','gridMap','showGridMap','size','focal','yaw','pitch','latitude','sid','oldSid','night','mode','samples'])locations[k]=gl.getUniformLocation(program,k);
  function texture(){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return t}
- const sky=texture(),exposure=texture(),framebuffer=gl.createFramebuffer();let dateKey='',bufferKey='',oldAngle=null,bw=0,bh=0;
+ const sky=texture(),exposure=texture(),framebuffer=gl.createFramebuffer();
+ let equatorialTexture;
+ gl.uniform1i(locations.gridMap,1);let dateKey='',bufferKey='',oldAngle=null,bw=0,bh=0;
  function prepare(date){if(dateKey===date)return;
   const map=document.createElement('canvas');map.width=4096;map.height=2048;const c=map.getContext('2d',{alpha:false});c.fillStyle='#000';c.fillRect(0,0,map.width,map.height);c.globalCompositeOperation='lighten';
   for(const s of stars){const x=((s.a/(2*Math.PI))%1+1)%1*map.width,y=(.5-Math.asin(s.sd)/Math.PI)*map.height;
@@ -779,7 +790,22 @@ function createSkyRenderer(surface){
   }
   gl.bindTexture(gl.TEXTURE_2D,sky);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,map);map.width=map.height=1;dateKey=date;bufferKey='';
  }
- return {draw({date,key,w,h,focal,yaw,pitch,sid,night,trails,minutes}){
+ function prepareEquatorialGrid(){
+  if(equatorialTexture)return;
+  const width=2160,height=1080;
+  const pixels=new Uint8Array(width*height);
+  // One channel stores coverage. Regular longitude/latitude spacing maps to 180/90 texels.
+  for(let y=0;y<height;y++){
+   const declinationLine=y>=90&&y<=990&&y%90===0;
+   for(let x=0;x<width;x++)if(declinationLine||x%180===0)pixels[y*width+x]=255;
+  }
+  gl.activeTexture(gl.TEXTURE1);
+  equatorialTexture=texture();
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,width,height,0,gl.RED,gl.UNSIGNED_BYTE,pixels);
+  gl.activeTexture(gl.TEXTURE0);
+ }
+ return {draw({date,key,w,h,focal,yaw,pitch,sid,night,trails,minutes,equatorial}){
+  if(equatorial)prepareEquatorialGrid();
   prepare(date);gl.useProgram(program);const sw=surface.width,sh=surface.height;
   const resized=sw!==bw||sh!==bh;if(resized){bw=sw;bh=sh;gl.bindTexture(gl.TEXTURE_2D,exposure);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,sw,sh,0,gl.RGBA,gl.UNSIGNED_BYTE,null);gl.bindFramebuffer(gl.FRAMEBUFFER,framebuffer);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,exposure,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('노출 버퍼 생성 실패');}
   gl.bindFramebuffer(gl.FRAMEBUFFER,framebuffer);gl.viewport(0,0,sw,sh);
@@ -790,7 +816,7 @@ function createSkyRenderer(surface){
   gl.uniform1i(locations.mode,0);gl.uniform1i(locations.samples,trails?Math.min(16,Math.max(1,Math.ceil(Math.abs(delta)*focal*sw/w/.6))):1);
   gl.uniform2f(locations.size,w,h);for(const [k,v]of Object.entries({focal,yaw,pitch,latitude:lat,sid,oldSid:sid-delta,night}))gl.uniform1f(locations[k],v);
   gl.bindTexture(gl.TEXTURE_2D,sky);gl.enable(gl.BLEND);gl.blendEquation(gl.MAX);gl.drawArrays(gl.TRIANGLES,0,3);gl.disable(gl.BLEND);
-  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.uniform1i(locations.mode,1);gl.bindTexture(gl.TEXTURE_2D,exposure);gl.drawArrays(gl.TRIANGLES,0,3);oldAngle=sid;
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.uniform1i(locations.mode,1);gl.uniform1i(locations.showGridMap,Number(equatorial));gl.bindTexture(gl.TEXTURE_2D,exposure);gl.drawArrays(gl.TRIANGLES,0,3);oldAngle=sid;
  }};
 }
 
@@ -941,7 +967,7 @@ new ResizeObserver(()=>{
  }
  
  for(const key in layerState)layerState[key]='';exposureBufferKey='';lastExposureMinute=null;lastConstellationView=lastNameView='';
- focal=Math.min(w*.82,h*.87);allocateLayer(constellationCanvas,constellationCtx,on("constellations"));allocateLayer(nameCanvas,nameCtx,on("names")||on("grid")||on("equatorial"));invalidate();
+ focal=Math.min(w*.82,h*.87);allocateLayer(constellationCanvas,constellationCtx,on("constellations"));allocateLayer(nameCanvas,nameCtx,on("names")||on("equatorial"));invalidate();
 }).observe(canvas);
 function draw(now=Date.now()){
  if(tracking)pointAtTarget();
@@ -973,8 +999,8 @@ function draw(now=Date.now()){
  if(bodies.moon.alt>0&&bodies.lunar.penCoverage>.001)el('eclipse-status').textContent=(bodies.lunar.coverage>.999?'개기월식':bodies.lunar.coverage>.001?'부분월식':'반영월식')+' · 본영 가림 '+(bodies.lunar.coverage*100).toFixed(1)+'% | ';
  const exposure=showPaths?Math.max(0,minutes-trailStart):1/3;
  el('capture').textContent=(showPaths?'STAR TRAILS · '+Math.floor(exposure)+' min':'20s · f/2.8 · ISO 1600')+' · '+el('speed').value+'× · '+(solar.alt>-6?'박명':solar.alt>-18?'여명 / 황혼':'밤');
- skyRenderer.draw({date:date.value,key:[viewKey,showPaths,el("time").dataset.reset||0].join('/'),w,h,focal,yaw,pitch,sid,night,trails:showPaths,minutes});
- allocateLayer(constellationCanvas,constellationCtx,showConstellations);allocateLayer(nameCanvas,nameCtx,showNames||showGrid||showEquatorial);
+ skyRenderer.draw({date:date.value,key:[viewKey,showPaths,el("time").dataset.reset||0].join('/'),w,h,focal,yaw,pitch,sid,night,trails:showPaths,minutes,equatorial:showEquatorial});
+ allocateLayer(constellationCanvas,constellationCtx,showConstellations);allocateLayer(nameCanvas,nameCtx,showNames||showEquatorial);
  // Small local sprite: Sun sits behind the ground, without a full-screen backing store.
  const sunAltitude=solar.alt*rad,sunPoint=project(sin(solar.az)*cos(sunAltitude),cos(solar.az)*cos(sunAltitude),sin(sunAltitude));
  const horizonScale=eclipseFraction>0?1:1+.18*Math.exp(-((solar.alt/4)**2));
@@ -1075,23 +1101,35 @@ function draw(now=Date.now()){
   layerState.constellations=constellationKey;lastConstellationView=constellationView;constellationTime=now;
  }
  // Names sit behind the opaque ground layer: named stars only, independent of the full star catalog.
- const nameView=viewKey+'/'+showNames+'/'+showGrid+'/'+showEquatorial+'/'+showBodies,nameKey=nameView+'/'+(showNames||showGrid||showEquatorial?minutes:0);
+ horizonGrid.hidden=!showGrid;
+ allocateLayer(horizonGrid,horizonCtx,showGrid);
+ const gridKey=[w,h,horizonGrid.width,horizonGrid.height,yaw,pitch].join('/');
+ if(!showGrid)horizonKey='';
+ else if(horizonKey!==gridKey){
+  horizonCtx.clearRect(0,0,w,h);
+  function altitude(a,b){return project(sin(a*rad)*cos(b*rad),cos(a*rad)*cos(b*rad),sin(b*rad))}
+  {for(let alt=0;alt<90;alt+=15)path(horizonCtx,Array.from({length:181},(_,i)=>altitude(i*2,alt)),'rgba(108,158,202,.50)');for(let az=0;az<360;az+=30)path(horizonCtx,Array.from({length:46},(_,i)=>altitude(az,i*2)),'#465273')}
+  horizonKey=gridKey;
+ }
+ const nameView=viewKey+'/'+showNames+'/'+showEquatorial+'/'+showBodies,nameKey=nameView+'/'+(showNames||showEquatorial?minutes:0);
  if(layerState.names!==nameKey){
   const c=nameCtx;c.clearRect(0,0,w,h);
-  function altitude(a,b){return project(sin(a*rad)*cos(b*rad),cos(a*rad)*cos(b*rad),sin(b*rad))}
-  if(showGrid){for(let alt=0;alt<90;alt+=15)path(c,Array.from({length:181},(_,i)=>altitude(i*2,alt)),'rgba(108,158,202,.50)');for(let az=0;az<360;az+=30)path(c,Array.from({length:46},(_,i)=>altitude(az,i*2)),'#465273')}
   if(showEquatorial){
-   const color='rgba(202,164,105,.52)';c.font='10px system-ui';
+   c.font='10px system-ui';
+   const inside=(p,top)=>p&&p[0]>20&&p[0]<w-60&&p[1]>top&&p[1]<h-90;
+   c.fillStyle='#d2b27c';
    for(let dec=-75;dec<=75;dec+=15){
-    const sd=sin(dec*rad),cd=cos(dec*rad),points=[];
-    for(let a=0;a<=360;a+=3)points.push(point({sd,cd},sid-a*rad));path(c,points,color,dec===0?1.3:.8);
-    const anchor=points.find(p=>p&&p[0]>20&&p[0]<w-60&&p[1]>80&&p[1]<h-90);
-    if(anchor){c.fillStyle='#d2b27c';c.fillText('δ '+(dec>0?'+':'')+dec+'°',anchor[0]+4,anchor[1]-4)}
+    const circle={sd:sin(dec*rad),cd:cos(dec*rad)};
+    for(let a=0;a<360;a+=3){
+     const p=point(circle,sid-a*rad);
+     if(inside(p,80)){c.fillText('δ '+(dec>0?'+':'')+dec+'°',p[0]+4,p[1]-4);break}
+    }
    }
    for(let hour=0;hour<24;hour+=2){
-    const points=[];for(let dec=-90;dec<=90;dec+=3)points.push(point({sd:sin(dec*rad),cd:cos(dec*rad)},sid-hour*15*rad));path(c,points,color,.8);
-    const anchor=points.find(p=>p&&p[0]>20&&p[0]<w-60&&p[1]>100&&p[1]<h-90);
-    if(anchor){c.fillStyle='#d2b27c';c.fillText('α '+hour+'h',anchor[0]+4,anchor[1]+12)}
+    for(let dec=-90;dec<=90;dec+=3){
+     const p=point({sd:sin(dec*rad),cd:cos(dec*rad)},sid-hour*15*rad);
+     if(inside(p,100)){c.fillText('α '+hour+'h',p[0]+4,p[1]+12);break}
+    }
    }
   }
   c.font='12px system-ui';c.fillStyle='#becbc8';
