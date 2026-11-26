@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>별의 일주운동 관측실</title>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>천구 관측실</title>
 <style>
 *{box-sizing:border-box}html{color-scheme:dark}body{margin:0;background:#090e21;color:#f5f6ff;font:14px system-ui,"Malgun Gothic",sans-serif}canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}canvas:active{cursor:grabbing}
 .panel{position:fixed;bottom:max(14px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(850px,calc(100% - 24px));max-height:62dvh;overflow:auto;padding:15px 20px;border:1px solid #d5e3ff47;border-radius:21px;background:linear-gradient(130deg,#293249b8,#141c32c2);box-shadow:inset 0 1px 0 #ffffff14,0 12px 48px #03061165}
@@ -19,11 +19,29 @@ button[aria-pressed=true],#play{background:#c2d9ce;color:#10251c}input[type=rang
 #sky-background{position:fixed;inset:0;z-index:0;background:#050c16;pointer-events:none}
 #sky{z-index:1;mix-blend-mode:screen}#constellation-layer{z-index:2;pointer-events:none}#horizon-grid{z-index:2;pointer-events:none}#horizon-grid[hidden]{display:none}#name-layer{z-index:3;pointer-events:none}#sun-layer{z-index:4;pointer-events:none;inset:auto}#sun-layer[hidden],#moon-layer[hidden]{display:none}#moon-layer{z-index:5;pointer-events:none;inset:auto}#ground-layer{z-index:6;pointer-events:none}
 .panel,.camera,.camera-right{z-index:10}
-.horizon-letter{position:fixed;z-index:7;pointer-events:none;transform:translate(-50%,-100%);color:#e3e9e5;font:600 clamp(20px, 2.5vw, 28px)/1.25 ui-monospace,Consolas,monospace;text-shadow:0 1px 4px #000,0 0 8px #000;letter-spacing:1px}.horizon-letter[hidden]{display:none}.observe-tools{display:grid;gap:10px;padding:12px 0 2px}.target-tools,.time-tools{display:flex;align-items:center;flex-wrap:wrap;gap:7px}.observe-tools label,.observe-tools span{font-size:12px}.time-tools label{display:flex;align-items:center;gap:4px}.time-tools input{width:57px;font:inherit;padding:7px 6px;border:1px solid #c2d9ce55;border-radius:8px;background:#111c2a;color:#fff;text-align:center}.observe-tools [role=status]{color:#c2d9ce;font-size:11px}@media(max-width:620px){.time-tools input{width:48px}.observe-tools{gap:12px}.time-tools select{max-width:85px}}#fold{display:inline-flex;align-items:center;justify-content:center;flex:0 0 36px;width:36px;height:36px;min-width:36px;padding:0;border-radius:11px;border:1px solid #c2d9ce38;background:#c2d9ce0c;color:#dce9e2;transition:background .15s,border-color .15s}#fold:hover{background:#c2d9ce21;border-color:#c2d9ce70}#fold svg{display:block;transition:transform .18s ease}.compact #fold svg{transform:rotate(180deg)}@media(prefers-reduced-motion:reduce){#fold,#fold svg{transition:none}}#clock-edit{color:inherit;background:transparent;border:0;border-bottom:1px solid #c2d9ce55;padding:2px 0;color-scheme:dark;max-width:100%}#clock-edit::-webkit-calendar-picker-indicator{display:none}#clock-edit:focus-visible{outline:1px solid #b9d6c7;outline-offset:2px}#clock,.compact #clock-edit{display:none}.compact #clock{display:inline}@media(max-width:620px){.head{flex-wrap:wrap}}#city-form input{font:inherit;padding:7px 9px;border:1px solid #c2d9ce55;border-radius:8px;background:#111c2a;color:inherit;max-width:100%}#city-form a{font-size:11px;color:#c2d9ce}#site-hud{max-width:min(42vw,280px);white-space:pre-line;overflow-wrap:anywhere}</style><main><div id="sky-background" aria-hidden="true"></div><canvas id="constellation-layer" aria-hidden="true"></canvas><canvas id="horizon-grid" aria-hidden="true" hidden></canvas><canvas id="name-layer" aria-hidden="true"></canvas><canvas id="moon-layer" aria-hidden="true" hidden></canvas><canvas id="sun-layer" aria-hidden="true" hidden></canvas><canvas id="ground-layer" aria-hidden="true"></canvas><canvas id="sky" tabindex="0" aria-label="3차원 밤하늘. 드래그하거나 방향키로 시선을 이동하세요."></canvas>
-<div class="camera" id="camera"><strong><i class="lamp"></i>NIGHT SKY / TIMELAPSE</strong><span id="eclipse-status"></span><span id="capture">20s · f/2.8 · ISO 1600</span></div><div class="camera-right" id="site-hud">37.30° N &nbsp; 127.11° E<br>YONGIN, KOREA</div><section class="panel" aria-label="관측 조작창"><div class="head"><div class="status"><input class="clock" id="clock-edit" type="time" step="1" value="12:00:00" aria-label="관측 시각 (관측지 현지 시각)"><span class="clock" id="clock"></span><div class="meta"><strong>별의 일주운동 관측실</strong><small><span id="site-name">용인</span> <span id="stamp"></span> <span id="site-zone">Asia/Seoul</span></small></div></div><div class="actions"><button id="play">▶ 재생</button><select id="speed" aria-label="재생 속도"><option value="60">60배속</option><option value="300">300배속</option><option value="900" selected>900배속</option><option value="1800">1800배속</option></select><button id="fold" aria-label="간략보기로 전환" title="간략보기로 전환" aria-controls="controls" aria-expanded="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" aria-hidden="true" focusable="false"><path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></div>
-<div id="controls"><div class="observe-tools">
- <form id="city-form" class="target-tools"><input id="city-query" type="search" aria-label="도시 이름" placeholder="도시 이름 (예: 서울, Paris)" required maxlength="80"><button>도시 검색</button><span id="city-status" role="status"></span><a href="https://open-meteo.com/en/docs/geocoding-api" target="_blank" rel="noopener">도시 자료: GeoNames / Open-Meteo</a></form><div class="target-tools"><label for="target">천체 찾기</label><select id="target"><option value="sun">태양</option><option value="moon">달</option><option value="polaris">북극성</option></select><button id="find">찾기</button><button id="track" aria-pressed="false">추적 시작</button><span id="tracking-status" role="status"></span></div>
- </div><input id="time" type="range" min="0" max="1440" step="1" value="0" aria-label="관측 시각"><div class="ticks"><span>12:00</span><span>18:00</span><span>00:00</span><span>06:00</span><span>12:00 +1일</span></div><div class="bottom"><div class="dirs" aria-label="관측 방향"></div><label>관측지 <select id="site"><option value="yongin">용인</option><option value="quito">키토 (에콰도르)</option><option id="searched-city" value="searched" hidden></option><option value="brisbane">브리즈번 (호주)</option></select></label><label>시작일 <input id="date" type="date" min="1900-01-01" max="2100-12-31"></label><div class="group"><button id="trails" aria-pressed="true">장노출 궤적</button><button id="lunar-example" title="2022년 11월 8일 개기월식">월식 예시</button><button id="eclipse-example" title="2020년 6월 21일 용인 부분일식">일식 예시</button><button id="bodies" aria-pressed="true">태양·달</button><button id="names" aria-pressed="false">별 이름</button><button id="constellations" aria-pressed="false">별자리</button><button id="grid" aria-pressed="false" title="방위각·고도: 관측자 기준">지평 좌표</button><button id="equatorial" aria-pressed="false" title="적경·적위: 천구 기준">적도 좌표</button></div></div><details class="note"><summary>관측 안내</summary><p>드래그하거나 방향키로 하늘을 둘러보세요. 기본 화면은 장노출입니다. 날짜를 지정할 때 천구 텍스처를 한 번 생성합니다. 이후 GPU가 같은 텍스처를 회전·투영하며 장노출은 최대 밝기로 합성합니다. 같은 궤적을 다시 지나도 밝기가 계속 증가하지 않습니다. 재생 시작부터 모든 별의 궤적이 쌓이며 2시간 제한은 없습니다. 장노출을 끄면 20초 노출 타임랩스로 전환합니다. 가까운 순서는 땅 → 태양·달 → 별 이름 → 별자리 → 별 → 별 없는 하늘입니다. 태양·달 원반은 잘 보이도록 계산된 겉보기 크기의 3배로 확대했습니다. 태양에는 눈부심 효과도 더했습니다. 지평선 부근의 태양 확대(최대 18%)는 시각적 연출이며 붉어짐과 약한 세로 압축을 표현했습니다. 태양·달 원반은 비슷한 겉보기 크기를 사용하며 달은 태양 앞에 배치합니다. 일식의 가림률은 실제 각크기로 계산하며 근접 시 표시 간격도 원반과 함께 확대합니다. 정밀 관측 예보용은 아닙니다. 2020-06-21 오후 부분일식, 2022-11-08 저녁 개기월식 예시 버튼을 사용할 수 있습니다. 월식은 지구의 본영·반영 원뿔과 달의 위치로 계산하며 붉은 색과 어두워지는 정도는 시각적 근사입니다. 관찰 시간은 선택일 낮 12시부터 다음 날 낮 12시까지입니다. 태양·달 위치와 일식 가림은 Astronomy Engine의 선택한 관측지 좌표로 계산하고 달의 위상은 SunCalc로 계산하며 표면 무늬는 시각적 근사입니다. 달은 낮은 고도에서 따뜻한 색과 감광을, 높은 고도에서 회백색을 띠며 낮에는 하늘빛에 대비가 낮아집니다. 밤하늘의 달빛은 위상·고도·월식 여부에 따라 약하게 반영합니다. 대기 효과는 시각적 근사입니다. 태양과 달은 지형에 가려집니다. 궤적을 선으로 그리지 않고 별 자체의 크기와 빛 번짐을 그대로 쌓습니다. 시점·날짜·노출 모드 변경, 시간 이동 시 누적 노출을 초기화합니다. 선택한 관측지에서 보이는 별 위치를 사용하며, 별빛 색과 하늘 밝기는 시각적 근사입니다. 배경은 별·입자 없는 청명한 하늘이며 태양 고도와 방향에 따라 노을과 여명이 변합니다. 땅은 독립된 최전방 레이어로 하늘의 모든 표시를 가립니다. 날짜와 태양 고도에 따라 황혼부터 새벽까지 밝기가 변합니다. 별자리 버튼은 88개 별자리의 연결선과 약칭을 표시합니다. 지평 좌표는 파란색 방위각·고도 격자(관측자 기준), 적도 좌표는 황금색 적경·적위 격자(천구 기준)입니다. 두 격자를 함께 표시할 수 있습니다.</p><span id="bearing"></span> | 별·별자리 자료: Hipparcos / D3-Celestial</details></div></section></main>
+.horizon-letter{position:fixed;z-index:7;pointer-events:none;transform:translate(-50%,-100%);color:#e3e9e5;font:600 clamp(20px, 2.5vw, 28px)/1.25 ui-monospace,Consolas,monospace;text-shadow:0 1px 4px #000,0 0 8px #000;letter-spacing:1px}.horizon-letter[hidden]{display:none}.observe-tools{display:grid;gap:10px;padding:12px 0 2px}.target-tools{display:flex;align-items:center;flex-wrap:wrap;gap:7px}.observe-tools label,.observe-tools span{font-size:12px}.observe-tools [role=status]{color:#c2d9ce;font-size:11px}@media(max-width:620px){.observe-tools{gap:12px}}#fold{display:inline-flex;align-items:center;justify-content:center;flex:0 0 36px;width:36px;height:36px;min-width:36px;padding:0;border-radius:11px;border:1px solid #c2d9ce38;background:#c2d9ce0c;color:#dce9e2;transition:background .15s,border-color .15s}#fold:hover{background:#c2d9ce21;border-color:#c2d9ce70}#fold svg{display:block;transition:transform .18s ease}.compact #fold svg{transform:rotate(180deg)}@media(prefers-reduced-motion:reduce){#fold,#fold svg{transition:none}}#clock-edit{color:inherit;background:transparent;border:0;border-bottom:1px solid #c2d9ce55;padding:2px 0;color-scheme:dark;max-width:100%}#clock-edit::-webkit-calendar-picker-indicator{display:none}#clock-edit:focus-visible{outline:1px solid #b9d6c7;outline-offset:2px}#clock,.compact #clock-edit{display:none}.compact #clock{display:inline}@media(max-width:620px){.head{flex-wrap:wrap}}#city-form input{font:inherit;padding:7px 9px;border:1px solid #c2d9ce55;border-radius:8px;background:#111c2a;color:inherit;max-width:100%}#city-form a{font-size:11px;color:#c2d9ce}#site-hud{max-width:min(42vw,280px);white-space:pre-line;overflow-wrap:anywhere}#site-name{padding:3px 6px;font:inherit;color:inherit}#site-name::after{content:' ▾'}#site-picker:not([hidden]){display:grid;gap:8px;margin-top:8px}.examples{margin-top:8px}.panel,.panel.compact{width:min(900px,calc(100% - 24px))}.panel{max-height:85vh;overflow:auto}.head{flex-wrap:nowrap}.head .status{min-width:0}.head .meta{min-width:0}.meta small{overflow-wrap:anywhere}#clock,#clock-edit{width:clamp(135px,24vw,210px);box-sizing:border-box}.camera.notice #capture{display:none}#notice:empty{display:none}@media(max-width:520px){.head .meta strong{display:none}.head .meta small{display:grid}.head{gap:4px}}@media(max-width:400px){.head .meta{order:3;flex-basis:100%}.head .status{flex-wrap:wrap}}#controls[hidden],#return-view[hidden]{display:none}.panel{display:flex;flex-direction:column-reverse;overflow:hidden}.head{flex:none}#controls{overflow-y:auto;min-height:0;padding-bottom:10px;margin-bottom:8px;border-bottom:1px solid #c7d9fd25}.head .actions{flex-wrap:nowrap;flex:none}.quick-toggles{display:flex;flex-wrap:wrap;gap:5px;padding:5px 0 8px}.quick-toggles button{font-size:12px;padding:5px 9px}.quick-toggles button[aria-pressed=true]{background:#c2d9ce;color:#10251c}#site-hud{top:max(16px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));pointer-events:auto;z-index:12;white-space:normal}
+#site-name{display:inline-flex;align-items:center;gap:10px;max-width:100%;min-height:40px;padding:6px 12px;font:600 14px/1.3 system-ui;color:#f0f5f2;background:#152029ed;border:1px solid #c3dfd54a;border-radius:12px;text-align:left;overflow-wrap:anywhere}
+#site-name::after{content:'';width:6px;height:6px;flex:none;border:solid #afc8bb;border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
+#site-name[aria-expanded=true]::after{transform:rotate(225deg)}
+#site-name:disabled{opacity:1;cursor:default;border-color:transparent;background:#101821aa}
+#site-name:disabled::after,#site-name:disabled~#site-coords{display:none}
+#site-coords{display:block;padding:3px 4px;color:#d4ddd9;text-shadow:0 1px 4px #000}
+#site-picker{position:absolute;right:0;top:100%;width:min(330px,calc(100vw - 32px));box-sizing:border-box;padding:14px;background:#111c26fa;color:#e6ede9;border:1px solid #abc7bc46;border-radius:14px;box-shadow:0 8px 28px #0006;text-align:left;font:13px/1.5 system-ui;letter-spacing:normal;max-height:55vh;overflow:auto}
+#site-picker:not([hidden]){gap:12px}#site-picker label{display:flex;align-items:center;gap:10px}#site-picker select{flex:1;min-width:0}#city-form{display:grid;grid-template-columns:minmax(0,1fr) auto}#city-form input{width:100%;box-sizing:border-box}#city-status,#city-form a{grid-column:1/-1}#city-status:empty{display:none}
+#site-hud :focus-visible{outline:2px solid #c4e5ce;outline-offset:2px}.observation-header{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:12px}
+#site-hud.panel-location{position:static;max-width:none;text-align:right;font:11px/1.4 system-ui}
+.observation-header{position:relative}
+#site-name{max-width:min(40vw,280px)}
+@media(max-width:600px){.observation-header .target-tools{flex-wrap:wrap}}
+.presets{display:flex;flex-direction:column;gap:2px;max-height:min(112px,22vh);overflow-y:auto;scrollbar-width:thin;overscroll-behavior:contain}.presets button{flex:none;min-height:40px;text-align:left;padding:7px 10px}.presets button[aria-pressed=true]{background:#c2d9ce;color:#10251c}#city-form label{grid-column:1/-1;color:#d4ddd9}#site-hud #site-picker{gap:10px}
+.compact .head .meta{display:grid}.compact .head .meta strong{display:block}.compact #site-zone{display:none}#summary-city::before{content:' · '}.compact .meta small{display:block}
+@media(max-width:620px){.compact .head .status{flex-wrap:wrap}.compact .head .meta{flex-basis:100%}.compact .head{align-items:flex-start}}
+#site-picker{position:fixed;inset:auto;z-index:30;width:min(310px,calc(100vw - 20px));margin:0;overflow:auto;overscroll-behavior:contain}
+#site-picker:not([hidden]){margin:0;gap:10px}#site-picker[hidden]{display:none}</style><main><div id="sky-background" aria-hidden="true"></div><canvas id="constellation-layer" aria-hidden="true"></canvas><canvas id="horizon-grid" aria-hidden="true" hidden></canvas><canvas id="name-layer" aria-hidden="true"></canvas><canvas id="moon-layer" aria-hidden="true" hidden></canvas><canvas id="sun-layer" aria-hidden="true" hidden></canvas><canvas id="ground-layer" aria-hidden="true"></canvas><canvas id="sky" tabindex="0" aria-label="3차원 밤하늘. 드래그하거나 방향키로 시선을 이동하세요."></canvas>
+<div class="camera" id="camera"><strong><i class="lamp"></i>NIGHT SKY / TIMELAPSE</strong><span id="eclipse-status"></span><span id="notice" role="status"></span><span id="capture">20s · f/2.8 · ISO 1600</span></div><section class="panel compact" aria-label="관측 조작창"><div class="head"><div class="status"><input class="clock" id="clock-edit" type="text" maxlength="8" autocomplete="off" spellcheck="false" title="24시간제 HH:MM 또는 HH:MM:SS" value="18:00:00" aria-label="관측지 현지 시각, 24시간제 시:분 또는 시:분:초"><span class="clock" id="clock"></span><div class="meta"><strong>천구 관측실</strong><small> <span id="stamp"></span> <span id="summary-city">용인</span> <span id="site-zone">Asia/Seoul</span></small></div></div><div class="actions"><button id="play">▶ 재생</button><button id="fold" aria-label="상세보기로 전환" title="상세보기로 전환" aria-controls="controls" aria-expanded="false"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" aria-hidden="true" focusable="false"><path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></div>
+<div class="group quick-toggles" role="group" aria-label="하늘 표시"><button id="trails" aria-pressed="true">장노출 궤적</button><button id="bodies" aria-pressed="true">태양·달</button><button id="names" aria-pressed="false">별 이름</button><button id="constellations" aria-pressed="false">별자리</button><button id="grid" aria-pressed="false" title="방위각·고도: 관측자 기준">지평 좌표</button><button id="equatorial" aria-pressed="false" title="적경·적위: 천구 기준">적도 좌표</button></div><div id="controls" hidden><div class="observe-tools"><div class="observation-header"><div class="target-tools"><label>시작일 <input id="date" type="date" min="1900-01-01" max="2100-12-31"></label><label>배속 <select id="speed" aria-label="재생 속도"><option value="60">60배속</option><option value="300">300배속</option><option value="900" selected>900배속</option><option value="1800">1800배속</option></select></label></div><aside class="panel-location" id="site-hud" aria-label="관측지"><button id="site-name" disabled aria-expanded="false" aria-controls="site-picker" title="관측지 변경">용인</button><span id="site-coords">37.30° N　127.11° E</span></aside></div>
+ <div class="target-tools"><label for="target">천체 찾기</label><select id="target"><option value="sun">태양</option><option value="moon">달</option><option value="polaris">북극성</option></select><button id="find">찾기</button><button id="track" aria-pressed="false">추적 시작</button><span id="tracking-status" role="status"></span></div>
+ </div><input id="time" type="range" min="0" max="1440" step="1" value="0" aria-label="관측 시각"><div class="ticks"><span>12:00</span><span>18:00</span><span>00:00</span><span>06:00</span><span>12:00 +1일</span></div><div class="bottom"><div class="dirs" aria-label="관측 방향"></div></div><div class="target-tools examples"><span>관측 예시</span><button id="lunar-example" title="2022년 11월 8일 개기월식">월식 예시</button><button id="eclipse-example" title="2020년 6월 21일 용인 부분일식">일식 예시</button><button id="return-view" hidden>이전 관측으로</button></div><details class="note"><summary>관측 안내</summary><p>드래그하거나 방향키로 하늘을 둘러보세요. 기본 화면은 장노출입니다. 날짜를 지정할 때 천구 텍스처를 한 번 생성합니다. 이후 GPU가 같은 텍스처를 회전·투영하며 장노출은 최대 밝기로 합성합니다. 같은 궤적을 다시 지나도 밝기가 계속 증가하지 않습니다. 재생 시작부터 모든 별의 궤적이 쌓이며 2시간 제한은 없습니다. 장노출을 끄면 20초 노출 타임랩스로 전환합니다. 가까운 순서는 땅 → 태양·달 → 별 이름 → 별자리 → 별 → 별 없는 하늘입니다. 태양·달 원반은 잘 보이도록 계산된 겉보기 크기의 3배로 확대했습니다. 태양에는 눈부심 효과도 더했습니다. 지평선 부근의 태양 확대(최대 18%)는 시각적 연출이며 붉어짐과 약한 세로 압축을 표현했습니다. 태양·달 원반은 비슷한 겉보기 크기를 사용하며 달은 태양 앞에 배치합니다. 일식의 가림률은 실제 각크기로 계산하며 근접 시 표시 간격도 원반과 함께 확대합니다. 정밀 관측 예보용은 아닙니다. 2020-06-21 오후 부분일식, 2022-11-08 저녁 개기월식 예시 버튼을 사용할 수 있습니다. 월식은 지구의 본영·반영 원뿔과 달의 위치로 계산하며 붉은 색과 어두워지는 정도는 시각적 근사입니다. 관찰 시간은 선택일 낮 12시부터 다음 날 낮 12시까지입니다. 태양·달 위치와 일식 가림은 Astronomy Engine의 선택한 관측지 좌표로 계산하고 달의 위상은 SunCalc로 계산하며 표면 무늬는 시각적 근사입니다. 달은 낮은 고도에서 따뜻한 색과 감광을, 높은 고도에서 회백색을 띠며 낮에는 하늘빛에 대비가 낮아집니다. 밤하늘의 달빛은 위상·고도·월식 여부에 따라 약하게 반영합니다. 대기 효과는 시각적 근사입니다. 태양과 달은 지형에 가려집니다. 궤적을 선으로 그리지 않고 별 자체의 크기와 빛 번짐을 그대로 쌓습니다. 시점·날짜·노출 모드 변경, 시간 이동 시 누적 노출을 초기화합니다. 선택한 관측지에서 보이는 별 위치를 사용하며, 별빛 색과 하늘 밝기는 시각적 근사입니다. 배경은 별·입자 없는 청명한 하늘이며 태양 고도와 방향에 따라 노을과 여명이 변합니다. 땅은 독립된 최전방 레이어로 하늘의 모든 표시를 가립니다. 날짜와 태양 고도에 따라 황혼부터 새벽까지 밝기가 변합니다. 별자리 버튼은 88개 별자리의 연결선과 약칭을 표시합니다. 지평 좌표는 파란색 방위각·고도 격자(관측자 기준), 적도 좌표는 황금색 적경·적위 격자(천구 기준)입니다. 두 격자를 함께 표시할 수 있습니다.</p><span id="bearing"></span> | 별·별자리 자료: Hipparcos / D3-Celestial</details></div></section></main><div id="site-picker" hidden><input id="site" type="hidden" value="yongin"><div class="presets" role="group" aria-label="관측 도시"><button id="preset-yongin" aria-pressed="true">용인</button><button id="preset-quito" aria-pressed="false">키토</button><button id="preset-brisbane" aria-pressed="false">브리즈번</button></div><form id="city-form" class="target-tools"><label for="city-query">직접입력</label><input id="city-query" type="search" aria-label="도시 또는 국가 이름" placeholder="도시 또는 국가 (예: 서울, 프랑스)" required maxlength="80"><button>도시 검색</button><span id="city-status" role="status"></span><a href="https://open-meteo.com/en/docs/geocoding-api" target="_blank" rel="noopener">도시 자료: GeoNames / Open-Meteo</a><a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">국가·수도 자료: Countries (ODbL)</a></form></div>
 
 <script>
 /*
@@ -338,7 +356,6 @@ var dayMs = 1000 * 60 * 60 * 24,
     J2000 = 2451545;
 
 function toJulian(date) { return date.valueOf() / dayMs - 0.5 + J1970; }
-function fromJulian(j)  { return new Date((j + 0.5 - J1970) * dayMs); }
 function toDays(date)   { return toJulian(date) - J2000; }
 
 
@@ -388,108 +405,6 @@ function sunCoords(d) {
 
 
 var SunCalc = {};
-
-
-// calculates sun position for a given date and latitude/longitude
-
-SunCalc.getPosition = function (date, lat, lng) {
-
-    var lw  = rad * -lng,
-        phi = rad * lat,
-        d   = toDays(date),
-
-        c  = sunCoords(d),
-        H  = siderealTime(d, lw) - c.ra;
-
-    return {
-        azimuth: azimuth(H, phi, c.dec),
-        altitude: altitude(H, phi, c.dec)
-    };
-};
-
-
-// sun times configuration (angle, morning name, evening name)
-
-var times = SunCalc.times = [
-    [-0.833, 'sunrise',       'sunset'      ],
-    [  -0.3, 'sunriseEnd',    'sunsetStart' ],
-    [    -6, 'dawn',          'dusk'        ],
-    [   -12, 'nauticalDawn',  'nauticalDusk'],
-    [   -18, 'nightEnd',      'night'       ],
-    [     6, 'goldenHourEnd', 'goldenHour'  ]
-];
-
-// adds a custom time to the times config
-
-SunCalc.addTime = function (angle, riseName, setName) {
-    times.push([angle, riseName, setName]);
-};
-
-
-// calculations for sun times
-
-var J0 = 0.0009;
-
-function julianCycle(d, lw) { return Math.round(d - J0 - lw / (2 * PI)); }
-
-function approxTransit(Ht, lw, n) { return J0 + (Ht + lw) / (2 * PI) + n; }
-function solarTransitJ(ds, M, L)  { return J2000 + ds + 0.0053 * sin(M) - 0.0069 * sin(2 * L); }
-
-function hourAngle(h, phi, d) { return acos((sin(h) - sin(phi) * sin(d)) / (cos(phi) * cos(d))); }
-function observerAngle(height) { return -2.076 * Math.sqrt(height) / 60; }
-
-// returns set time for the given sun altitude
-function getSetJ(h, lw, phi, dec, n, M, L) {
-
-    var w = hourAngle(h, phi, dec),
-        a = approxTransit(w, lw, n);
-    return solarTransitJ(a, M, L);
-}
-
-
-// calculates sun times for a given date, latitude/longitude, and, optionally,
-// the observer height (in meters) relative to the horizon
-
-SunCalc.getTimes = function (date, lat, lng, height) {
-
-    height = height || 0;
-
-    var lw = rad * -lng,
-        phi = rad * lat,
-
-        dh = observerAngle(height),
-
-        d = toDays(date),
-        n = julianCycle(d, lw),
-        ds = approxTransit(0, lw, n),
-
-        M = solarMeanAnomaly(ds),
-        L = eclipticLongitude(M),
-        dec = declination(L, 0),
-
-        Jnoon = solarTransitJ(ds, M, L),
-
-        i, len, time, h0, Jset, Jrise;
-
-
-    var result = {
-        solarNoon: fromJulian(Jnoon),
-        nadir: fromJulian(Jnoon - 0.5)
-    };
-
-    for (i = 0, len = times.length; i < len; i += 1) {
-        time = times[i];
-        h0 = (time[0] + dh) * rad;
-
-        Jset = getSetJ(h0, lw, phi, dec, n, M, L);
-        Jrise = Jnoon - (Jset - Jnoon);
-
-        result[time[1]] = fromJulian(Jrise);
-        result[time[2]] = fromJulian(Jset);
-    }
-
-    return result;
-};
 
 
 // moon calculations, based on http://aa.quae.nl/en/reken/hemelpositie.html formulas
@@ -558,73 +473,7 @@ SunCalc.getMoonIllumination = function (date) {
     };
 };
 
-
-function hoursLater(date, h) {
-    return new Date(date.valueOf() + h * dayMs / 24);
-}
-
-// calculations for moon rise/set times are based on http://www.stargazing.net/kepler/moonrise.html article
-
-SunCalc.getMoonTimes = function (date, lat, lng, inUTC) {
-    var t = new Date(date);
-    if (inUTC) t.setUTCHours(0, 0, 0, 0);
-    else t.setHours(0, 0, 0, 0);
-
-    var hc = 0.133 * rad,
-        h0 = SunCalc.getMoonPosition(t, lat, lng).altitude - hc,
-        h1, h2, rise, set, a, b, xe, ye, d, roots, x1, x2, dx;
-
-    // go in 2-hour chunks, each time seeing if a 3-point quadratic curve crosses zero (which means rise or set)
-    for (var i = 1; i <= 24; i += 2) {
-        h1 = SunCalc.getMoonPosition(hoursLater(t, i), lat, lng).altitude - hc;
-        h2 = SunCalc.getMoonPosition(hoursLater(t, i + 1), lat, lng).altitude - hc;
-
-        a = (h0 + h2) / 2 - h1;
-        b = (h2 - h0) / 2;
-        xe = -b / (2 * a);
-        ye = (a * xe + b) * xe + h1;
-        d = b * b - 4 * a * h1;
-        roots = 0;
-
-        if (d >= 0) {
-            dx = Math.sqrt(d) / (Math.abs(a) * 2);
-            x1 = xe - dx;
-            x2 = xe + dx;
-            if (Math.abs(x1) <= 1) roots++;
-            if (Math.abs(x2) <= 1) roots++;
-            if (x1 < -1) x1 = x2;
-        }
-
-        if (roots === 1) {
-            if (h0 < 0) rise = i + x1;
-            else set = i + x1;
-
-        } else if (roots === 2) {
-            rise = i + (ye < 0 ? x2 : x1);
-            set = i + (ye < 0 ? x1 : x2);
-        }
-
-        if (rise && set) break;
-
-        h0 = h2;
-    }
-
-    var result = {};
-
-    if (rise) result.rise = hoursLater(t, rise);
-    if (set) result.set = hoursLater(t, set);
-
-    if (!rise && !set) result[ye > 0 ? 'alwaysUp' : 'alwaysDown'] = true;
-
-    return result;
-};
-
-
-// export as Node module / AMD module / browser variable
-if (typeof exports === 'object' && typeof module !== 'undefined') module.exports = SunCalc;
-else if (typeof define === 'function' && define.amd) define(SunCalc);
-else globalThis.SunCalc = SunCalc;
-
+    globalThis.SunCalc = SunCalc;
 }());
 
 
@@ -632,6 +481,8 @@ const fold = document.getElementById('fold');
 fold.onclick = () => {
   const collapsed = document.querySelector('.panel').classList.toggle('compact');
   document.getElementById('controls').hidden = collapsed;
+  el('site-name').disabled=collapsed;
+  if(collapsed)setPicker(false);
   fold.setAttribute('aria-expanded', String(!collapsed));
   fold.title = collapsed ? '상세보기로 전환' : '간략보기로 전환';
   fold.setAttribute('aria-label', fold.title);
@@ -694,7 +545,7 @@ function solarState(millis){return celestialState(millis).sun;}
 
 
 const stars=catalog.map(([id,a,d,m])=>({id,a:a*rad,sd:sin(d*rad),cd:cos(d*rad),m,ca:cos(a*rad),sa:sin(a*rad),size:Math.max(.35,Math.min(2.1,1.65-.22*m)),rgb:id%11<3?'183,207,242':id%11<6?'245,215,177':'225,232,237'})).sort((a,b)=>b.m-a.m);
-const el=id=>document.getElementById(id),canvas=el('sky'),ctx=null,date=el('date'),slider=el('time');
+const el=id=>document.getElementById(id),canvas=el('sky'),date=el('date'),slider=el('time');
 const skyBackground=el('sky-background'),constellationCanvas=el('constellation-layer'),nameCanvas=el('name-layer');
 const constellationCtx=constellationCanvas.getContext('2d'),nameCtx=nameCanvas.getContext('2d');
 const horizonGrid=el('horizon-grid'),horizonCtx=horizonGrid.getContext('2d');
@@ -705,7 +556,6 @@ const moonCanvas=el('moon-layer'),moonCtx=moonCanvas.getContext('2d');let moonSp
 const horizonLetters=['N','E','S','W'].map(text=>{const label=document.createElement('span');label.className='horizon-letter';label.textContent=text;label.setAttribute('aria-hidden','true');label.hidden=true;document.querySelector('main').append(label);return label});
 const namedStars=stars.filter(s=>labels[s.id]);
 const layerState={sky:'',stars:'',constellations:'',names:'',ground:''};
-let constellationTime=-Infinity,nameTime=-Infinity,lastConstellationView='',lastNameView='';
 const dayMs=86400000;
 let cityClock=makeClock(site.zone),dayWindow;
 function makeClock(zone){
@@ -733,14 +583,14 @@ date.value=localISO(Date.now()).slice(0,10);
 let renderScale=1,scheduled=0,lastDraw=-Infinity;
 function schedule(){if(!scheduled&&!document.hidden)scheduled=requestAnimationFrame(frame)}
 function invalidate(){dirty=true;schedule()}
-let yaw=0,pitch=29*rad,minutes=0,playing=true,dirty=true,last=0,w,h,focal;
+let yaw=0,pitch=29*rad,minutes=360,playing=true,dirty=true,last=0,w,h,focal;
 const directions=['북','동','남','서'];const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
-directions.forEach((v,i)=>{let b=document.createElement('button');b.textContent=v;b.onclick=()=>{stopTracking();yaw=i*Math.PI/2;pitch=29*rad;invalidate()};document.querySelector('.dirs').append(b)});
+directions.forEach((v,i)=>{let b=document.createElement('button');b.textContent=v;b.onclick=()=>{exposureNotice('시점 변경');stopTracking();yaw=i*Math.PI/2;pitch=29*rad;invalidate()};document.querySelector('.dirs').append(b)});
 for(const id of ['trails','names','grid','equatorial','constellations','bodies'])el(id).onclick=()=>{let b=el(id);b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!=='true');if(id==='trails')trailStart=minutes;invalidate()};
 const on=id=>el(id).getAttribute('aria-pressed')==='true';
 function play(p){if(p&&!playing)last=0;playing=p;el('play').textContent=p?'Ⅱ 일시정지':'▶ 재생';el('camera').classList.toggle('paused',!p);schedule()}
 play(true);
-let trailStart=minutes,lastExposureMinute=null,exposureBufferKey='';
+let trailStart=minutes;
 function createSkyRenderer(surface){
  const gl=surface.getContext('webgl2',{alpha:false,antialias:false,depth:false,stencil:false,preserveDrawingBuffer:false});
  if(!gl)throw Error('천구 렌더링에는 WebGL 2를 지원하는 브라우저가 필요합니다.');
@@ -796,8 +646,9 @@ function createSkyRenderer(surface){
   const pixels=new Uint8Array(width*height);
   // One channel stores coverage. Regular longitude/latitude spacing maps to 180/90 texels.
   for(let y=0;y<height;y++){
-   const declinationLine=y>=90&&y<=990&&y%90===0;
-   for(let x=0;x<width;x++)if(declinationLine||x%180===0)pixels[y*width+x]=255;
+   const row=y*width;
+   if(y>0 && y%90===0)pixels.fill(255,row,row+width);
+   else for(let x=0;x<width;x+=180)pixels[row+x]=255;
   }
   gl.activeTexture(gl.TEXTURE1);
   equatorialTexture=texture();
@@ -815,7 +666,11 @@ function createSkyRenderer(surface){
   const delta=Math.atan2(Math.sin(sid-oldAngle),Math.cos(sid-oldAngle));
   gl.uniform1i(locations.mode,0);gl.uniform1i(locations.samples,trails?Math.min(16,Math.max(1,Math.ceil(Math.abs(delta)*focal*sw/w/.6))):1);
   gl.uniform2f(locations.size,w,h);for(const [k,v]of Object.entries({focal,yaw,pitch,latitude:lat,sid,oldSid:sid-delta,night}))gl.uniform1f(locations[k],v);
-  gl.bindTexture(gl.TEXTURE_2D,sky);gl.enable(gl.BLEND);gl.blendEquation(gl.MAX);gl.drawArrays(gl.TRIANGLES,0,3);gl.disable(gl.BLEND);
+  // MAX blending a black sky leaves the accumulated exposure intact.
+  if(night>0){
+   gl.bindTexture(gl.TEXTURE_2D,sky);gl.enable(gl.BLEND);gl.blendEquation(gl.MAX);
+   gl.drawArrays(gl.TRIANGLES,0,3);gl.disable(gl.BLEND);
+  }
   gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.uniform1i(locations.mode,1);gl.uniform1i(locations.showGridMap,Number(equatorial));gl.bindTexture(gl.TEXTURE_2D,exposure);gl.drawArrays(gl.TRIANGLES,0,3);oldAngle=sid;
  }};
 }
@@ -843,14 +698,29 @@ function drawAtmosphere({w,h,focal,yaw,pitch,solar,brightness,now,moon=null,moon
  const strength=Math.exp(-(((solar.alt+2)/6)**2))*clamp((solar.alt+14)/5,0,1);
  const moonStrength=moon?Math.pow(moonFraction,1.8)*clamp(moon.alt/20,0,1)*clamp((-solar.alt-4)/14,0,1)*(1-.97*lunarCoverage):0;
  const pixels=atmospherePixels.data;
+ const hasMoon=moonStrength>.001;
+ const moonSin=hasMoon?sin(moon.alt*rad):0,moonCos=hasMoon?cos(moon.alt*rad):0;
  for(let i=0;i<rayAlt.length;i++){
-  const alt=rayAlt[i],delta=Math.atan2(sin(rayAz[i]-solar.az),cos(rayAz[i]-solar.az));
-  const direction=Math.exp(-((delta/(55*rad))**2)),warm=strength*direction*Math.exp(-(((alt-1)/7)**2)),pink=strength*direction*Math.exp(-(((alt-10)/10)**2));
-  const horizon=clamp((25-alt)/25,0,1),base=[38+66*horizon,67+60*horizon,105+50*horizon];
-  let lunarGlow=0;
-  if(moonStrength>.001){const a=alt*rad,b=moon.alt*rad,separation=Math.acos(clamp(sin(a)*sin(b)+cos(a)*cos(b)*cos(rayAz[i]-moon.az),-1,1));lunarGlow=moonStrength*(.22+.78*Math.exp(-((separation/(18*rad))**2)));}
-  const add=[165*warm+65*pink+5*lunarGlow,69*warm+17*pink+8*lunarGlow,13*warm+39*pink+13*lunarGlow];
-  for(let c=0;c<3;c++)pixels[i*4+c]=Math.round(Math.min(255,base[c]*brightness+add[c]));pixels[i*4+3]=255;
+  const alt=rayAlt[i],horizon=clamp((25-alt)/25,0,1);
+  let warm=0,pink=0,lunarGlow=0;
+  if(strength>0){
+   // The Gaussian is symmetric around zero, including across the azimuth seam.
+   const offset=(rayAz[i]-solar.az)%(2*Math.PI);
+   const delta=Math.min(Math.abs(offset),2*Math.PI-Math.abs(offset));
+   const direction=strength*Math.exp(-((delta/(55*rad))**2));
+   warm=direction*Math.exp(-(((alt-1)/7)**2));
+   pink=direction*Math.exp(-(((alt-10)/10)**2));
+  }
+  if(hasMoon){
+   const a=alt*rad;
+   const separation=Math.acos(clamp(sin(a)*moonSin+cos(a)*moonCos*cos(rayAz[i]-moon.az),-1,1));
+   lunarGlow=moonStrength*(.22+.78*Math.exp(-((separation/(18*rad))**2)));
+  }
+  const j=i*4;
+  pixels[j]=Math.round((38+66*horizon)*brightness+(165*warm+65*pink+5*lunarGlow));
+  pixels[j+1]=Math.round((67+60*horizon)*brightness+(69*warm+17*pink+8*lunarGlow));
+  pixels[j+2]=Math.round((105+50*horizon)*brightness+(13*warm+39*pink+13*lunarGlow));
+  pixels[j+3]=255;
  }
  atmosphereCtx.putImageData(atmospherePixels,0,0);atmosphereKey=key;atmosphereTime=now;
 }
@@ -858,30 +728,89 @@ function drawAtmosphere({w,h,focal,yaw,pitch,solar,brightness,now,moon=null,moon
 
 const skyRenderer=createSkyRenderer(canvas);
 function allocateLayer(surface,c,enabled){const scale=Math.min(devicePixelRatio,1.25,Math.sqrt(1000000/(w*h)));const width=enabled?Math.floor(w*scale):1,height=enabled?Math.floor(h*scale):1;if(surface.width!==width||surface.height!==height){surface.width=width;surface.height=height;c.setTransform(scale,0,0,scale,0,0)}}
+function resetExposure(){slider.dataset.reset=String(Number(slider.dataset.reset||0)+1)}
 function localNoon(){return observingDay().start}
+function observationTime(){return localNoon()+minutes*60000}
 function selectSite(key){
- const wallClock=localISO(localNoon()+minutes*60000).slice(11,19);
+ const wallClock=localISO(observationTime()).slice(11,19);
  site=sites[key];lat=site.lat*rad;lon=site.lon;cityClock=makeClock(site.zone);
  minutes=clockMinutes(wallClock,minutes===dayWindow?.duration);
  el('site').value=key;
- el('site-name').textContent=site.name;
+ el('summary-city').textContent=site.name;
+ for(const preset of ['yongin','quito','brisbane'])el('preset-'+preset).setAttribute('aria-pressed',String(preset===key));
+ el('site-name').textContent=key==='searched'?site.country:site.name;
  el('site-zone').textContent=site.zone;
- el('site-hud').textContent=Math.abs(site.lat).toFixed(2)+'° '+(site.lat<0?'S':'N')+'  '+Math.abs(lon).toFixed(2)+'° '+(lon<0?'W':'E')+'\n'+site.country;
- slider.dataset.reset=String(Number(slider.dataset.reset||0)+1);
+ el('site-coords').textContent=Math.abs(site.lat).toFixed(2)+'° '+(site.lat<0?'S':'N')+'  '+Math.abs(lon).toFixed(2)+'° '+(lon<0?'W':'E');
+ resetExposure();
  celestialCacheTime=NaN;trailStart=minutes;invalidate();
 }
-el('site').onchange=()=>selectSite(el('site').value);
+function placeCityPicker(){
+ const picker=el('site-picker');
+ if(picker.hidden)return;
+ const anchor=el('site-name').getBoundingClientRect();
+ const gap=6,edge=10;
+ const above=anchor.top-gap-edge,below=innerHeight-anchor.bottom-gap-edge;
+ const down=below>=picker.scrollHeight+2 || below>=above;
+ picker.style.maxHeight=Math.max(1,down?below:above)+'px';
+ picker.style.left=Math.max(edge,Math.min(innerWidth-edge-picker.offsetWidth,anchor.right-picker.offsetWidth))+'px';
+ picker.style.top=(down?anchor.bottom+gap:anchor.top-gap-picker.offsetHeight)+'px';
+}
+document.defaultView?.addEventListener('resize',placeCityPicker);
+el('controls').onscroll=placeCityPicker;
+function setPicker(open){
+ el('site-picker').hidden=!open;
+ el('site-name').setAttribute('aria-expanded',String(open));
+ if(open)el('city-status').textContent='';
+ citySearch?.abort();
+ if(open){placeCityPicker();el('preset-yongin').focus({preventScroll:true})}
+}
+document.addEventListener('pointerdown',event=>{
+ if(!el('site-picker').hidden&&!el('site-hud').contains(event.target)&&!el('site-picker').contains(event.target))setPicker(false);
+});
+document.addEventListener('keydown',event=>{
+ if(event.key==='Escape'&&!el('site-picker').hidden){setPicker(false);el('site-name').focus()}
+});
+el('site-name').onclick=()=>setPicker(el('site-picker').hidden);
+for(const key of ['yongin','quito','brisbane'])el('preset-'+key).onclick=()=>{
+ selectSite(key);setPicker(false);el('site-name').focus();
+};
+el('site').onchange=()=>{selectSite(el('site').value);setPicker(false);el('site-name').focus()};
+let noticeTimer;
+function exposureNotice(reason){
+ if(!on('trails'))return;
+ el('notice').textContent=reason+' · 새 노출 시작';
+ el('camera').classList.add('notice');
+ clearTimeout(noticeTimer);
+ noticeTimer=setTimeout(()=>{el('notice').textContent='';el('camera').classList.remove('notice')},1800);
+}
 const cityStatus=el('city-status');
+// Country/capital names adapted from mledoze/countries (ODbL); coordinates/time zones from GeoNames (CC BY 4.0).
+const capitalRows=[["아루바|Aruba","아루바","AW","Oranjestad",12.52398,-70.02703,"America/Aruba"],["아프가니스탄|아프가니스탄 이슬람 공화국|Afghanistan|Islamic Republic of Afghanistan","아프가니스탄","AF","Kabul",34.52813,69.17233,"Asia/Kabul"],["앙골라|앙골라 공화국|Angola|Republic of Angola","앙골라","AO","Luanda",-8.83682,13.23432,"Africa/Luanda"],["앵귈라|Anguilla","앵귈라","AI","The Valley",18.21704,-63.05783,"America/Anguilla"],["올란드 제도|Åland Islands","올란드 제도","AX","Mariehamn",60.09726,19.93481,"Europe/Mariehamn"],["알바니아|알바니아 공화국|Albania|Republic of Albania","알바니아","AL","Tirana",41.32744,19.81866,"Europe/Tirane"],["안도라|안도라 공국|Andorra|Principality of Andorra","안도라","AD","Andorra la Vella",42.50779,1.52109,"Europe/Andorra"],["아랍에미리트|아랍 토후국 연방|United Arab Emirates","아랍에미리트","AE","Abu Dhabi",24.45118,54.39696,"Asia/Dubai"],["아르헨티나|아르헨티나 공화국|Argentina|Argentine Republic","아르헨티나","AR","Buenos Aires",-34.61315,-58.37723,"America/Argentina/Buenos_Aires"],["아르메니아|아르메니아 공화국|Armenia|Republic of Armenia","아르메니아","AM","Yerevan",40.17765,44.5126,"Asia/Yerevan"],["아메리칸 사모아|아메리칸사모아|American Samoa","아메리칸 사모아","AS","Pago Pago",-14.27806,-170.7025,"Pacific/Pago_Pago"],["프랑스령 남방 지역|프랑스령 남부와 남극 지역|French Southern and Antarctic Lands|Territory of the French Southern and Antarctic Lands","프랑스령 남방 지역","TF","Port-aux-Français",-49.34916,70.21937,"Indian/Kerguelen"],["앤티가 바부다|Antigua and Barbuda","앤티가 바부다","AG","Saint John's",17.12096,-61.84329,"America/Antigua"],["오스트레일리아|호주|오스트레일리아 연방|Australia|Commonwealth of Australia","오스트레일리아","AU","캔버라",-35.28346,149.12807,"Australia/Sydney"],["오스트리아|오스트리아 공화국|Austria|Republic of Austria","오스트리아","AT","Vienna",48.20849,16.37208,"Europe/Vienna"],["아제르바이잔|아제르바이잔 공화국|Azerbaijan|Republic of Azerbaijan","아제르바이잔","AZ","Baku",40.37767,49.89201,"Asia/Baku"],["부룬디|Burundi|Republic of Burundi","부룬디","BI","Gitega",-3.42708,29.92463,"Africa/Bujumbura"],["벨기에|벨기에 왕국|Belgium|Kingdom of Belgium","벨기에","BE","Brussels",50.85045,4.34878,"Europe/Brussels"],["베냉|베냉 공화국|Benin|Republic of Benin","베냉","BJ","Porto-Novo",6.49646,2.60359,"Africa/Porto-Novo"],["부르키나파소|Burkina Faso","부르키나파소","BF","Ouagadougou",12.36566,-1.53388,"Africa/Ouagadougou"],["방글라데시|방글라데시 인민 공화국|Bangladesh|People's Republic of Bangladesh","방글라데시","BD","Dhaka",23.7104,90.40744,"Asia/Dhaka"],["불가리아|불가리아 공화국|Bulgaria|Republic of Bulgaria","불가리아","BG","Sofia",42.69751,23.32415,"Europe/Sofia"],["바레인|바레인 왕국|Bahrain|Kingdom of Bahrain","바레인","BH","Manama",26.22787,50.58565,"Asia/Bahrain"],["바하마|바하마 연방|Bahamas|Commonwealth of the Bahamas","바하마","BS","Nassau",25.05823,-77.34306,"America/Nassau"],["보스니아 헤르체고비나|Bosnia and Herzegovina","보스니아 헤르체고비나","BA","Sarajevo",43.84864,18.35644,"Europe/Sarajevo"],["생바르텔레미|Saint Barthélemy|Collectivity of Saint Barthélemy","생바르텔레미","BL","Gustavia",17.89618,-62.84978,"America/St_Barthelemy"],["세인트헬레나|Saint Helena, Ascension and Tristan da Cunha","세인트헬레나","SH","Jamestown",-15.92488,-5.71816,"Atlantic/St_Helena"],["벨라루스|벨라루스 공화국|Belarus|Republic of Belarus","벨라루스","BY","Minsk",53.90019,27.56653,"Europe/Minsk"],["벨리즈|Belize","벨리즈","BZ","Belmopan",17.25376,-88.76401,"America/Belize"],["버뮤다|Bermuda","버뮤다","BM","Hamilton",32.2949,-64.78303,"Atlantic/Bermuda"],["볼리비아|볼리비아 다민족국|Bolivia|Plurinational State of Bolivia","볼리비아","BO","Sucre",-19.03332,-65.26274,"America/La_Paz"],["네덜란드령 카리브|카리브 네덜란드|보네르, 신트외스타티위스, 사바|Caribbean Netherlands|Bonaire, Sint Eustatius and Saba","네덜란드령 카리브","BQ","Kralendijk",12.15,-68.26667,"America/Kralendijk"],["브라질|브라질 연방 공화국|Brazil|Federative Republic of Brazil","브라질","BR","브라질리아",-15.77972,-47.92972,"America/Sao_Paulo"],["바베이도스|Barbados","바베이도스","BB","Bridgetown",13.10732,-59.62021,"America/Barbados"],["브루나이|브루나이 다루살람국|Brunei|Nation of Brunei, Abode of Peace","브루나이","BN","Bandar Seri Begawan",4.89035,114.94006,"Asia/Brunei"],["부탄|부탄 왕국|Bhutan|Kingdom of Bhutan","부탄","BT","Thimphu",27.46609,89.64191,"Asia/Thimphu"],["보츠와나|보츠와나 공화국|Botswana|Republic of Botswana","보츠와나","BW","Gaborone",-24.65451,25.90859,"Africa/Gaborone"],["중앙 아프리카 공화국|중앙아프리카 공화국|Central African Republic","중앙 아프리카 공화국","CF","Bangui",4.36122,18.55496,"Africa/Bangui"],["캐나다|Canada","캐나다","CA","오타와",45.41117,-75.69812,"America/Toronto"],["코코스 제도|Cocos (Keeling) Islands|Territory of the Cocos (Keeling) Islands","코코스 제도","CC","West Island",-12.15681,96.82251,"Indian/Cocos"],["스위스|스위스 연방|Switzerland|Swiss Confederation","스위스","CH","Bern",46.94809,7.44744,"Europe/Zurich"],["칠레|칠레 공화국|Chile|Republic of Chile","칠레","CL","Santiago",-33.45694,-70.64827,"America/Santiago"],["중국|중화인민공화국|China|People's Republic of China","중국","CN","베이징",39.9075,116.39723,"Asia/Shanghai"],["코트디부아르|코트디부아르 공화국|Ivory Coast|Republic of Côte d'Ivoire","코트디부아르","CI","Yamoussoukro",6.82055,-5.27674,"Africa/Abidjan"],["카메룬|카메룬 공화국|Cameroon|Republic of Cameroon","카메룬","CM","Yaoundé",3.86667,11.51667,"Africa/Douala"],["콩고-킨샤사|콩고 민주 공화국|DR Congo|Democratic Republic of the Congo","콩고-킨샤사","CD","Kinshasa",-4.32758,15.31357,"Africa/Kinshasa"],["콩고-브라자빌|콩고|Congo|Republic of the Congo","콩고-브라자빌","CG","Brazzaville",-4.26613,15.28318,"Africa/Brazzaville"],["쿡 제도|Cook Islands","쿡 제도","CK","Avarua",-21.2075,-159.77546,"Pacific/Rarotonga"],["콜롬비아|콜롬비아 공화국|Colombia|Republic of Colombia","콜롬비아","CO","Bogotá",4.60971,-74.08175,"America/Bogota"],["코모로|코모로 연방|Comoros|Union of the Comoros","코모로","KM","Moroni",-11.70216,43.25506,"Indian/Comoro"],["카보베르데|카보베르데 공화국|Cape Verde|Republic of Cabo Verde","카보베르데","CV","Praia",14.93152,-23.51254,"Atlantic/Cape_Verde"],["코스타리카|코스타리카 공화국|Costa Rica|Republic of Costa Rica","코스타리카","CR","San José",9.93388,-84.08489,"America/Costa_Rica"],["쿠바|쿠바 공화국|Cuba|Republic of Cuba","쿠바","CU","Havana",23.13302,-82.38304,"America/Havana"],["퀴라소|Curaçao|Country of Curaçao","퀴라소","CW","Willemstad",12.12246,-68.88641,"America/Curacao"],["크리스마스섬|크리스마스 섬|Christmas Island|Territory of Christmas Island","크리스마스섬","CX","Flying Fish Cove",-10.42172,105.67912,"Indian/Christmas"],["케이맨 제도|Cayman Islands","케이맨 제도","KY","George Town",19.2866,-81.37436,"America/Cayman"],["키프로스|키프로스 공화국|Cyprus|Republic of Cyprus","키프로스","CY","Nicosia",35.17284,33.35397,"Asia/Nicosia"],["체코|Czechia|Czech Republic","체코","CZ","Prague",50.08804,14.42076,"Europe/Prague"],["독일|독일 연방 공화국|Germany|Federal Republic of Germany","독일","DE","베를린",52.52437,13.41053,"Europe/Berlin"],["지부티|지부티 공화국|Djibouti|Republic of Djibouti","지부티","DJ","Djibouti",11.58901,43.14503,"Africa/Djibouti"],["도미니카|도미니카연방|Dominica|Commonwealth of Dominica","도미니카","DM","Roseau",15.30174,-61.38808,"America/Dominica"],["덴마크|덴마크 왕국|Denmark|Kingdom of Denmark","덴마크","DK","Copenhagen",55.67594,12.56553,"Europe/Copenhagen"],["도미니카 공화국|Dominican Republic","도미니카 공화국","DO","Santo Domingo",18.47186,-69.89232,"America/Santo_Domingo"],["알제리|알제리 인민 민주 공화국|Algeria|People's Democratic Republic of Algeria","알제리","DZ","Algiers",36.73225,3.08746,"Africa/Algiers"],["에콰도르|에콰도르 공화국|Ecuador|Republic of Ecuador","에콰도르","EC","키토",-0.22985,-78.52495,"America/Guayaquil"],["이집트|이집트 아랍 공화국|Egypt|Arab Republic of Egypt","이집트","EG","Cairo",30.06263,31.24967,"Africa/Cairo"],["에리트리아|에리트레아|에리트레아국|Eritrea|State of Eritrea","에리트리아","ER","Asmara",15.33805,38.93184,"Africa/Asmara"],["서사하라|사하라 아랍 민주 공화국|Western Sahara|Sahrawi Arab Democratic Republic","서사하라","EH","El Aaiún",27.1418,-13.18797,"Africa/El_Aaiun"],["스페인|에스파냐 왕국|Spain|Kingdom of Spain","스페인","ES","마드리드",40.4165,-3.70256,"Europe/Madrid"],["에스토니아|에스토니아 공화국|Estonia|Republic of Estonia","에스토니아","EE","Tallinn",59.43696,24.75353,"Europe/Tallinn"],["에티오피아|에티오피아 연방 민주 공화국|Ethiopia|Federal Democratic Republic of Ethiopia","에티오피아","ET","Addis Ababa",9.02497,38.74689,"Africa/Addis_Ababa"],["핀란드|핀란드 공화국|Finland|Republic of Finland","핀란드","FI","Helsinki",60.16952,24.93545,"Europe/Helsinki"],["피지|피지 공화국|Fiji|Republic of Fiji","피지","FJ","Suva",-18.13683,178.42531,"Pacific/Fiji"],["포클랜드 제도|Falkland Islands","포클랜드 제도","FK","Stanley",-51.69382,-57.85701,"Atlantic/Stanley"],["프랑스|프랑스 공화국|France|French Republic","프랑스","FR","파리",48.85341,2.3488,"Europe/Paris"],["페로 제도|Faroe Islands","페로 제도","FO","Tórshavn",62.00973,-6.77164,"Atlantic/Faroe"],["미크로네시아|미크로네시아 연방|Micronesia|Federated States of Micronesia","미크로네시아","FM","Palikir",6.92477,158.16109,"Pacific/Pohnpei"],["가봉|가봉 공화국|Gabon|Gabonese Republic","가봉","GA","Libreville",0.39241,9.45356,"Africa/Libreville"],["영국|그레이트브리튼 북아일랜드 연합 왕국|United Kingdom|United Kingdom of Great Britain and Northern Ireland|UK","영국","GB","런던",51.50853,-0.12574,"Europe/London"],["조지아|Georgia","조지아","GE","Tbilisi",41.69143,44.83412,"Asia/Tbilisi"],["건지|건지 섬|Guernsey|Bailiwick of Guernsey","건지","GG","St. Peter Port",49.45981,-2.53527,"Europe/Guernsey"],["가나|가나 공화국|Ghana|Republic of Ghana","가나","GH","Accra",5.55602,-0.1969,"Africa/Accra"],["지브롤터|Gibraltar","지브롤터","GI","Gibraltar",36.14474,-5.35257,"Europe/Gibraltar"],["기니|기니 공화국|Guinea|Republic of Guinea","기니","GN","Conakry",9.53795,-13.67729,"Africa/Conakry"],["과들루프|Guadeloupe","과들루프","GP","Basse-Terre",15.99714,-61.73214,"America/Guadeloupe"],["감비아|감비아 공화국|Gambia|Republic of the Gambia","감비아","GM","Banjul",13.45274,-16.57803,"Africa/Banjul"],["기니비사우|기니비사우 공화국|Guinea-Bissau|Republic of Guinea-Bissau","기니비사우","GW","Bissau",11.86357,-15.59767,"Africa/Bissau"],["적도 기니|적도 기니 공화국|Equatorial Guinea|Republic of Equatorial Guinea","적도 기니","GQ","Ciudad de la Paz",1.5925,10.82361,"Africa/Malabo"],["그리스|그리스 공화국|Greece|Hellenic Republic","그리스","GR","Athens",37.98376,23.72784,"Europe/Athens"],["그레나다|Grenada","그레나다","GD","St. George's",12.05288,-61.75226,"America/Grenada"],["그린란드|Greenland","그린란드","GL","Nuuk",64.18347,-51.72157,"America/Nuuk"],["과테말라|과테말라 공화국|Guatemala|Republic of Guatemala","과테말라","GT","Guatemala City",14.64072,-90.51327,"America/Guatemala"],["프랑스령 기아나|French Guiana|Guiana","프랑스령 기아나","GF","Cayenne",4.9381,-52.33455,"America/Cayenne"],["괌|Guam","괌","GU","Hagåtña",13.47567,144.74886,"Pacific/Guam"],["가이아나|가이아나 협동 공화국|Guyana|Co-operative Republic of Guyana","가이아나","GY","Georgetown",6.80448,-58.15527,"America/Guyana"],["홍콩(중국 특별행정구)|홍콩|중화인민공화국 홍콩 특별행정구|Hong Kong|Hong Kong Special Administrative Region of the People's Republic of China","홍콩(중국 특별행정구)","HK","City of Victoria",22.27832,114.17469,"Asia/Hong_Kong"],["온두라스|온두라스 공화국|Honduras|Republic of Honduras","온두라스","HN","Tegucigalpa",14.0818,-87.20681,"America/Tegucigalpa"],["크로아티아|크로아티아 공화국|Croatia|Republic of Croatia","크로아티아","HR","Zagreb",45.81444,15.97798,"Europe/Zagreb"],["아이티|아이티 공화국|Haiti|Republic of Haiti","아이티","HT","Port-au-Prince",18.54349,-72.33881,"America/Port-au-Prince"],["헝가리|Hungary","헝가리","HU","Budapest",47.49835,19.04045,"Europe/Budapest"],["인도네시아|인도네시아 공화국|Indonesia|Republic of Indonesia","인도네시아","ID","Jakarta",-6.21462,106.84513,"Asia/Jakarta"],["맨섬|Isle of Man","맨섬","IM","Douglas",54.15,-4.48333,"Europe/Isle_of_Man"],["인도|인도 공화국|India|Republic of India","인도","IN","뉴델리",28.62137,77.2148,"Asia/Kolkata"],["영국령 인도양 지역|British Indian Ocean Territory","영국령 인도양 지역","IO","Diego Garcia"],["아일랜드|아일랜드 공화국|Ireland|Republic of Ireland","아일랜드","IE","Dublin",53.33306,-6.24889,"Europe/Dublin"],["이란|이란 이슬람 공화국|Iran|Islamic Republic of Iran","이란","IR","Tehran",35.69439,51.42151,"Asia/Tehran"],["이라크|이라크 공화국|Iraq|Republic of Iraq","이라크","IQ","Baghdad",33.34058,44.40088,"Asia/Baghdad"],["아이슬란드|아이슬란드 공화국|Iceland","아이슬란드","IS","Reykjavik",64.13548,-21.89541,"Atlantic/Reykjavik"],["이스라엘|이스라엘국|Israel|State of Israel","이스라엘","IL","Jerusalem",31.76904,35.21633,"Asia/Jerusalem"],["이탈리아|이탈리아 공화국|Italy|Italian Republic","이탈리아","IT","로마",41.89193,12.51133,"Europe/Rome"],["자메이카|Jamaica","자메이카","JM","Kingston",17.99702,-76.79358,"America/Jamaica"],["저지|저지 섬|Jersey|Bailiwick of Jersey","저지","JE","Saint Helier",49.18804,-2.10491,"Europe/Jersey"],["요르단|요르단 하심 왕국|Jordan|Hashemite Kingdom of Jordan","요르단","JO","Amman",31.95522,35.94503,"Asia/Amman"],["일본|일본국|Japan","일본","JP","도쿄",35.6895,139.69171,"Asia/Tokyo"],["카자흐스탄|카자흐스탄 공화국|Kazakhstan|Republic of Kazakhstan","카자흐스탄","KZ","Astana",51.1801,71.44598,"Asia/Almaty"],["케냐|케냐 공화국|Kenya|Republic of Kenya","케냐","KE","Nairobi",-1.28333,36.81667,"Africa/Nairobi"],["키르기스스탄|키르기스 공화국|Kyrgyzstan|Kyrgyz Republic","키르기스스탄","KG","Bishkek",42.87,74.59,"Asia/Bishkek"],["캄보디아|캄보디아 왕국|Cambodia|Kingdom of Cambodia","캄보디아","KH","Phnom Penh",11.56245,104.91601,"Asia/Phnom_Penh"],["키리바시|키리바시 공화국|Kiribati|Independent and Sovereign Republic of Kiribati","키리바시","KI","South Tarawa",1.3278,172.97696,"Pacific/Tarawa"],["세인트키츠 네비스|세인트키츠 네비스 연방|Saint Kitts and Nevis|Federation of Saint Christopher and Nevis","세인트키츠 네비스","KN","Basseterre",17.2955,-62.72499,"America/St_Kitts"],["대한민국|한국|South Korea|Republic of Korea","대한민국","KR","서울",37.566,126.9784,"Asia/Seoul"],["코소보|코소보 공화국|Kosovo|Republic of Kosovo","코소보","XK","Pristina",42.67272,21.16688,"Europe/Belgrade"],["쿠웨이트|쿠웨이트국|Kuwait|State of Kuwait","쿠웨이트","KW","Kuwait City",29.367,47.97429,"Asia/Kuwait"],["라오스|라오 인민 민주 공화국|Laos|Lao People's Democratic Republic","라오스","LA","Vientiane",17.96667,102.6,"Asia/Vientiane"],["레바논|레바논 공화국|Lebanon|Lebanese Republic","레바논","LB","Beirut",33.89332,35.50157,"Asia/Beirut"],["라이베리아|라이베리아 공화국|Liberia|Republic of Liberia","라이베리아","LR","Monrovia",6.30054,-10.7969,"Africa/Monrovia"],["리비아|Libya|State of Libya","리비아","LY","Tripoli",32.88743,13.18733,"Africa/Tripoli"],["세인트루시아|Saint Lucia","세인트루시아","LC","Castries",13.9957,-61.00614,"America/St_Lucia"],["리히텐슈타인|리히텐슈타인 공국|Liechtenstein|Principality of Liechtenstein","리히텐슈타인","LI","Vaduz",47.14151,9.52154,"Europe/Vaduz"],["스리랑카|스리랑카 민주 사회주의 공화국|Sri Lanka|Democratic Socialist Republic of Sri Lanka","스리랑카","LK","Sri Jayewardenepura Kotte",6.88297,79.90708,"Asia/Colombo"],["레소토|레소토 왕국|Lesotho|Kingdom of Lesotho","레소토","LS","Maseru",-29.31667,27.48333,"Africa/Maseru"],["리투아니아|리투아니아 공화국|Lithuania|Republic of Lithuania","리투아니아","LT","Vilnius",54.68916,25.2798,"Europe/Vilnius"],["룩셈부르크|룩셈부르크 대공국|Luxembourg|Grand Duchy of Luxembourg","룩셈부르크","LU","Luxembourg",49.60982,6.13268,"Europe/Luxembourg"],["라트비아|라트비아 공화국|Latvia|Republic of Latvia","라트비아","LV","Riga",56.946,24.10589,"Europe/Riga"],["생마르탱|Saint Martin","생마르탱","MF","Marigot",18.06819,-63.08302,"America/Marigot"],["모로코|모로코 왕국|Morocco|Kingdom of Morocco","모로코","MA","Rabat",34.01325,-6.83255,"Africa/Casablanca"],["모나코|모나코 공국|Monaco|Principality of Monaco","모나코","MC","Monaco",43.73718,7.42145,"Europe/Monaco"],["몰도바|몰도바 공화국|Moldova|Republic of Moldova","몰도바","MD","Chișinău",47.00902,28.85938,"Europe/Chisinau"],["마다가스카르|마다가스카르 공화국|Madagascar|Republic of Madagascar","마다가스카르","MG","Antananarivo",-18.91368,47.53613,"Indian/Antananarivo"],["몰디브|몰디브 공화국|Maldives|Republic of the Maldives","몰디브","MV","Malé",4.17521,73.50916,"Indian/Maldives"],["멕시코|멕시코 합중국|Mexico|United Mexican States","멕시코","MX","Mexico City",19.42847,-99.12766,"America/Mexico_City"],["마셜 제도|마셜 제도 공화국|Marshall Islands|Republic of the Marshall Islands","마셜 제도","MH","Majuro",7.08971,171.38027,"Pacific/Majuro"],["북마케도니아|북마케도니아 공화국|North Macedonia|Republic of North Macedonia","북마케도니아","MK","Skopje",41.99646,21.43141,"Europe/Skopje"],["말리|말리 공화국|Mali|Republic of Mali","말리","ML","Bamako",12.60915,-7.97522,"Africa/Bamako"],["몰타|몰타 공화국|Malta|Republic of Malta","몰타","MT","Valletta",35.89968,14.5148,"Europe/Malta"],["미얀마|미얀마 연방 공화국|Myanmar|Republic of the Union of Myanmar","미얀마","MM","Naypyidaw",19.745,96.12972,"Asia/Yangon"],["몬테네그로|Montenegro","몬테네그로","ME","Podgorica",42.44124,19.26309,"Europe/Podgorica"],["몽골|몽골국|Mongolia","몽골","MN","Ulan Bator",47.90771,106.88324,"Asia/Ulaanbaatar"],["북마리아나제도|북마리아나 제도|Northern Mariana Islands|Commonwealth of the Northern Mariana Islands","북마리아나제도","MP","Saipan",15.21233,145.7545,"Pacific/Saipan"],["모잠비크|모잠비크 공화국|Mozambique|Republic of Mozambique","모잠비크","MZ","Maputo",-25.96553,32.58322,"Africa/Maputo"],["모리타니|모리타니 이슬람 공화국|Mauritania|Islamic Republic of Mauritania","모리타니","MR","Nouakchott",18.08581,-15.9785,"Africa/Nouakchott"],["몬트세라트|몬트세랫|Montserrat","몬트세라트","MS","Plymouth",16.70555,-62.21292,"America/Montserrat"],["마르티니크|Martinique","마르티니크","MQ","Fort-de-France",14.60365,-61.07418,"America/Martinique"],["모리셔스|모리셔스 공화국|Mauritius|Republic of Mauritius","모리셔스","MU","Port Louis",-20.16194,57.49889,"Indian/Mauritius"],["말라위|말라위 공화국|Malawi|Republic of Malawi","말라위","MW","Lilongwe",-13.96692,33.78725,"Africa/Blantyre"],["말레이시아|Malaysia","말레이시아","MY","Kuala Lumpur",3.1412,101.68653,"Asia/Kuala_Lumpur"],["마요트|Mayotte|Department of Mayotte","마요트","YT","Mamoudzou",-12.78234,45.22878,"Indian/Mayotte"],["나미비아|나미비아 공화국|Namibia|Republic of Namibia","나미비아","NA","Windhoek",-22.55941,17.08323,"Africa/Windhoek"],["뉴칼레도니아|누벨칼레도니|New Caledonia","뉴칼레도니아","NC","Nouméa",-22.27407,166.44884,"Pacific/Noumea"],["니제르|니제르 공화국|Niger|Republic of Niger","니제르","NE","Niamey",13.51366,2.1098,"Africa/Niamey"],["노퍽섬|노퍽 섬|Norfolk Island|Territory of Norfolk Island","노퍽섬","NF","Kingston",-29.05459,167.96628,"Pacific/Norfolk"],["나이지리아|나이지리아 연방 공화국|Nigeria|Federal Republic of Nigeria","나이지리아","NG","Abuja",9.05785,7.49508,"Africa/Lagos"],["니카라과|니카라과 공화국|Nicaragua|Republic of Nicaragua","니카라과","NI","Managua",12.13282,-86.2504,"America/Managua"],["니우에|Niue","니우에","NU","Alofi",-19.05294,-169.91957,"Pacific/Niue"],["네덜란드|네덜란드 왕국|Netherlands|Kingdom of the Netherlands","네덜란드","NL","Amsterdam",52.37403,4.88969,"Europe/Amsterdam"],["노르웨이|노르웨이 왕국|Norway|Kingdom of Norway","노르웨이","NO","Oslo",59.91273,10.74609,"Europe/Oslo"],["네팔|네팔 연방 민주 공화국|Nepal|Federal Democratic Republic of Nepal","네팔","NP","Kathmandu",27.70169,85.3206,"Asia/Kathmandu"],["나우루|나우루 공화국|Nauru|Republic of Nauru","나우루","NR","Yaren",-0.55085,166.9252,"Pacific/Nauru"],["뉴질랜드|New Zealand","뉴질랜드","NZ","웰링턴",-41.28664,174.77557,"Pacific/Auckland"],["오만|오만 술탄국|Oman|Sultanate of Oman","오만","OM","Muscat",23.58413,58.40778,"Asia/Muscat"],["파키스탄|파키스탄 이슬람 공화국|Pakistan|Islamic Republic of Pakistan","파키스탄","PK","Islamabad",33.72148,73.04329,"Asia/Karachi"],["파나마|파나마 공화국|Panama|Republic of Panama","파나마","PA","Panama City",8.9936,-79.51973,"America/Panama"],["핏케언 제도|Pitcairn Islands|Pitcairn Group of Islands","핏케언 제도","PN","Adamstown",-25.06597,-130.10147,"Pacific/Pitcairn"],["페루|페루 공화국|Peru|Republic of Peru","페루","PE","Lima",-12.04318,-77.02824,"America/Lima"],["필리핀|필리핀 공화국|Philippines|Republic of the Philippines","필리핀","PH","Manila",14.6042,120.9822,"Asia/Manila"],["팔라우|팔라우 공화국|Palau|Republic of Palau","팔라우","PW","Ngerulmud",7.50077,134.6238,"Pacific/Palau"],["파푸아뉴기니|파푸아뉴기니 독립국|Papua New Guinea|Independent State of Papua New Guinea","파푸아뉴기니","PG","Port Moresby",-9.47723,147.15089,"Pacific/Port_Moresby"],["폴란드|폴란드 공화국|Poland|Republic of Poland","폴란드","PL","Warsaw",52.22977,21.01178,"Europe/Warsaw"],["푸에르토리코|Puerto Rico|Commonwealth of Puerto Rico","푸에르토리코","PR","San Juan",18.46633,-66.10572,"America/Puerto_Rico"],["북한|조선|조선민주주의인민공화국|North Korea|Democratic People's Republic of Korea","북한","KP","평양",39.03385,125.75432,"Asia/Pyongyang"],["포르투갈|포르투갈 공화국|Portugal|Portuguese Republic","포르투갈","PT","Lisbon",38.72509,-9.1498,"Europe/Lisbon"],["파라과이|파라과이 공화국|Paraguay|Republic of Paraguay","파라과이","PY","Asunción",-25.28646,-57.647,"America/Asuncion"],["팔레스타인 지구|팔레스타인|팔레스타인국|Palestine|State of Palestine","팔레스타인 지구","PS","Ramallah",31.89964,35.20422,"Asia/Hebron"],["프랑스령 폴리네시아|French Polynesia","프랑스령 폴리네시아","PF","Papeetē",-17.5347,-149.56843,"Pacific/Tahiti"],["카타르|카타르국|Qatar|State of Qatar","카타르","QA","Doha",25.28545,51.53096,"Asia/Qatar"],["레위니옹|Réunion|Réunion Island","레위니옹","RE","Saint-Denis",-20.88231,55.4504,"Indian/Reunion"],["루마니아|Romania","루마니아","RO","Bucharest",44.43225,26.10626,"Europe/Bucharest"],["러시아|러시아 연방|Russia|Russian Federation","러시아","RU","모스크바",55.75204,37.61781,"Europe/Moscow"],["르완다|르완다 공화국|Rwanda|Republic of Rwanda","르완다","RW","Kigali",-1.94995,30.05885,"Africa/Kigali"],["사우디아라비아|사우디아라비아 왕국|Saudi Arabia|Kingdom of Saudi Arabia","사우디아라비아","SA","Riyadh",24.68773,46.72185,"Asia/Riyadh"],["수단|수단 공화국|Sudan|Republic of the Sudan","수단","SD","Khartoum",15.55177,32.53241,"Africa/Khartoum"],["세네갈|세네갈 공화국|Senegal|Republic of Senegal","세네갈","SN","Dakar",14.6937,-17.44406,"Africa/Dakar"],["싱가포르|싱가포르 공화국|Singapore|Republic of Singapore","싱가포르","SG","싱가포르",1.28967,103.85007,"Asia/Singapore"],["사우스조지아 사우스샌드위치 제도|South Georgia|South Georgia and the South Sandwich Islands","사우스조지아 사우스샌드위치 제도","GS","King Edward Point",-54.28111,-36.5092,"Atlantic/South_Georgia"],["스발바르제도-얀마웬섬|스발바르 얀마옌 제도|Svalbard and Jan Mayen|Svalbard og Jan Mayen","스발바르제도-얀마웬섬","SJ","Longyearbyen",78.22334,15.64689,"Arctic/Longyearbyen"],["솔로몬 제도|Solomon Islands","솔로몬 제도","SB","Honiara",-9.43333,159.95,"Pacific/Guadalcanal"],["시에라리온|시에라리온 공화국|Sierra Leone|Republic of Sierra Leone","시에라리온","SL","Freetown",8.48714,-13.2356,"Africa/Freetown"],["엘살바도르|엘살바도르 공화국|El Salvador|Republic of El Salvador","엘살바도르","SV","San Salvador",13.68935,-89.18718,"America/El_Salvador"],["산마리노|산마리노 공화국|San Marino|Most Serene Republic of San Marino","산마리노","SM","City of San Marino",43.93667,12.44639,"Europe/San_Marino"],["소말리아|소말리아 연방 공화국|Somalia|Federal Republic of Somalia","소말리아","SO","Mogadishu",2.03711,45.34375,"Africa/Mogadishu"],["생피에르 미클롱|Saint Pierre and Miquelon","생피에르 미클롱","PM","Saint-Pierre",46.77914,-56.1773,"America/Miquelon"],["세르비아|세르비아 공화국|Serbia|Republic of Serbia","세르비아","RS","Belgrade",44.80401,20.46513,"Europe/Belgrade"],["남수단|남수단 공화국|South Sudan|Republic of South Sudan","남수단","SS","Juba",4.85165,31.58247,"Africa/Juba"],["상투메 프린시페|상투메 프린시페 민주 공화국|São Tomé and Príncipe|Democratic Republic of São Tomé and Príncipe","상투메 프린시페","ST","São Tomé",0.33756,6.7299,"Africa/Sao_Tome"],["수리남|수리남 공화국|Suriname|Republic of Suriname","수리남","SR","Paramaribo",5.86638,-55.16682,"America/Paramaribo"],["슬로바키아|슬로바키아 공화국|Slovakia|Slovak Republic","슬로바키아","SK","Bratislava",48.14816,17.10674,"Europe/Bratislava"],["슬로베니아|슬로베니아 공화국|Slovenia|Republic of Slovenia","슬로베니아","SI","Ljubljana",46.05108,14.50513,"Europe/Ljubljana"],["스웨덴|스웨덴 왕국|Sweden|Kingdom of Sweden","스웨덴","SE","Stockholm",59.32938,18.06871,"Europe/Stockholm"],["에스와티니|에스와티니 왕국|Eswatini|Kingdom of Eswatini","에스와티니","SZ","Lobamba",-26.46667,31.2,"Africa/Mbabane"],["신트마르턴|Sint Maarten","신트마르턴","SX","Philipsburg",18.026,-63.04582,"America/Lower_Princes"],["세이셸|세이셸 공화국|Seychelles|Republic of Seychelles","세이셸","SC","Victoria",-4.62001,55.45501,"Indian/Mahe"],["시리아|시리아 아랍 공화국|Syria|Syrian Arab Republic","시리아","SY","Damascus",33.5102,36.29128,"Asia/Damascus"],["터크스 케이커스 제도|Turks and Caicos Islands","터크스 케이커스 제도","TC","Cockburn Town",21.46122,-71.14188,"America/Grand_Turk"],["차드|차드 공화국|Chad|Republic of Chad","차드","TD","N'Djamena",12.10672,15.0444,"Africa/Ndjamena"],["토고|토고 공화국|Togo|Togolese Republic","토고","TG","Lomé",6.12874,1.22154,"Africa/Lome"],["태국|타이 왕국|Thailand|Kingdom of Thailand","태국","TH","Bangkok",13.75398,100.50144,"Asia/Bangkok"],["타지키스탄|타지키스탄 공화국|Tajikistan|Republic of Tajikistan","타지키스탄","TJ","Dushanbe",38.53575,68.77905,"Asia/Dushanbe"],["토켈라우|Tokelau","토켈라우","TK","Fakaofo"],["투르크메니스탄|Turkmenistan","투르크메니스탄","TM","Ashgabat",37.95,58.38333,"Asia/Ashgabat"],["동티모르|동티모르 민주 공화국|Timor-Leste|Democratic Republic of Timor-Leste","동티모르","TL","Dili",-8.55861,125.57361,"Asia/Dili"],["통가|통가 왕국|Tonga|Kingdom of Tonga","통가","TO","Nuku'alofa",-21.13683,-175.20114,"Pacific/Tongatapu"],["트리니다드 토바고|트리니다드 토바고 공화국|Trinidad and Tobago|Republic of Trinidad and Tobago","트리니다드 토바고","TT","Port of Spain",10.66668,-61.51889,"America/Port_of_Spain"],["튀니지|튀니지 공화국|Tunisia|Tunisian Republic","튀니지","TN","Tunis",36.81897,10.16579,"Africa/Tunis"],["튀르키예|튀르키예 공화국|Türkiye|Republic of Türkiye","튀르키예","TR","Ankara",39.91987,32.85427,"Europe/Istanbul"],["투발루|Tuvalu","투발루","TV","Funafuti",-8.52425,179.19417,"Pacific/Funafuti"],["대만|중화민국|Taiwan|Republic of China (Taiwan)","대만","TW","Taipei",25.05306,121.52639,"Asia/Taipei"],["탄자니아|탄자니아 연합 공화국|Tanzania|United Republic of Tanzania","탄자니아","TZ","Dodoma",-6.17221,35.73947,"Africa/Dar_es_Salaam"],["우간다|우간다 공화국|Uganda|Republic of Uganda","우간다","UG","Kampala",0.31628,32.58219,"Africa/Kampala"],["우크라이나|Ukraine","우크라이나","UA","Kyiv",50.45466,30.5238,"Europe/Kyiv"],["우루과이|우루과이 동방 공화국|Uruguay|Oriental Republic of Uruguay","우루과이","UY","Montevideo",-34.90328,-56.18816,"America/Montevideo"],["미국|아메리카 합중국|United States|United States of America|USA|미합중국","미국","US","워싱턴 D.C.",38.89511,-77.03637,"America/New_York"],["우즈베키스탄|우즈베키스탄 공화국|Uzbekistan|Republic of Uzbekistan","우즈베키스탄","UZ","Tashkent",41.26465,69.21627,"Asia/Tashkent"],["바티칸 시국|바티칸|Vatican City|Vatican City State","바티칸 시국","VA","Vatican City",41.90268,12.45414,"Europe/Vatican"],["세인트빈센트그레나딘|세인트빈센트 그레나딘|Saint Vincent and the Grenadines","세인트빈센트그레나딘","VC","Kingstown",13.15527,-61.22742,"America/St_Vincent"],["베네수엘라|베네수엘라 볼리바르 공화국|Venezuela|Bolivarian Republic of Venezuela","베네수엘라","VE","Caracas",10.48801,-66.87919,"America/Caracas"],["영국령 버진아일랜드|British Virgin Islands|Virgin Islands","영국령 버진아일랜드","VG","Road Town",18.42693,-64.62079,"America/Tortola"],["미국령 버진아일랜드|United States Virgin Islands|Virgin Islands of the United States","미국령 버진아일랜드","VI","Charlotte Amalie",18.3419,-64.9307,"America/St_Thomas"],["베트남|베트남 사회주의 공화국|Vietnam|Socialist Republic of Vietnam","베트남","VN","Hanoi",21.0245,105.84117,"Asia/Bangkok"],["바누아투|바누아투 공화국|Vanuatu|Republic of Vanuatu","바누아투","VU","Port Vila",-17.73648,168.31366,"Pacific/Efate"],["왈리스-푸투나 제도|왈리스 퓌튀나|Wallis and Futuna|Territory of the Wallis and Futuna Islands","왈리스-푸투나 제도","WF","Mata-Utu",-13.28163,-176.17453,"Pacific/Wallis"],["사모아|사모아 독립국|Samoa|Independent State of Samoa","사모아","WS","Apia",-13.83333,-171.76666,"Pacific/Apia"],["예멘|예멘 공화국|Yemen|Republic of Yemen","예멘","YE","Sana'a",15.35452,44.20646,"Asia/Aden"],["남아프리카|남아프리카 공화국|South Africa|Republic of South Africa","남아프리카","ZA","Pretoria",-25.74486,28.18783,"Africa/Johannesburg"],["잠비아|잠비아 공화국|Zambia|Republic of Zambia","잠비아","ZM","Lusaka",-15.40669,28.28713,"Africa/Lusaka"],["짐바브웨|짐바브웨 공화국|Zimbabwe|Republic of Zimbabwe","짐바브웨","ZW","Harare",-17.82772,31.05337,"Africa/Harare"]];
+const normalizeCountry=s=>s.normalize('NFKC').toLowerCase().replace(/[\s.'’-]/g,'');
+const capitalsByName=new Map();
+for(const row of capitalRows)for(const alias of row[0].split('|'))capitalsByName.set(normalizeCountry(alias),row);
+function applySearchCity(city){
+ const label=[...new Set([city.name,city.admin1,city.country].filter(Boolean))].join(', ');
+ sites.searched={name:city.name,country:label,lat:city.latitude,lon:city.longitude,zone:city.timezone};
+ selectSite('searched');setPicker(false);el('site-name').focus();
+ cityStatus.textContent=label+' 관측지를 적용했습니다.';
+}
 let citySearch;
 el('city-form').onsubmit=async event=>{
  event.preventDefault();
  citySearch?.abort();
  const query=el('city-query').value.trim();
+ const capital=capitalsByName.get(normalizeCountry(query));
+ if(capital?.[6]){
+  const [,country,,name,latitude,longitude,timezone]=capital;
+  applySearchCity({name,country,latitude,longitude,timezone});return;
+ }
  if(query.length<2){cityStatus.textContent='도시 이름을 두 글자 이상 입력하세요.';return}
  const request=citySearch=new AbortController();
  cityStatus.textContent='검색 중…';
- const params=new URLSearchParams({name:query,count:'30',language:'ko'});
+ const params=new URLSearchParams({name:capital?capital[3]:query,count:'30',language:'ko'});
  try{
+  if(capital)params.set('countryCode',capital[2]);
   const response=await fetch('https://geocoding-api.open-meteo.com/v1/search?'+params,{signal:request.signal});
   if(!response.ok)throw Error('City lookup failed');
   const data=await response.json();
@@ -895,32 +824,51 @@ el('city-form').onsubmit=async event=>{
    cityStatus.textContent='검색 결과가 없습니다. 다른 이름이나 영문 표기로 검색해 보세요.';
    return;
   }
-  const label=[...new Set([city.name,city.admin1,city.country].filter(Boolean))].join(', ');
-  sites.searched={name:city.name,country:label,lat:city.latitude,lon:city.longitude,zone:city.timezone};
-  el('searched-city').textContent=label;
-  el('searched-city').hidden=false;
-  selectSite('searched');
-  cityStatus.textContent=label+' 관측지를 적용했습니다.';
+  applySearchCity(city);
  }catch{
   if(!request.signal.aborted)cityStatus.textContent='도시를 검색할 수 없습니다. 인터넷 연결을 확인하고 다시 시도하세요.';
  }
 };
-el('lunar-example').onclick=()=>{stopTracking();selectSite('yongin');
- date.value='2022-11-08';minutes=479;trailStart=minutes;slider.dataset.reset=String(Number(slider.dataset.reset||0)+1);
- const moon=celestialState(localNoon()+minutes*60000).moon;yaw=moon.az;pitch=moon.alt*rad;
- el('bodies').setAttribute('aria-pressed','true');play(false);invalidate();
+let previousView;
+function showEclipseExample(day,minute,body){
+ if(!previousView){
+  previousView={siteKey:el('site').value||'yongin',searched:sites.searched,date:date.value,minutes,yaw,pitch,playing,tracking,target:el('target').value,speed:el('speed').value,
+   layers:Object.fromEntries(['trails','names','grid','equatorial','constellations','bodies'].map(id=>[id,on(id)]))};
+ }
+ citySearch?.abort();
+ setPicker(false);
+ el('return-view').hidden=false;
+ stopTracking();
+ selectSite('yongin');
+ date.value=day;
+ minutes=trailStart=minute;
+ resetExposure();
+ const target=celestialState(observationTime())[body];
+ yaw=target.az;
+ pitch=target.alt*rad;
+ el('bodies').setAttribute('aria-pressed','true');
+ play(false);
+ invalidate();
+}
+el('return-view').onclick=()=>{
+ const v=previousView;if(!v)return;
+ previousView=null;citySearch?.abort();setPicker(false);
+ if(v.siteKey==='searched')sites.searched=v.searched;
+ selectSite(v.siteKey);
+ date.value=v.date;minutes=trailStart=v.minutes;yaw=v.yaw;pitch=v.pitch;
+ el('speed').value=v.speed;el('target').value=v.target;
+ for(const [id,enabled] of Object.entries(v.layers))el(id).setAttribute('aria-pressed',String(enabled));
+ stopTracking();if(v.tracking)el('track').onclick();
+ el('return-view').hidden=true;resetExposure();play(v.playing);invalidate();exposureNotice('이전 관측 복원');
 };
-el('eclipse-example').onclick=()=>{stopTracking();selectSite('yongin');
- date.value='2020-06-21';minutes=293;trailStart=minutes;slider.dataset.reset=String(Number(slider.dataset.reset||0)+1);
- const sun=solarState(localNoon()+minutes*60000);yaw=sun.az;pitch=sun.alt*rad;
- el('bodies').setAttribute('aria-pressed','true');play(false);invalidate();
-};
-el('play').onclick=()=>{if(editingClock)clockEdit.blur();if(!playing&&minutes>=observingDay().duration){minutes=0;trailStart=0;slider.dataset.reset=String(Number(slider.dataset.reset||0)+1);}play(!playing);invalidate()};
-slider.oninput=()=>{slider.dataset.reset=String(Number(slider.dataset.reset||0)+1);minutes=Number(slider.value);trailStart=minutes;play(false);invalidate()};
+el('lunar-example').onclick=()=>showEclipseExample('2022-11-08',479,'moon');
+el('eclipse-example').onclick=()=>showEclipseExample('2020-06-21',293,'sun');
+el('play').onclick=()=>{if(editingClock)clockEdit.blur();if(!playing&&minutes>=observingDay().duration){minutes=0;trailStart=0;resetExposure();}play(!playing);invalidate()};
+slider.oninput=()=>{exposureNotice('시각 변경');resetExposure();minutes=Number(slider.value);trailStart=minutes;play(false);invalidate()};
 date.onchange=()=>{if(!date.value||!date.validity.valid)date.value=localISO(Date.now()).slice(0,10);minutes=Math.min(minutes,observingDay().duration);trailStart=minutes;invalidate()};
 let tracking=false;
 function targetPosition(){
- const millis=localNoon()+minutes*60000,target=el('target').value||'sun';
+ const millis=observationTime(),target=el('target').value||'sun';
  if(target==='sun'||target==='moon'){const p=celestialState(millis)[target];return {az:p.az,alt:p.alt*rad}}
  const s=stars.find(s=>s.id===11767),sid=(280.46061837+360.98564736629*(millis/86400000-10957.5)+lon)%360*rad,k=s.cd*cos(sid-s.a),u=sin(lat)*s.sd+cos(lat)*k;
  return {az:Math.atan2(-s.cd*sin(sid-s.a),cos(lat)*s.sd-sin(lat)*k),alt:Math.asin(clamp(u,-1,1))};
@@ -932,7 +880,7 @@ el('track').onclick=()=>{if(tracking)stopTracking();else{tracking=true;el('track
 el('target').onchange=()=>{if(tracking)pointAtTarget();invalidate()};
 const clockEdit=el('clock-edit');
 let editingClock=false,clockChanged=false;
-clockEdit.onfocus=()=>{editingClock=true;play(false)};
+clockEdit.onfocus=()=>{editingClock=true;play(false);clockEdit.select()};
 clockEdit.oninput=()=>{clockChanged=true};
 function clockMinutes(value,nextNoon){
  const [hour,minute,second=0]=value.split(':').map(Number);
@@ -943,10 +891,17 @@ function clockMinutes(value,nextNoon){
  return clamp((instant-start)/60000,0,duration);
 }
 function finishClock(){
- if(clockChanged && clockEdit.value){
+ const valid=/^(?:[01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.test(clockEdit.value);
+ if(clockChanged && !valid && clockEdit.value){
+  clockEdit.setCustomValidity('00:00부터 23:59:59까지 HH:MM 또는 HH:MM:SS로 입력하세요.');
+  clockEdit.reportValidity();
+  clockEdit.setCustomValidity('');
+ }
+ if(clockChanged && valid){
+  exposureNotice('시각 변경');
   minutes=clockMinutes(clockEdit.value,minutes>=observingDay().duration/2);
   trailStart=minutes;
-  slider.dataset.reset=String(Number(slider.dataset.reset||0)+1);
+  resetExposure();
  }
  editingClock=false;clockChanged=false;invalidate();
 }
@@ -954,25 +909,28 @@ clockEdit.onblur=finishClock;
 clockEdit.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();clockEdit.blur()}};
 
 let drag;canvas.onpointerdown=e=>{stopTracking();drag=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId)};
-canvas.onpointermove=e=>{if(!drag)return;yaw-=(e.clientX-drag[0])/focal;pitch=clamp(pitch+(e.clientY-drag[1])/focal,-5*rad,89*rad);drag=[e.clientX,e.clientY];invalidate()};canvas.onlostpointercapture=()=>drag=null;
-canvas.onkeydown=e=>{let delta={ArrowLeft:[-5,0],ArrowRight:[5,0],ArrowUp:[0,5],ArrowDown:[0,-5]}[e.key];if(delta){e.preventDefault();stopTracking();yaw+=delta[0]*rad;pitch=clamp(pitch+delta[1]*rad,-5*rad,89*rad);invalidate()}};
+canvas.onpointermove=e=>{if(!drag)return;exposureNotice('시점 변경');yaw-=(e.clientX-drag[0])/focal;pitch=clamp(pitch+(e.clientY-drag[1])/focal,-5*rad,89*rad);drag=[e.clientX,e.clientY];invalidate()};canvas.onlostpointercapture=()=>drag=null;
+canvas.onkeydown=e=>{let delta={ArrowLeft:[-5,0],ArrowRight:[5,0],ArrowUp:[0,5],ArrowDown:[0,-5]}[e.key];if(delta){e.preventDefault();exposureNotice('시점 변경');stopTracking();yaw+=delta[0]*rad;pitch=clamp(pitch+delta[1]*rad,-5*rad,89*rad);invalidate()}};
 new ResizeObserver(()=>{
  w=canvas.clientWidth;h=canvas.clientHeight;if(!w||!h)return;
  // Prioritize the photographic star layer; keep overlays at lower resolution.
  const d=Math.min(devicePixelRatio,2,Math.sqrt(4000000/(w*h)));renderScale=d;
  const overlayScale=Math.min(devicePixelRatio,1.25,Math.sqrt(1000000/(w*h)));
- for(const [surface,c] of [[canvas,ctx],[constellationCanvas,constellationCtx],[nameCanvas,nameCtx],[groundCanvas,groundCtx]]){
-  const scale=surface===canvas?d:overlayScale;
-  surface.width=Math.floor(w*scale);surface.height=Math.floor(h*scale);if(c)c.setTransform(scale,0,0,scale,0,0);
+ canvas.width=Math.floor(w*d);
+ canvas.height=Math.floor(h*d);
+ for(const [surface,context] of [[constellationCanvas,constellationCtx],[nameCanvas,nameCtx],[groundCanvas,groundCtx]]){
+  surface.width=Math.floor(w*overlayScale);
+  surface.height=Math.floor(h*overlayScale);
+  context.setTransform(overlayScale,0,0,overlayScale,0,0);
  }
  
- for(const key in layerState)layerState[key]='';exposureBufferKey='';lastExposureMinute=null;lastConstellationView=lastNameView='';
+ for(const key in layerState)layerState[key]='';
  focal=Math.min(w*.82,h*.87);allocateLayer(constellationCanvas,constellationCtx,on("constellations"));allocateLayer(nameCanvas,nameCtx,on("names")||on("equatorial"));invalidate();
 }).observe(canvas);
 function draw(now=Date.now()){
  if(tracking)pointAtTarget();
- const millis=localNoon()+minutes*60000,iso=localISO(millis);
- if(!editingClock && clockEdit.value!==iso.slice(11,19))clockEdit.value=iso.slice(11,19);el('clock').textContent=iso.slice(11,16);el('stamp').textContent=iso.slice(0,10).replaceAll('-',' / ');slider.value=Math.floor(minutes);slider.setAttribute('aria-valuetext',iso.slice(11,16));
+ const millis=observationTime(),iso=localISO(millis);
+ if(!editingClock && clockEdit.value!==iso.slice(11,19))clockEdit.value=iso.slice(11,19);el('clock').textContent=iso.slice(11,19);el('stamp').textContent=iso.slice(0,10).replaceAll('-',' / ');slider.value=Math.floor(minutes);slider.setAttribute('aria-valuetext',iso.slice(11,16));
  const deg=((Math.round(yaw/rad)%360)+360)%360;
  el('bearing').textContent='방위각 '+deg+'°　고도 '+Math.round(pitch/rad)+'°';
  document.querySelectorAll('.dirs button').forEach((b,i)=>b.setAttribute('aria-pressed',deg===i*90));
@@ -1021,8 +979,8 @@ function draw(now=Date.now()){
   sunCanvas.style.left=(sunPoint[0]-Math.ceil(sunGlow))+'px';sunCanvas.style.top=(sunPoint[1]-Math.ceil(sunGlow))+'px';
  }else if(sunCanvas.width!==1){sunCanvas.width=sunCanvas.height=1;sunSpriteKey=''}
 
- const moon={azimuth:bodies.moon.az-Math.PI,altitude:bodies.moon.alt*rad,distance:bodies.moon.distance},illumination=illuminationForSky;
- const maz=moon.azimuth+Math.PI,ma=moon.altitude,mv=[sin(maz)*cos(ma),cos(maz)*cos(ma),sin(ma)];
+ const illumination=illuminationForSky;
+ const maz=bodies.moon.az,ma=bodies.moon.alt*rad,mv=[sin(maz)*cos(ma),cos(maz)*cos(ma),sin(ma)];
  let mp=project(...mv);const mr=3*Math.max(1.2,focal*Math.tan(bodies.moon.radius));
  // Magnify relative separation with the discs near conjunction, keeping real eclipse contact geometry.
  if(mp&&sunPoint&&bodies.separation<4*rad){const zoom=1+2*clamp((4-bodies.separation/rad)/2,0,1);mp=[sunPoint[0]+(mp[0]-sunPoint[0])*zoom,sunPoint[1]+(mp[1]-sunPoint[1])*zoom]}
@@ -1098,7 +1056,7 @@ function draw(now=Date.now()){
     if(anchor){c.fillStyle='rgba(168,202,211,.75)';c.fillText(names[group.id]||group.id,anchor[0]+9,anchor[1]+16)}
    }
   }
-  layerState.constellations=constellationKey;lastConstellationView=constellationView;constellationTime=now;
+  layerState.constellations=constellationKey;
  }
  // Names sit behind the opaque ground layer: named stars only, independent of the full star catalog.
  horizonGrid.hidden=!showGrid;
@@ -1108,7 +1066,8 @@ function draw(now=Date.now()){
  else if(horizonKey!==gridKey){
   horizonCtx.clearRect(0,0,w,h);
   function altitude(a,b){return project(sin(a*rad)*cos(b*rad),cos(a*rad)*cos(b*rad),sin(b*rad))}
-  {for(let alt=0;alt<90;alt+=15)path(horizonCtx,Array.from({length:181},(_,i)=>altitude(i*2,alt)),'rgba(108,158,202,.50)');for(let az=0;az<360;az+=30)path(horizonCtx,Array.from({length:46},(_,i)=>altitude(az,i*2)),'#465273')}
+  for(let alt=0;alt<90;alt+=15)path(horizonCtx,Array.from({length:181},(_,i)=>altitude(i*2,alt)),'rgba(108,158,202,.50)');
+  for(let az=0;az<360;az+=30)path(horizonCtx,Array.from({length:46},(_,i)=>altitude(az,i*2)),'#465273')
   horizonKey=gridKey;
  }
  const nameView=viewKey+'/'+showNames+'/'+showEquatorial+'/'+showBodies,nameKey=nameView+'/'+(showNames||showEquatorial?minutes:0);
@@ -1141,7 +1100,7 @@ function draw(now=Date.now()){
   }
   if(showNames)for(const s of namedStars){const p=point(s,sid-s.a);if(visible(p))c.fillText(labels[s.id],p[0]+8,p[1]-6)}
 
-  layerState.names=nameKey;lastNameView=nameView;nameTime=now;
+  layerState.names=nameKey;
  }
 }
 
